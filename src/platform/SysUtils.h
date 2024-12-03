@@ -1,0 +1,10 @@
+#pragma once
+
+#include <filesystem>
+
+namespace utils
+{
+
+std::filesystem::path OpenFileDialog();
+
+}
