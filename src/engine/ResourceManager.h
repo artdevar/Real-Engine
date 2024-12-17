@@ -1,29 +1,32 @@
 #pragma once
 
 #include "interfaces/Shutdownable.h"
+#include "utils/Common.h"
 #include <filesystem>
 #include <memory>
 #include <string>
 #include <map>
 
-struct TModel;
+class CModel;
 class CShader;
 class CTextureBase;
+class IAsset;
 
-class CResourceManager final :
-  public IShutdownable
+class CResourceManager final : public IShutdownable
 {
+  DISABLE_CLASS_COPY(CResourceManager);
+
 public:
 
   CResourceManager() = default;
 
-  CResourceManager(const CResourceManager &) = delete;
+  void Init();
 
   void Shutdown() override;
 
-  std::shared_ptr<TModel> LoadModel(const std::filesystem::path & _Path);
+  std::shared_ptr<CModel> LoadModel(const std::filesystem::path & _Path);
 
-  std::shared_ptr<CShader> LoadShader(const std::string & _Path);
+  std::shared_ptr<CShader> LoadShader(const std::filesystem::path & _Path);
 
   std::shared_ptr<CTextureBase> LoadTexture(const std::filesystem::path & _Path);
 
@@ -31,8 +34,8 @@ public:
 
 private:
 
-  std::map<std::string, std::shared_ptr<TModel>>       m_Models;
-  std::map<std::string, std::shared_ptr<CShader>>      m_Shaders;
-  std::map<std::string, std::shared_ptr<CTextureBase>> m_Textures;
+  static const std::filesystem::path DEFAULT_TEXTURE_PATH;
+
+  std::map<std::string, std::shared_ptr<IAsset>, std::less<>> m_Assets;
 
 };

@@ -8,7 +8,7 @@
 #include "utils/Common.h"
 #include "Shared.h"
 
-struct TModel;
+class CModel;
 class CTextureBase;
 
 enum class ELightType
@@ -50,9 +50,7 @@ struct TSkyboxComponent
 
 struct TModelComponent
 {
-  std::shared_ptr<TModel> Model;
-  unsigned int vertices;
-  unsigned int indices;
+  std::shared_ptr<CModel> Model;
 };
 
 

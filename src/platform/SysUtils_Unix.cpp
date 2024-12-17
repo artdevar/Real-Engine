@@ -7,7 +7,7 @@ namespace utils
 std::filesystem::path OpenFileDialog()
 {
   char PathBuffer[256];
-  MEM_ZERO(PathBuffer);
+  FastMemSet(PathBuffer, 0x00, sizeof(PathBuffer));
 
   FILE * File = popen("zenity \"$@\" 2>/dev/null --file-selection --title=\"Select a file\"", "r");
 

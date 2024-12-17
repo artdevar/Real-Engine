@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interfaces/Shutdownable.h"
+#include "interfaces/Asset.h"
 #include <glad/glad.h>
 #include <glm/fwd.hpp>
 #include <string>
@@ -8,8 +8,7 @@
 #include <variant>
 #include <map>
 
-class CShader final :
-  public IShutdownable
+class CShader final : public IAsset
 {
   using UniformType = std::variant<GLint, GLuint, GLfloat, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
 
@@ -19,9 +18,11 @@ public:
 
   CShader(const CShader &) = delete;
 
+  ~CShader() override;
+
   void Shutdown() override;
 
-  bool Init(const std::string & _Path);
+  bool Load(const std::filesystem::path & _Path) override;
 
   GLuint GetID() const;
 
@@ -37,11 +38,13 @@ private:
 
   bool IsUsed() const;
 
-  GLuint LoadShader(const std::string & _Path, GLenum _ShaderType);
+  GLuint LoadShader(const std::filesystem::path & _Path, GLenum _ShaderType);
 
 private:
 
+  static constexpr inline GLuint INVALID_VALUE = 0u;
+
   GLuint m_ID;
-  std::map<std::string, GLuint> m_UniformsCache;
+  std::map<std::string, GLuint, std::less<>> m_UniformsCache;
 
 };

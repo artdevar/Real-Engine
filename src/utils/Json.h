@@ -4,12 +4,14 @@
 #include <glm/vec3.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
+#include <string_view>
+#include <filesystem>
 #include <fstream>
 
 namespace utils
 {
 
-inline nlohmann::json ParseJson(const std::string & _Path)
+inline nlohmann::json ParseJson(const std::filesystem::path & _Path)
 {
   nlohmann::json Rv;
 
@@ -20,7 +22,7 @@ inline nlohmann::json ParseJson(const std::string & _Path)
   return Rv;
 }
 
-inline void SaveJson(const std::string & _Path, const nlohmann::json & _Data)
+inline void SaveJson(const std::filesystem::path & _Path, const nlohmann::json & _Data)
 {
   std::ofstream ConfigFile(_Path);
   assert(ConfigFile.is_open());

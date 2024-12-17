@@ -15,15 +15,10 @@ public:
   {
     const ctti::type_id_t TypeID = ctti::type_id<T>();
 
-    assert(m_ComponentTypes.find(TypeID) == m_ComponentTypes.end() && "Registering component type more than once.");
+    assert(!m_ComponentTypes.contains(TypeID) && "Registering component type more than once.");
 
-    // Add this component type to the component type map
     m_ComponentTypes.emplace(TypeID, m_NextComponentType);
-
-    // Create a ComponentArray pointer and add it to the component arrays map
     m_ComponentArrays.emplace(TypeID, std::make_shared<CComponentArray<T>>());
-
-    // Increment the value so that the next component registered will be different
     ++m_NextComponentType;
   }
 
@@ -31,10 +26,8 @@ public:
   ecs::TComponentType GetComponentType()
   {
     const ctti::type_id_t TypeID = ctti::type_id<T>();
+    assert(m_ComponentTypes.contains(TypeID) && "Component not registered before use.");
 
-    assert(m_ComponentTypes.find(TypeID) != m_ComponentTypes.end() && "Component not registered before use.");
-
-    // Return this component's type - used for creating signatures
     return m_ComponentTypes[TypeID];
   }
 
@@ -86,7 +79,7 @@ private:
   {
     const ctti::type_id_t TypeID = ctti::type_id<T>();
 
-    assert(m_ComponentTypes.find(TypeID) != m_ComponentTypes.end() && "Component not registered before use.");
+    assert(m_ComponentTypes.contains(TypeID) && "Component not registered before use.");
 
     return std::static_pointer_cast<CComponentArray<T>>(m_ComponentArrays[TypeID]);
   }

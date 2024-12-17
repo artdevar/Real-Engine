@@ -49,18 +49,18 @@ private:
   void SpawnEntity(TEntityType _Type);
 
   void RenderEntityData(ecs::TEntity _Entity);
-
   void RenderEntityData(ecs::TModelComponent & _Mesh);
-
   void RenderEntityData(ecs::TTransformComponent & _Transform);
-
   void RenderEntityData(ecs::TLightComponent & _Light);
+
+private:
+
+  int GetCurrentEntityIndex(const std::vector<ecs::TEntity> & _Entities) const;
 
 private:
 
   CEngine * m_Engine;
 
   std::optional<ecs::TEntity> m_CurrentEntity;
-  int                         m_LightIndex = -1;
 
 };

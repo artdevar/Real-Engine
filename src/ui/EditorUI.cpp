@@ -136,23 +136,25 @@ void CEditorUI::RenderEntities()
       }
     }
 
+    const std::vector<ecs::TEntity> & Entities = World->GetAllEntities();
+
     std::vector<std::string> EntitiesNames;
-    for (auto Entity : World->GetAllEntities())
+    for (auto Entity : Entities)
       EntitiesNames.push_back(std::to_string(Entity));
 
-    int CurrentEntityIndex = m_CurrentEntity.value_or(-1);
+    int CurrentEntityIndex = GetCurrentEntityIndex(Entities);
 
     if (ImGui::ListBox(
           "Entities",
           &CurrentEntityIndex,
           [](void * _Vec, int _Index, const char ** _Ret) -> bool
           {
-            auto Entities = reinterpret_cast<std::vector<std::string>*>(_Vec);
+            auto EntitiesNames = reinterpret_cast<std::vector<std::string>*>(_Vec);
 
-            if (_Index < 0 || _Index >= Entities->size())
+            if (_Index < 0 || _Index >= EntitiesNames->size())
               return false;
 
-            *_Ret = Entities->at(_Index).c_str();
+            *_Ret = EntitiesNames->at(_Index).c_str();
             return true;
           },
           reinterpret_cast<void*>(&EntitiesNames),
@@ -160,7 +162,7 @@ void CEditorUI::RenderEntities()
           4)
         )
     {
-      m_CurrentEntity = CurrentEntityIndex;
+      m_CurrentEntity = Entities[CurrentEntityIndex];
     }
 
     if (m_CurrentEntity.has_value())
@@ -312,6 +314,17 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent & _Light)
   }
 }
 
+int CEditorUI::GetCurrentEntityIndex(const std::vector<ecs::TEntity> & _Entities) const
+{
+  if (m_CurrentEntity.has_value())
+  {
+    const auto Iterator = std::find(_Entities.cbegin(), _Entities.cend(), m_CurrentEntity.value());
+    return std::distance(_Entities.cbegin(), Iterator);
+  }
+
+  return -1;
+}
+
 void CEditorUI::SpawnEntity(TEntityType _Type)
 {
   switch (_Type)
@@ -322,7 +335,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
       if (ModelPathToLoad.empty())
         return;
 
-      std::shared_ptr<TModel> Model = m_Engine->GetResourceManager()->LoadModel(ModelPathToLoad);
+      std::shared_ptr<CModel> Model = m_Engine->GetResourceManager()->LoadModel(ModelPathToLoad);
       if (!Model)
         return;
 

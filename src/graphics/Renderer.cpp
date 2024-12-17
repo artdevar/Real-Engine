@@ -27,11 +27,6 @@ void CRenderer::SetViewport(GLsizei _Width, GLsizei _Height)
   glViewport(0, 0, _Width, _Height);
 }
 
-void CRenderer::DrawElements(GLenum _Mode, GLsizei _Count, GLenum _Type)
-{
-  glDrawElements(_Mode, _Count, _Type, 0);
-}
-
 void CRenderer::DrawArrays(GLenum _Mode, GLsizei _Count)
 {
   glDrawArrays(_Mode, 0, _Count);
@@ -61,7 +56,8 @@ const std::shared_ptr<CShader> & CRenderer::GetShader() const
 
 void CRenderer::SetLightingData(TShaderLighting && _Data)
 {
-  m_Lighting = _Data;
+  IS_SAME_TYPE(m_Lighting, _Data);
+  memmove(&m_Lighting, &_Data, sizeof(m_Lighting));
 }
 
 void CRenderer::InitShaderValues()
@@ -70,6 +66,7 @@ void CRenderer::InitShaderValues()
   m_CurrentShader->Validate();
   m_CurrentShader->SetUniform("u_Projection", m_Camera->GetProjection());
   m_CurrentShader->SetUniform("u_ViewPos",    m_Camera->GetPosition());
+  m_CurrentShader->SetUniform("u_View",       m_Camera->GetView());
 
   GLuint LightingDataLoc = glGetUniformBlockIndex(m_CurrentShader->GetID(), "u_Lighting");
 

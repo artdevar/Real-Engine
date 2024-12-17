@@ -6,7 +6,7 @@
 #include <algorithm>
 #include "Common.h"
 
-template <typename T, std::size_t N>
+template <typename T, std::size_t Capacity>
 class CStaticArray final
 {
   DISABLE_CLASS_COPY(CStaticArray);
@@ -16,14 +16,10 @@ public:
 
   constexpr CStaticArray() = default;
 
-  constexpr CStaticArray(const T & _Value)
+  template <std::convertible_to<T> U>
+  constexpr CStaticArray(U && _Value)
   {
-    FillArray(_Value);
-  }
-
-  constexpr CStaticArray(T && _Value)
-  {
-    FillArray(std::forward<T>(_Value));
+    FillArray(std::forward<U>(_Value));
   }
 
   constexpr T & operator[](std::size_t _Index)
@@ -38,7 +34,7 @@ public:
 
   constexpr std::size_t GetCapacity() const
   {
-    return N;
+    return Capacity;
   }
 
   constexpr std::size_t GetActualSize() const
@@ -71,16 +67,11 @@ public:
     return CIterator(m_Data + GetActualSize());
   }
 
-  constexpr void FillArray(const T & _Value)
+  template <std::convertible_to<T> U>
+  constexpr void FillArray(U && _Value)
   {
     m_ActualSize = GetCapacity();
-    std::fill(begin(), end(), _Value);
-  }
-
-  constexpr void FillArray(T && _Value)
-  {
-    m_ActualSize = GetCapacity();
-    std::fill(begin(), end(), std::forward<T>(_Value));
+    std::fill(begin(), end(), std::forward<U>(_Value));
   }
 
   constexpr void Clear()
@@ -88,19 +79,12 @@ public:
     m_ActualSize = 0;
   }
 
-  constexpr void PushBack(T && _Value)
+  template <std::convertible_to<T> U>
+  constexpr void PushBack(U && _Value)
   {
     assert(GetActualSize() < GetCapacity() && "Array is filled up");
 
-    m_Data[m_ActualSize] = std::forward<T>(_Value);
-    m_ActualSize++;
-  }
-
-  constexpr void PushBack(const T & _Value)
-  {
-    assert(GetActualSize() < GetCapacity() && "Array is filled up");
-
-    m_Data[m_ActualSize] = _Value;
+    m_Data[m_ActualSize] = std::forward<U>(_Value);
     m_ActualSize++;
   }
 
@@ -113,7 +97,7 @@ public:
 
 private:
 
-  T           m_Data[N];
+  T           m_Data[Capacity];
   std::size_t m_ActualSize = 0;
 };
 

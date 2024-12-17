@@ -1,45 +1,59 @@
-#include "ModelLoader.h"
 #include "Model.h"
-#include "TextureBase.h"
-#include "Shared.h"
-#include "utils/Logger.h"
 #include "engine/Engine.h"
 #include "engine/ResourceManager.h"
+#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/material.h>
 
-std::shared_ptr<TModel> CModelLoader::LoadModel(const TLoadParams & _LoadParams)
+void CModel::Shutdown()
 {
-  const aiScene * Scene;
-  Assimp::Importer Importer;
-
-  const std::string ModelPath = _LoadParams.ModelPath.string();
-
-  unsigned int Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_PreTransformVertices;
-  if (_LoadParams.FlipUVs)
-    Flags |= aiProcess_FlipUVs;
-
-  Scene = Importer.ReadFile(ModelPath, Flags);
-  if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
-  {
-    CLogger::Log(ELogType::Error, std::format("Assimp import model '{}' error: {}\n", ModelPath, Importer.GetErrorString()));
-    return nullptr;
-  }
-
-  TProcessParams Params;
-  Params.ModelPath   = _LoadParams.ModelPath;
-  Params.Scene       = Scene;
-
-  std::vector<TMesh> Meshes;
-  ProcessNode(Params, Scene->mRootNode, Meshes);
-
-  CLogger::Log(ELogType::Info, std::format("Model '{}' is loaded. Meshes count: {}\n", ModelPath, Meshes.size()));
-
-  return std::make_shared<TModel>(std::move(Meshes));
+  m_Meshes.clear();
 }
 
-void CModelLoader::ProcessNode(TProcessParams &_Params, aiNode *_Node, std::vector<TMesh> &_Meshes)
+bool CModel::Load(const std::filesystem::path & _Path)
+{
+  std::optional<std::filesystem::path> ModelPath;
+  bool FlipUVs = false;
+
+  if (IsJson(_Path))
+  {
+    nlohmann::json JsonContent = utils::ParseJson(_Path);
+    ModelPath = _Path.parent_path() / JsonContent["ModelPath"].get<std::string>();
+    FlipUVs   = JsonContent["FlipUVs"].get<bool>();
+  }
+
+  unsigned int Flags = aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_PreTransformVertices;
+  if (FlipUVs)
+    Flags |= aiProcess_FlipUVs;
+
+  const aiScene *  Scene;
+  Assimp::Importer Importer;
+
+  Scene = Importer.ReadFile(ModelPath.value_or(_Path).string(), Flags);
+  if (!Scene || Scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !Scene->mRootNode)
+  {
+    CLogger::Log(ELogType::Error, std::format("Assimp import model '{}' error: {}\n", ModelPath->c_str(), Importer.GetErrorString()));
+    return false;
+  }
+
+  TLoadingParams Params;
+  Params.ModelPath = ModelPath.value_or(_Path);
+  Params.Scene     = Scene;
+
+  ProcessNode(Params, Scene->mRootNode, m_Meshes);
+
+  CLogger::Log(ELogType::Info, std::format("Model '{}' is loaded. Meshes count: {}\n", Params.ModelPath.c_str(), m_Meshes.size()));
+
+  return true;
+}
+
+const std::vector<TMesh> & CModel::GetMeshes() const
+{
+  return m_Meshes;
+}
+
+void CModel::ProcessNode(TLoadingParams &_Params, aiNode *_Node, std::vector<TMesh> & _Meshes)
 {
   for (unsigned int i = 0; i < _Node->mNumMeshes; i++)
   {
@@ -51,7 +65,7 @@ void CModelLoader::ProcessNode(TProcessParams &_Params, aiNode *_Node, std::vect
     ProcessNode(_Params, _Node->mChildren[i], _Meshes);
 }
 
-TMesh CModelLoader::ProcessMesh(TProcessParams & _Params, aiMesh * _Mesh)
+TMesh CModel::ProcessMesh(TLoadingParams & _Params, aiMesh * _Mesh)
 {
   assert(_Mesh->HasNormals());
 
@@ -61,7 +75,7 @@ TMesh CModelLoader::ProcessMesh(TProcessParams & _Params, aiMesh * _Mesh)
 
   for (unsigned int i = 0; i < _Mesh->mNumVertices; i++)
   {
-    auto & Vertex = Vertices.emplace_back();
+    shared::TVertex & Vertex = Vertices.emplace_back();
 
     Vertex.Position = glm::vec3(_Mesh->mVertices[i].x, _Mesh->mVertices[i].y, _Mesh->mVertices[i].z);
     Vertex.Normal   = glm::vec3(_Mesh->mNormals[i].x, _Mesh->mNormals[i].y, _Mesh->mNormals[i].z);
@@ -84,25 +98,19 @@ TMesh CModelLoader::ProcessMesh(TProcessParams & _Params, aiMesh * _Mesh)
       Indices.push_back(Face.mIndices[j]);
   }
 
-  std::shared_ptr<CResourceManager> ResourceManager = CEngine::Instance()->GetResourceManager();
-
   aiMaterial * AiMaterial = _Params.Scene->mMaterials[_Mesh->mMaterialIndex];
 
-  auto GetMaterialTexture = [AiMaterial, &ResourceManager, &_Params](aiTextureType _Type, bool _LoadDefault) -> std::shared_ptr<CTextureBase> {
+  auto GetMaterialTexture = [AiMaterial, &_Params, ResourceManager = CEngine::Instance()->GetResourceManager()](aiTextureType _Type)
+  {
     aiString Path;
     if (AiMaterial->GetTexture(_Type, 0, &Path) == AI_SUCCESS)
-    {
       return ResourceManager->LoadTexture(_Params.ModelPath.parent_path() / Path.C_Str());
-    } else if (_LoadDefault)
-    {
-      return ResourceManager->LoadTexture("../assets/textures/default.jpg");
-    }
-
-    return nullptr;
+    else
+      return std::shared_ptr<CTextureBase>(nullptr);
   };
 
-  Material.DiffuseTexture  = GetMaterialTexture(aiTextureType::aiTextureType_DIFFUSE,  true);
-  Material.SpecularTexture = GetMaterialTexture(aiTextureType::aiTextureType_SPECULAR, false);
+  Material.DiffuseTexture  = GetMaterialTexture(aiTextureType::aiTextureType_DIFFUSE);
+  Material.SpecularTexture = GetMaterialTexture(aiTextureType::aiTextureType_SPECULAR);
   Material.Shininess       = 32.0f;
 
   return TMesh(std::move(Vertices), std::move(Indices), std::move(Material));

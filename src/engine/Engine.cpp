@@ -114,10 +114,11 @@ int CEngine::Init()
   glCullFace(GL_BACK);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   InitCallbacks();
 
+  m_ResourceManager->Init();
   m_World->Init();
   m_EditorUI->Init(this);
 
@@ -136,9 +137,9 @@ int CEngine::Run()
   double LastFrameTime = 0.0;
   while (!glfwWindowShouldClose(m_Window))
   {
-    GLenum err;
-    if ((err = glGetError()) != GL_NO_ERROR)
-      CLogger::Log(ELogType::Error, std::format("OpenGL error: {}\n", err));
+    GLenum Error;
+    if ((Error = glGetError()) != GL_NO_ERROR)
+      CLogger::Log(ELogType::Error, std::format("OpenGL error: {}\n", Error));
 
     const auto WindowSize = GetWindowSize();
 

@@ -1,10 +1,20 @@
 #pragma once
 
+#include <glad/glad.h>
 #include <glm/glm.hpp>
 
-// Lighting
+#define STRIDE_AND_OFFSET(Type, Property) \
+  sizeof(Type), (GLvoid*)offsetof(Type, Property)
 
-constexpr inline int MaxPointLights = 5;
+constexpr inline GLuint ATTRIB_LOC_POSITION  = 0;
+constexpr inline GLuint ATTRIB_LOC_NORMAL    = 1;
+constexpr inline GLuint ATTRIB_LOC_TEXCOORDS = 2;
+constexpr inline GLuint ATTRIB_LOC_TANGENT   = 3;
+constexpr inline GLuint ATTRIB_LOC_BITANGENT = 4;
+constexpr inline GLuint ATTRIB_LOC_DRAW_ID   = 5;
+constexpr inline GLuint ATTRIB_LOC_TRANSFORM = 10;
+
+constexpr inline int MAX_POINT_LIGHTS = 5;
 
 struct TLightDirectional
 {
@@ -45,7 +55,7 @@ struct TShaderLighting
 {
   TLightDirectional LightDirectional;
   TLightSpot        LightSpot;
-  TLightPoint       LightPoints[MaxPointLights];
+  TLightPoint       LightPoints[MAX_POINT_LIGHTS];
   alignas(4) int    PointLightsCount;
 };
 

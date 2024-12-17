@@ -21,7 +21,6 @@ void CWorld::Init()
 
 void CWorld::Shutdown()
 {
-  m_EntitiesCoordinator->GetSystem<ecs::CShutdownSystem>()->Shutdown();
   m_EntitiesCoordinator.reset();
 }
 
@@ -68,7 +67,6 @@ void CWorld::InitECS()
   m_EntitiesCoordinator->RegisterSystem<ecs::CModelRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CSkyboxRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CPhysicsSystem>();
-  m_EntitiesCoordinator->RegisterSystem<ecs::CShutdownSystem>();
 
   {
     ecs::TSignature LightingSystemSignature;
@@ -93,11 +91,5 @@ void CWorld::InitECS()
     ecs::TSignature PhysicsSystemSignature;
     PhysicsSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CPhysicsSystem>(PhysicsSystemSignature);
-  }
-
-  {
-    ecs::TSignature ShutdownSystemSignature;
-    ShutdownSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TModelComponent>());
-    m_EntitiesCoordinator->SetSystemSignature<ecs::CShutdownSystem>(ShutdownSystemSignature);
   }
 }

@@ -1,12 +1,15 @@
 #pragma once
 
 #include "Shared.h"
-#include "Buffer.h"
-#include "TextureBase.h"
-#include "interfaces/Renderable.h"
+#include "Texture.h"
+#include "interfaces/Asset.h"
 #include "utils/Common.h"
 #include <vector>
 #include <memory>
+
+struct aiNode;
+struct aiMesh;
+struct aiScene;
 
 struct TMaterial
 {
@@ -50,13 +53,33 @@ struct TMesh
   TMaterial                    Material;
 };
 
-struct TModel
+class CModel : public IAsset
 {
-  DISABLE_CLASS_COPY(TModel);
+  DISABLE_CLASS_COPY(CModel);
 
-  TModel(std::vector<TMesh> && _Meshes) :
-    Meshes(std::move(_Meshes))
-  {}
+public:
 
-  std::vector<TMesh> Meshes;
+  CModel() = default;
+
+  void Shutdown() override;
+
+  bool Load(const std::filesystem::path & _Path) override;
+
+  const std::vector<TMesh> & GetMeshes() const;
+
+private:
+
+  struct TLoadingParams
+  {
+    const aiScene *       Scene;
+    std::filesystem::path ModelPath;
+  };
+
+  static void ProcessNode(TLoadingParams & _Params, aiNode * _Node, std::vector<TMesh> & _Meshes);
+
+  static TMesh ProcessMesh(TLoadingParams & _Params, aiMesh * _Mesh);
+
+private:
+
+  std::vector<TMesh> m_Meshes;
 };

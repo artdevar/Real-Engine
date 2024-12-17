@@ -4,6 +4,8 @@
 #include <vector>
 #include "utils/Common.h"
 
+#include "utils/Clock.h"
+
 template <class Derived>
 class CBuffer
 {
@@ -82,10 +84,16 @@ class CVertexArray final : public CBuffer<CVertexArray>
 
 public:
 
-  void EnableVertexAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void * _Offset)
+  void EnableAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void * _Offset)
   {
-    glEnableVertexAttribArray(_Index);
+    glEnableVertexArrayAttrib(m_ID, _Index);
     glVertexAttribPointer(_Index, _Size, _Type, GL_FALSE, _Stride, _Offset);
+  }
+
+  void EnableAttribWithDivisor(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void * _Offset, GLuint _Divisor)
+  {
+    EnableAttrib(_Index, _Size, _Type, _Stride, _Offset);
+    glVertexAttribDivisor(_Index, _Divisor);
   }
 
 protected:
@@ -151,50 +159,97 @@ public:
     return *this;
   }
 
-  template <typename T>
-  void Assign(T * _Data, GLuint _Amount)
+  void Clear()
   {
-    const GLsizeiptr DataSizeInBytes  = _Amount * sizeof(T);
-    const bool       RegenerateBuffer = m_Capacity != DataSizeInBytes;
+    if (m_ActualSize == 0)
+      return;
 
-    if (RegenerateBuffer)
-    {
-      glBufferData(m_Target, DataSizeInBytes, nullptr, m_Usage);
-      m_Capacity = DataSizeInBytes;
-    }
+    glInvalidateBufferData(m_ID);
+    m_ActualSize = 0;
+  }
 
-    void * MemPtr = glMapBuffer(m_Target, GL_WRITE_ONLY);
-    memcpy(MemPtr, _Data, DataSizeInBytes);
-    glUnmapBuffer(m_Target);
+  template <typename T>
+  void Assign(T * _Data, GLsizeiptr _DataSizeInBytes)
+  {
+    assert(_DataSizeInBytes > 0);
 
-    m_ActualSize = DataSizeInBytes;
+    if (m_Capacity < _DataSizeInBytes)
+      ReallocateImpl(_DataSizeInBytes, false);
+    else if (m_ActualSize > _DataSizeInBytes)
+      glInvalidateBufferSubData(m_ID, _DataSizeInBytes, m_ActualSize - _DataSizeInBytes);
+
+    glNamedBufferSubData(m_ID, 0, _DataSizeInBytes, _Data);
+    m_ActualSize = _DataSizeInBytes;
   }
 
   template <typename T>
   void Assign(const std::vector<T> & _Data)
   {
-    Assign(_Data.data(), _Data.size());
+    assert(!_Data.empty());
+    Assign(_Data.data(), _Data.size() * sizeof(T));
   }
 
   template <typename T>
-  void Push(T * _Data, GLuint _Amount)
+  void Push(T * _Data, GLsizeiptr _DataSizeInBytes)
   {
-    const GLsizeiptr DataSizeInBytes = _Amount * sizeof(T);
+    assert(_DataSizeInBytes > 0);
 
-    if (m_ActualSize + DataSizeInBytes > m_Capacity)
-      Reallocate(m_ActualSize + DataSizeInBytes);
+    if (m_ActualSize + _DataSizeInBytes > m_Capacity)
+      Reallocate(m_ActualSize + _DataSizeInBytes);
 
-    void * MemPtr = glMapBuffer(m_Target, GL_WRITE_ONLY);
-    memcpy(((int8_t*)MemPtr + m_ActualSize), _Data, DataSizeInBytes);
-    glUnmapBuffer(m_Target);
-
-    m_ActualSize += DataSizeInBytes;
+    glNamedBufferSubData(m_ID, m_ActualSize, _DataSizeInBytes, _Data);
+    m_ActualSize += _DataSizeInBytes;
   }
 
   template <typename T>
   void Push(const std::vector<T> & _Data)
   {
-    Push(_Data.data(), _Data.size());
+    assert(!_Data.empty());
+    Push(_Data.data(), _Data.size() * sizeof(T));
+  }
+
+  void Erase(GLintptr _Offset, GLsizeiptr _SizeInBytes)
+  {
+    GLuint NewBufferID = 0;
+    glGenBuffers(1, &NewBufferID);
+    glBindBuffer(m_Target, NewBufferID);
+    glBufferData(m_Target, m_Capacity - _SizeInBytes, nullptr, m_Usage);
+
+    glCopyNamedBufferSubData(m_ID, NewBufferID, 0, 0, _Offset);
+    glCopyNamedBufferSubData(m_ID, NewBufferID, _Offset + _SizeInBytes, _Offset, m_ActualSize - _Offset - _SizeInBytes);
+    glDeleteBuffers(1, &m_ID);
+    m_ID = NewBufferID;
+
+    m_Capacity   -= _SizeInBytes;
+    m_ActualSize -= _SizeInBytes;
+    assert(m_Capacity >= 0 && m_ActualSize >= 0);
+  }
+
+  void Reserve(GLsizeiptr _SizeInBytes)
+  {
+    if (_SizeInBytes <= 0 || _SizeInBytes < m_Capacity)
+      return;
+
+    ReallocateImpl(_SizeInBytes, m_ActualSize != 0);
+  }
+
+  void Shrink()
+  {
+    if (m_ActualSize == m_Capacity)
+      return;
+
+    assert(m_ActualSize < m_Capacity);
+    ReallocateImpl(m_ActualSize, m_ActualSize != 0);
+  }
+
+  GLsizeiptr GetCapacity() const
+  {
+    return m_Capacity;
+  }
+
+  GLsizeiptr GetSize() const
+  {
+    return m_ActualSize;
   }
 
 protected:
@@ -209,29 +264,33 @@ protected:
   void Reallocate(GLsizeiptr _RequiredSize)
   {
     const bool       NeedCopyData      = m_ActualSize != 0;
-    const GLsizeiptr NewBufferCapacity = m_Capacity + static_cast<GLsizeiptr>((_RequiredSize - m_Capacity) * GrowthFactor);
+    const GLsizeiptr NewBufferCapacity = static_cast<GLsizeiptr>(_RequiredSize * GrowthFactor);
 
-    if (NeedCopyData)
-    {
-      GLuint NewBufferID = 0;
-      glGenBuffers(1, &NewBufferID);
-      glBindBuffer(m_Target, NewBufferID);
-      glBufferData(m_Target, NewBufferCapacity, nullptr, m_Usage);
+    ReallocateImpl(NewBufferCapacity, NeedCopyData);
+  }
 
-      glBindBuffer(GL_COPY_READ_BUFFER,  m_ID);
-      glBindBuffer(GL_COPY_WRITE_BUFFER, NewBufferID);
-      glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, m_ActualSize);
-      glBindBuffer(GL_COPY_READ_BUFFER, 0);
-      glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
-      glDeleteBuffers(1, &m_ID);
-      m_ID = NewBufferID;
-    }
-    else
+  void ReallocateImpl(GLsizeiptr _NewCapacity, bool _NeedCopy)
+  {
+    m_Capacity = _NewCapacity;
+
+    if (!_NeedCopy)
     {
-      glBufferData(m_Target, NewBufferCapacity, nullptr, m_Usage);
+      glBufferData(m_Target, _NewCapacity, nullptr, m_Usage);
+      return;
     }
 
-    m_Capacity = NewBufferCapacity;
+    GLuint NewBufferID = 0;
+    glGenBuffers(1, &NewBufferID);
+    glBindBuffer(m_Target, NewBufferID);
+    glBufferData(m_Target, _NewCapacity, nullptr, m_Usage);
+
+    glBindBuffer(GL_COPY_READ_BUFFER,  m_ID);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, NewBufferID);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, m_ActualSize);
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+    glDeleteBuffers(1, &m_ID);
+    m_ID = NewBufferID;
   }
 
   void GenerateBuffer()
@@ -259,7 +318,7 @@ protected:
   GLenum     m_Target;
   GLenum     m_Usage;
   GLsizeiptr m_Capacity;   // in bytes
-  GLintptr   m_ActualSize; // in bytes
+  GLsizeiptr m_ActualSize; // in bytes
 };
 
 // ------------------------------------------------
@@ -289,5 +348,15 @@ class CUniformBuffer final : public CBufferObject
 public:
 
   CUniformBuffer(GLenum _Usage) : CBufferObject(GL_UNIFORM_BUFFER, _Usage)
+  {}
+};
+
+//
+
+class CIndirectBuffer final : public CBufferObject
+{
+public:
+
+  CIndirectBuffer(GLenum _Usage) : CBufferObject(GL_DRAW_INDIRECT_BUFFER, _Usage)
   {}
 };

@@ -17,7 +17,7 @@ class CLogger final
 {
 public:
 
-  enum ELogOutput
+  enum ELogOutput : uint32_t
   {
     None    = 0x00,
     File    = 0x01,

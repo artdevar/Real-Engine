@@ -1,25 +1,21 @@
 cmake_minimum_required(VERSION 3.25.0)
-project(3D_Engine VERSION 0.0.1)
+project(Real_Engine VERSION 0.0.1)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
-add_executable(3D_Engine)
+add_executable(Real_Engine)
 
-target_sources(3D_Engine PRIVATE
+target_sources(Real_Engine PRIVATE
   src/Main.cpp
   src/engine/Engine.cpp
   src/engine/Camera.cpp
   src/engine/World.cpp
   src/engine/ResourceManager.cpp
   src/graphics/Renderer.cpp
-  src/graphics/Cubemap.cpp
   src/graphics/Shader.cpp
-  src/graphics/Texture.cpp
-  src/graphics/TextureBase.cpp
-  src/graphics/ModelLoader.cpp
-  src/ecs/Components.cpp
+  src/graphics/Model.cpp
   src/ecs/Systems.cpp
   src/ecs/EntityManager.cpp
   src/ui/EditorUI.cpp
@@ -35,28 +31,24 @@ target_sources(3D_Engine PRIVATE
 )
 
 if (WIN32)
-  target_sources(3D_Engine PRIVATE src/platform/SysUtils_Window.cpp)
+  target_sources(Real_Engine PRIVATE src/platform/SysUtils_Window.cpp)
 elseif (UNIX AND NOT APPLE)
-  target_sources(3D_Engine PRIVATE src/platform/SysUtils_Unix.cpp)
+  target_sources(Real_Engine PRIVATE src/platform/SysUtils_Unix.cpp)
 endif ()
 
 find_package(OpenGL REQUIRED)
-find_package(nlohmann_json REQUIRED)
 
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
-target_link_libraries(3D_Engine nlohmann_json::nlohmann_json)
-target_link_libraries(3D_Engine glfw)
-target_link_libraries(3D_Engine assimp)
+target_link_libraries(Real_Engine glfw)
+target_link_libraries(Real_Engine assimp)
 
-target_include_directories(3D_Engine
+target_include_directories(Real_Engine
   PUBLIC ${PROJECT_SOURCE_DIR}/lib
   PUBLIC ${PROJECT_SOURCE_DIR}/lib/ctti
   PUBLIC ${PROJECT_SOURCE_DIR}/lib/assimp/include
+  PUBLIC ${PROJECT_SOURCE_DIR}/lib/nlohmann/include
   PUBLIC ${PROJECT_SOURCE_DIR}/lib/glm-1.0.1
   PUBLIC ${PROJECT_SOURCE_DIR}/src
   PUBLIC ${PROJECT_SOURCE_DIR}/src/imgui
 )
-
-add_compile_definitions(SHADER_HOT_RELOAD)
-

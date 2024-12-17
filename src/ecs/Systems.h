@@ -1,10 +1,12 @@
 #pragma once
 
 #include "SystemManager.h"
+#include "CommonECS.h"
 #include "interfaces/Renderable.h"
 #include "interfaces/Updateable.h"
 #include "interfaces/Shutdownable.h"
 #include "graphics/Buffer.h"
+#include <map>
 
 struct TShaderLighting;
 class CShader;
@@ -28,13 +30,42 @@ protected:
 
   void OnEntityAdded(ecs::TEntity _Entity) override;
 
+  void OnEntityDeleted(ecs::TEntity _Entity) override;
+
+  void OnVBOContentChanged();
+
 protected:
 
-  std::shared_ptr<CShader> m_ModelShader;
+  struct TDrawCommand
+  {
+    GLuint Elements;
+    GLuint Instances;
+    GLuint FirstIndex;
+    GLuint BaseVertex;
+    GLuint BaseInstance;
+  };
 
-  CVertexArray   m_VAO;
-  CVertexBuffer  m_VBO;
-  CElementBuffer m_EBO;
+  struct TEntityBufferData
+  {
+    GLintptr VBOOffset;
+    GLintptr EBOOffset;
+
+    GLsizeiptr VBOSize;
+    GLsizeiptr EBOSize;
+
+    uint32_t Vertices;
+    uint32_t Indices;
+  };
+
+  std::weak_ptr<CShader>               m_ModelShader;
+  std::map<TEntity, TEntityBufferData> m_EntityBufferData;
+
+  CVertexArray    m_VAO; // vertex array
+  CVertexBuffer   m_VBO; // vertex buffer
+  CElementBuffer  m_EBO; // indices buffer
+
+  CVertexBuffer   m_MBO; // matrix buffer
+  CIndirectBuffer m_IBO; // draw commands buffer
 };
 
 // --------------------------------------------------
@@ -53,9 +84,9 @@ public:
 
 protected:
 
-  std::shared_ptr<CShader> m_SkyboxShader;
-  CVertexArray             m_VAO;
-  CVertexBuffer            m_VBO;
+  std::weak_ptr<CShader> m_SkyboxShader;
+  CVertexArray           m_VAO;
+  CVertexBuffer          m_VBO;
 };
 
 // --------------------------------------------------
@@ -77,17 +108,6 @@ class CLightingSystem :
 public:
 
   TShaderLighting ComposeLightingData() const;
-};
-
-// --------------------------------------------------
-
-class CShutdownSystem :
-  public IShutdownable,
-  public CSystem
-{
-public:
-
-  void Shutdown() override;
 };
 
 }

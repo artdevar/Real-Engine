@@ -29,15 +29,6 @@ struct TImage
   int Channels;
 };
 
-struct TTextureInitParams
-{
-  union
-  {
-    TImage Image;
-    std::array<TImage, CUBEMAP_FACES> Images;
-  };
-};
-
 constexpr inline float SkyboxVertices[] = {
   -1.0f,  1.0f, -1.0f,
   -1.0f, -1.0f, -1.0f,

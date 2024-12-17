@@ -15,7 +15,6 @@ public:
   CRenderer();
 
   void Clear(GLbitfield _Mask);
-
   void ClearColor(GLfloat _R, GLfloat _G, GLfloat _B, GLfloat _A);
 
   void SetViewport(GLsizei _Width, GLsizei _Height);
@@ -24,11 +23,9 @@ public:
   void DrawArrays(GLenum _Mode, GLsizei _Count);
 
   void SetCamera(const std::shared_ptr<CCamera> & _Camera);
-
   const std::shared_ptr<CCamera> & GetCamera() const;
 
   void SetShader(const std::shared_ptr<CShader> & _Shader);
-
   const std::shared_ptr<CShader> & GetShader() const;
 
   void SetLightingData(TShaderLighting && _Data);
