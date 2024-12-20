@@ -66,6 +66,8 @@ private: // Callbacks
 
   void EnableDebugMode(bool _Enable);
 
+  void OnGLErrorOccured(GLenum _Error);
+
 private:
 
   static constexpr int WindowWidth  = 1200;

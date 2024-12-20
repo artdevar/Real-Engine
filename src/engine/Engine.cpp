@@ -79,7 +79,7 @@ int CEngine::Init()
   }
 
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_SAMPLES, 4);
 
@@ -101,6 +101,12 @@ int CEngine::Init()
     const int ErrorCode = glad_glGetError();
     CLogger::Log(ELogType::Error, std::format("glad load gl failed: {}\n", ErrorCode));
     return ErrorCode;
+  }
+
+  if (!GLAD_GL_ARB_bindless_texture)
+  {
+    CLogger::Log(ELogType::Error, "ARB_bindless_texture isn't supported by the GPU\n");
+    //return EXIT_FAILURE;
   }
 
   glViewport(0, 0, WindowWidth, WindowHeight);
@@ -137,9 +143,8 @@ int CEngine::Run()
   double LastFrameTime = 0.0;
   while (!glfwWindowShouldClose(m_Window))
   {
-    GLenum Error;
-    if ((Error = glGetError()) != GL_NO_ERROR)
-      CLogger::Log(ELogType::Error, std::format("OpenGL error: {}\n", Error));
+    if (GLenum Error = glGetError(); Error != GL_NO_ERROR)
+      OnGLErrorOccured(Error);
 
     const auto WindowSize = GetWindowSize();
 
@@ -317,4 +322,39 @@ void CEngine::EnableDebugMode(bool _Enable)
     glfwSetCursorPos(m_Window, m_PrevCursorPosX, m_PrevCursorPosY);
     glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   }
+}
+
+void CEngine::OnGLErrorOccured(GLenum _Error)
+{
+  auto GetErrorDescription = [](GLenum _Error) -> std::string_view
+  {
+    switch (_Error)
+    {
+      case GL_INVALID_ENUM:
+        return "GL_INVALID_ENUM";
+
+      case GL_INVALID_VALUE:
+        return "GL_INVALID_VALUE";
+
+      case GL_INVALID_OPERATION:
+        return "GL_INVALID_OPERATION";
+
+      case GL_STACK_OVERFLOW:
+        return "GL_STACK_OVERFLOW";
+
+      case GL_STACK_UNDERFLOW:
+        return "GL_STACK_UNDERFLOW";
+
+      case GL_OUT_OF_MEMORY:
+        return "GL_OUT_OF_MEMORY";
+
+      case GL_INVALID_FRAMEBUFFER_OPERATION:
+        return "GL_INVALID_FRAMEBUFFER_OPERATION";
+
+      default:
+        return "UNDEFINED";
+    }
+  };
+
+  CLogger::Log(ELogType::Error, std::format("OpenGL: {} (0x{:x})\n", GetErrorDescription(_Error), _Error));
 }

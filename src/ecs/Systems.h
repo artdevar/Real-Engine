@@ -66,6 +66,7 @@ protected:
 
   CVertexBuffer   m_MBO; // matrix buffer
   CIndirectBuffer m_IBO; // draw commands buffer
+  CShaderBuffer   m_SBO; // textures buffer
 };
 
 // --------------------------------------------------

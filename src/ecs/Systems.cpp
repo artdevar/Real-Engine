@@ -18,7 +18,8 @@ CModelRenderSystem::CModelRenderSystem() :
   m_VBO(GL_DYNAMIC_DRAW),
   m_MBO(GL_DYNAMIC_DRAW),
   m_EBO(GL_DYNAMIC_DRAW),
-  m_IBO(GL_DYNAMIC_DRAW)
+  m_IBO(GL_DYNAMIC_DRAW),
+  m_SBO(GL_DYNAMIC_DRAW)
 {
 }
 
@@ -88,6 +89,7 @@ void CModelRenderSystem::Render(CRenderer & _Renderer)
   m_MBO.Reserve(m_Entities.size() * sizeof(TTransformComponent::Transform));
 
   std::vector<TDrawCommand> DrawCommands;
+  std::vector<GLuint64>     TextureHandles;
 
   GLuint OffsetIndices  = 0;
   GLuint OffsetVertices = 0;
@@ -100,18 +102,21 @@ void CModelRenderSystem::Render(CRenderer & _Renderer)
 
     m_MBO.Push(glm::value_ptr(TransformComponent.Transform), sizeof(TransformComponent.Transform));
 
+    const TMaterial & Material = ModelComponent.Model->GetMeshes()[0].Material;
+    auto thandle = glGetTextureHandleARB(Material.DiffuseTexture->Get());
+    assert(thandle != 0);
+    TextureHandles.push_back(thandle);
+
     TDrawCommand & DrawCommand = DrawCommands.emplace_back();
 
     DrawCommand.Elements     = BufferData.Indices;
     DrawCommand.Instances    = 1;
     DrawCommand.FirstIndex   = OffsetIndices;
     DrawCommand.BaseVertex   = OffsetVertices;
-    DrawCommand.BaseInstance = Index;
+    DrawCommand.BaseInstance = Index++;
 
     OffsetVertices += BufferData.Vertices;
     OffsetIndices  += BufferData.Indices;
-
-    Index++;
   }
 
   m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_TRANSFORM + 0, 4, GL_FLOAT, sizeof(glm::mat4x4), (GLvoid*)0,  1);
@@ -121,10 +126,20 @@ void CModelRenderSystem::Render(CRenderer & _Renderer)
 
   m_IBO.Bind();
   m_IBO.Assign(DrawCommands);
-
+  m_IBO.BindToTarget(GL_ARRAY_BUFFER); // so vertex attrib will work
   m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_DRAW_ID, 1, GL_UNSIGNED_INT, STRIDE_AND_OFFSET(TDrawCommand, BaseInstance), 1);
 
+  m_SBO.Bind();
+  m_SBO.Assign(TextureHandles);
+  m_SBO.BindToBase(BINDING_TEXTURE_BUFFER);
+
+  //for (GLuint64 t : TextureHandles)
+  //  glMakeTextureHandleResidentARB(t);
+
   glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (GLvoid*)0, m_Entities.size(), 0);
+
+  //for (auto t : TextureHandles)
+  //  glMakeTextureHandleNonResidentARB(t);
 
   m_VAO.Unbind();
 }
@@ -135,8 +150,10 @@ void CModelRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
 
   auto & ModelComponent = m_Coordinator->GetComponent<TModelComponent>(_Entity);
 
-  std::vector<shared::TVertex> Vertices = ModelComponent.Model->GetMeshes()[0].Vertices;
-  std::vector<unsigned int>    Indices  = ModelComponent.Model->GetMeshes()[0].Indices;
+  const TMesh & MESH = ModelComponent.Model->GetMeshes()[0];
+
+  std::vector<shared::TVertex> Vertices = MESH.Vertices;
+  std::vector<unsigned int>    Indices  = MESH.Indices;
 
   //for (const auto & m : ModelComponent.Model->GetMeshes())
   //{
@@ -146,7 +163,7 @@ void CModelRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
 
   assert(!m_EntityBufferData.contains(_Entity));
 
-  TEntityBufferData EntityBufferData;
+  TEntityBufferData  EntityBufferData;
   EntityBufferData.VBOOffset = m_VBO.GetSize();
   EntityBufferData.VBOSize   = Vertices.size() * sizeof(shared::TVertex);
   EntityBufferData.EBOOffset = m_EBO.GetSize();

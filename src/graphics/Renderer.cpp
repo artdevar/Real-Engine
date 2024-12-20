@@ -4,11 +4,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 CRenderer::CRenderer() :
-  m_LightingUBO(GL_STATIC_DRAW)
+  m_LightingUBO(GL_DYNAMIC_DRAW)
 {
   m_LightingUBO.Bind();
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(TShaderLighting), NULL, GL_STATIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, 0, m_LightingUBO.ID());
+  m_LightingUBO.Reserve(sizeof(TShaderLighting));
+  m_LightingUBO.BindToBase(BINDING_LIGHTING_BUFFER);
   m_LightingUBO.Unbind();
 }
 
@@ -57,7 +57,7 @@ const std::shared_ptr<CShader> & CRenderer::GetShader() const
 void CRenderer::SetLightingData(TShaderLighting && _Data)
 {
   IS_SAME_TYPE(m_Lighting, _Data);
-  memmove(&m_Lighting, &_Data, sizeof(m_Lighting));
+  FastMemCpy(&m_Lighting, &_Data, sizeof(m_Lighting));
 }
 
 void CRenderer::InitShaderValues()
@@ -73,8 +73,8 @@ void CRenderer::InitShaderValues()
   if (LightingDataLoc != GL_INVALID_INDEX)
   {
     m_LightingUBO.Bind();
-    glUniformBlockBinding(m_CurrentShader->GetID(), LightingDataLoc, 0);
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(m_Lighting), &m_Lighting);
+    glUniformBlockBinding(m_CurrentShader->GetID(), LightingDataLoc, BINDING_LIGHTING_BUFFER);
+    m_LightingUBO.Assign(&m_Lighting, sizeof(m_Lighting));
     m_LightingUBO.Unbind();
   }
 }

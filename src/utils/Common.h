@@ -29,15 +29,15 @@ inline bool IsJson(const std::filesystem::path & _Path)
 }
 
 template <typename Destination, typename Source>
-requires (std::is_pointer_v<Destination> && std::is_pointer_v<Source>)
-inline void FastMemCpy(Destination _Dst, Source _Src, uint32_t _SizeInBytes)
+requires (std::is_trivially_copyable_v<Destination> && std::is_trivially_copyable_v<Source>)
+inline void FastMemCpy(Destination * _Dst, Source * _Src, uint32_t _SizeInBytes)
 {
   std::copy(std::execution::par, (uint8_t*)_Src, (uint8_t*)_Src + _SizeInBytes, (uint8_t*)_Dst);
 }
 
 template <typename Destination, typename T>
-requires (std::is_pointer_v<Destination> && std::is_trivial_v<T>)
-inline void FastMemSet(Destination _Dst, T && _Value, uint32_t _SizeInBytes)
+requires (std::is_standard_layout_v<Destination> && std::is_trivial_v<T>)
+inline void FastMemSet(Destination * _Dst, T && _Value, uint32_t _SizeInBytes)
 {
   std::fill(std::execution::par, (uint8_t*)_Dst, (uint8_t*)_Dst + _SizeInBytes, std::forward<T>(_Value));
 }

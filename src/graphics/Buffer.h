@@ -87,7 +87,25 @@ public:
   void EnableAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void * _Offset)
   {
     glEnableVertexArrayAttrib(m_ID, _Index);
-    glVertexAttribPointer(_Index, _Size, _Type, GL_FALSE, _Stride, _Offset);
+
+    switch (_Type)
+    {
+      case GL_BYTE:
+      case GL_UNSIGNED_BYTE:
+      case GL_SHORT:
+      case GL_UNSIGNED_SHORT:
+      case GL_INT:
+      case GL_UNSIGNED_INT:
+        glVertexAttribIPointer(_Index, _Size, _Type, _Stride, _Offset);
+        break;
+
+      case GL_DOUBLE:
+        glVertexAttribLPointer(_Index, _Size, _Type, _Stride, _Offset);
+
+      default:
+        glVertexAttribPointer(_Index, _Size, _Type, GL_FALSE, _Stride, _Offset);
+        break;
+    }
   }
 
   void EnableAttribWithDivisor(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void * _Offset, GLuint _Divisor)
@@ -169,6 +187,7 @@ public:
   }
 
   template <typename T>
+  requires (std::is_trivially_copyable_v<T>)
   void Assign(T * _Data, GLsizeiptr _DataSizeInBytes)
   {
     assert(_DataSizeInBytes > 0);
@@ -190,6 +209,7 @@ public:
   }
 
   template <typename T>
+  requires (std::is_trivially_copyable_v<T>)
   void Push(T * _Data, GLsizeiptr _DataSizeInBytes)
   {
     assert(_DataSizeInBytes > 0);
@@ -225,9 +245,24 @@ public:
     assert(m_Capacity >= 0 && m_ActualSize >= 0);
   }
 
+  void BindToTarget(GLenum _Target)
+  {
+    glBindBuffer(_Target, m_ID);
+  }
+
+  void BindToBase(GLuint _Index)
+  {
+    assert(m_Target == GL_ATOMIC_COUNTER_BUFFER     ||
+           m_Target == GL_TRANSFORM_FEEDBACK_BUFFER ||
+           m_Target == GL_UNIFORM_BUFFER            ||
+           m_Target == GL_SHADER_STORAGE_BUFFER     && "Wrong target");
+
+    glBindBufferBase(m_Target, _Index, m_ID);
+  }
+
   void Reserve(GLsizeiptr _SizeInBytes)
   {
-    if (_SizeInBytes <= 0 || _SizeInBytes < m_Capacity)
+    if (_SizeInBytes <= m_Capacity)
       return;
 
     ReallocateImpl(_SizeInBytes, m_ActualSize != 0);
@@ -358,5 +393,15 @@ class CIndirectBuffer final : public CBufferObject
 public:
 
   CIndirectBuffer(GLenum _Usage) : CBufferObject(GL_DRAW_INDIRECT_BUFFER, _Usage)
+  {}
+};
+
+//
+
+class CShaderBuffer final : public CBufferObject
+{
+public:
+
+  CShaderBuffer(GLenum _Usage) : CBufferObject(GL_SHADER_STORAGE_BUFFER, _Usage)
   {}
 };
