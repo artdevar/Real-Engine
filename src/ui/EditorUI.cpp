@@ -8,6 +8,7 @@
 #include "graphics/Shader.h"
 #include "ecs/Coordinator.h"
 #include "ecs/EntityBuilder.h"
+#include "ecs/ComponentsFactory.h"
 #include "utils/Math.h"
 #include "platform/SysUtils.h"
 #include "imgui/imgui.h"
@@ -196,8 +197,8 @@ void CEditorUI::RenderEntityData(ecs::TModelComponent & _Mesh)
     if (auto Filename = utils::OpenFileDialog(); !Filename.empty())
     {
       auto Model = m_Engine->GetResourceManager()->LoadModel(Filename);
-      if (Model)
-        _Mesh.Model = std::move(Model);
+      //if (Model)
+      //  _Mesh.Model = std::move(Model);
     }
   }
 }
@@ -341,12 +342,8 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
 
       CEntityBuilder Builder = m_Engine->m_World->GetEntityBuilder();
 
-      ecs::TTransformComponent TransformComponent;
-      ecs::TModelComponent     ModelComponent;
-      ModelComponent.Model = std::move(Model);
-
-      Builder.AddComponent(std::move(TransformComponent));
-      Builder.AddComponent(std::move(ModelComponent));
+      Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TTransformComponent>(glm::mat4x4(1.0f)));
+      Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TModelComponent>(Model));
 
       m_CurrentEntity = Builder.GetEntity();
       break;
@@ -363,11 +360,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
         return;
 
       CEntityBuilder Builder = m_Engine->m_World->GetEntityBuilder();
-
-      ecs::TSkyboxComponent Skybox;
-      Skybox.Cubemap = Cubemap;
-
-      Builder.AddComponent(std::move(Skybox));
+      Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TSkyboxComponent>(Cubemap));
       m_CurrentEntity = Builder.GetEntity();
 
       break;
@@ -376,7 +369,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     case TEntityType::PointLight:
     {
       CEntityBuilder Builder = m_Engine->m_World->GetEntityBuilder();
-      Builder.AddComponent(ecs::TLightComponent{.Type = ELightType::Point});
+      Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Point));
       m_CurrentEntity = Builder.GetEntity();
       break;
     }
@@ -385,7 +378,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     case TEntityType::DirectionalLight:
     {
       CEntityBuilder Builder = m_Engine->m_World->GetEntityBuilder();
-      Builder.AddComponent(ecs::TLightComponent{.Type = ELightType::Directional});
+      Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Directional));
       m_CurrentEntity = Builder.GetEntity();
       break;
     }
@@ -393,7 +386,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     case TEntityType::Spotlight:
     {
       CEntityBuilder Builder = m_Engine->m_World->GetEntityBuilder();
-      Builder.AddComponent(ecs::TLightComponent{.Type = ELightType::Spotlight});
+      Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Spotlight));
       m_CurrentEntity = Builder.GetEntity();
       break;
     }

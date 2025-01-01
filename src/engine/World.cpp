@@ -57,6 +57,7 @@ CEntityBuilder CWorld::GetEntityBuilder() const
 void CWorld::InitECS()
 {
   m_EntitiesCoordinator = std::make_unique<CCoordinator>();
+
   m_EntitiesCoordinator->Init();
   m_EntitiesCoordinator->RegisterComponent<ecs::TModelComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TTransformComponent>();

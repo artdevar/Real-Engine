@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <format>
 #include <map>
@@ -35,9 +34,15 @@ public:
       LogCallbacks.PushBack(CLogger::LogToConsole);
   }
 
-  static void Log(ELogType _Type, const std::string_view & _Log);
+  template <typename ... Args>
+  static void Log(ELogType _Type, std::string_view _Format, Args ... _Args)
+  {
+    DoLog(_Type, std::vformat(_Format, std::make_format_args(_Args...))); // _Args can't be rvalue
+  }
 
 private:
+
+  static void DoLog(ELogType _Type, const std::string & _Log);
 
   static void LogToConsole(const std::string & _Log);
   static void LogToFile(const std::string & _Log);

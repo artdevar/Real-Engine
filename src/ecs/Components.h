@@ -4,9 +4,11 @@
 #include <glm/mat4x4.hpp>
 #include <vector>
 #include <memory>
+#include <map>
 #include "graphics/Buffer.h"
 #include "utils/Common.h"
 #include "Shared.h"
+
 
 class CModel;
 class CTextureBase;
@@ -24,6 +26,18 @@ namespace ecs
 struct TTransformComponent
 {
   glm::mat4x4 Transform = glm::mat4x4(1.0f);
+};
+
+struct TModelComponent
+{
+  struct TPrimitiveData
+  {
+    CVertexArray VAO;
+    uint32_t     Indices;
+    uint32_t     Offset;
+  };
+
+  std::vector<TPrimitiveData> Primitives;
 };
 
 struct TLightComponent
@@ -45,12 +59,7 @@ struct TLightComponent
 
 struct TSkyboxComponent
 {
-  std::shared_ptr<CTextureBase> Cubemap;
-};
-
-struct TModelComponent
-{
-  std::shared_ptr<CModel> Model;
+  GLuint TextureUnit;
 };
 
 

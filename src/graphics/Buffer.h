@@ -4,8 +4,6 @@
 #include <vector>
 #include "utils/Common.h"
 
-#include "utils/Clock.h"
-
 template <class Derived>
 class CBuffer
 {
@@ -13,10 +11,10 @@ class CBuffer
 
 public:
 
-  CBuffer(CBuffer && _Other) :
+  CBuffer(CBuffer && _Other) noexcept :
     m_ID(_Other.m_ID)
   {
-    _Other.m_ID = 0;
+    _Other.m_ID = INVALID_BUFFER;
   }
 
   CBuffer & operator=(CBuffer && _Other)
@@ -25,7 +23,7 @@ public:
       Shutdown();
 
     m_ID = _Other.m_ID;
-    _Other.m_ID = 0;
+    _Other.m_ID = INVALID_BUFFER;
 
     return *this;
   }
@@ -37,7 +35,7 @@ public:
 
   void Bind()
   {
-    assert(m_ID != 0);
+    assert(m_ID != INVALID_BUFFER);
     static_cast<Derived*>(this)->BindBuffer();
   }
 
@@ -53,25 +51,28 @@ public:
 
 protected:
 
-  CBuffer() : m_ID(0u)
+  CBuffer() : m_ID(INVALID_BUFFER)
   {
     Init();
   }
 
   void Init()
   {
+    assert(m_ID == INVALID_BUFFER);
     static_cast<Derived*>(this)->GenerateBuffer();
+    assert(m_ID != INVALID_BUFFER);
   }
 
   void Shutdown()
   {
-    if (m_ID)
+    if (m_ID != INVALID_BUFFER)
     {
-      Unbind();
       static_cast<Derived*>(this)->DeleteBuffer();
-      m_ID = 0;
+      m_ID = INVALID_BUFFER;
     }
   }
+
+  static constexpr inline GLuint INVALID_BUFFER = 0u;
 
   GLuint m_ID;
 };
@@ -83,6 +84,8 @@ class CVertexArray final : public CBuffer<CVertexArray>
   friend CBuffer;
 
 public:
+
+  CVertexArray() = default;
 
   void EnableAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void * _Offset)
   {
@@ -128,7 +131,7 @@ protected:
 
   void UnbindBuffer()
   {
-    glBindVertexArray(0);
+    glBindVertexArray(INVALID_BUFFER);
   }
 
   void DeleteBuffer()
@@ -145,7 +148,14 @@ class CBufferObject : public CBuffer<CBufferObject>
 
 public:
 
-  CBufferObject(CBufferObject && _Other) :
+  CBufferObject(GLenum _Target, GLenum _Usage) :
+    m_Target(_Target),
+    m_Usage(_Usage),
+    m_Capacity(0),
+    m_ActualSize(0)
+  {}
+
+  CBufferObject(CBufferObject && _Other) noexcept :
     CBuffer<CBufferObject>(std::move(_Other)),
     m_Target(_Other.m_Target),
     m_Usage(_Other.m_Usage),
@@ -168,7 +178,7 @@ public:
     m_Usage      = _Other.m_Usage;
     m_Capacity   = _Other.m_Capacity;
     m_ActualSize = _Other.m_ActualSize;
-    _Other.m_ID         = 0;
+    _Other.m_ID         = INVALID_BUFFER;
     _Other.m_Target     = 0;
     _Other.m_Usage      = 0;
     _Other.m_Capacity   = 0;
@@ -192,19 +202,18 @@ public:
   {
     assert(_DataSizeInBytes > 0);
 
-    if (m_Capacity < _DataSizeInBytes)
-      ReallocateImpl(_DataSizeInBytes, false);
-    else if (m_ActualSize > _DataSizeInBytes)
-      glInvalidateBufferSubData(m_ID, _DataSizeInBytes, m_ActualSize - _DataSizeInBytes);
+    if (m_Capacity == _DataSizeInBytes)
+      glNamedBufferSubData(m_ID, 0, _DataSizeInBytes, _Data);
+    else
+      glNamedBufferData(m_ID, _DataSizeInBytes, _Data, m_Usage);
 
-    glNamedBufferSubData(m_ID, 0, _DataSizeInBytes, _Data);
+    m_Capacity   = _DataSizeInBytes;
     m_ActualSize = _DataSizeInBytes;
   }
 
   template <typename T>
   void Assign(const std::vector<T> & _Data)
   {
-    assert(!_Data.empty());
     Assign(_Data.data(), _Data.size() * sizeof(T));
   }
 
@@ -224,7 +233,6 @@ public:
   template <typename T>
   void Push(const std::vector<T> & _Data)
   {
-    assert(!_Data.empty());
     Push(_Data.data(), _Data.size() * sizeof(T));
   }
 
@@ -287,19 +295,12 @@ public:
     return m_ActualSize;
   }
 
-protected:
-
-  CBufferObject(GLenum _Target, GLenum _Usage) :
-    m_Target(_Target),
-    m_Usage(_Usage),
-    m_Capacity(0),
-    m_ActualSize(0)
-  {}
+//protected:
 
   void Reallocate(GLsizeiptr _RequiredSize)
   {
     const bool       NeedCopyData      = m_ActualSize != 0;
-    const GLsizeiptr NewBufferCapacity = static_cast<GLsizeiptr>(_RequiredSize * GrowthFactor);
+    const GLsizeiptr NewBufferCapacity = static_cast<GLsizeiptr>(_RequiredSize * 1.3f);
 
     ReallocateImpl(NewBufferCapacity, NeedCopyData);
   }
@@ -347,8 +348,6 @@ protected:
   {
     glDeleteBuffers(1, &m_ID);
   }
-
-  static constexpr inline float GrowthFactor = 1.3f;
 
   GLenum     m_Target;
   GLenum     m_Usage;

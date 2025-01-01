@@ -4,6 +4,7 @@
 #include "Texture.h"
 #include "interfaces/Asset.h"
 #include "utils/Common.h"
+#include "tiny_gltf.h"
 #include <vector>
 #include <memory>
 
@@ -53,6 +54,7 @@ struct TMesh
   TMaterial                    Material;
 };
 
+#if 0
 class CModel : public IAsset
 {
   DISABLE_CLASS_COPY(CModel);
@@ -82,4 +84,23 @@ private:
 private:
 
   std::vector<TMesh> m_Meshes;
+};
+
+#endif
+
+
+
+class CModel : public IAsset
+{
+  DISABLE_CLASS_COPY(CModel);
+
+public:
+
+  CModel() = default;
+
+  void Shutdown() override;
+
+  bool Load(const std::filesystem::path & _Path) override;
+
+  tinygltf::Model m_Model;
 };

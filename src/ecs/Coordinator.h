@@ -42,7 +42,7 @@ public:
   template <typename T>
   void AddComponent(ecs::TEntity _Entity, T && _Component)
   {
-    m_ComponentManager->AddComponent<T>(_Entity, std::forward<T>(_Component));
+    m_ComponentManager->AddComponent(_Entity, std::forward<T>(_Component));
 
     ecs::TSignature Signature = m_EntityManager->GetSignature(_Entity);
     Signature.set(m_ComponentManager->GetComponentType<T>(), true);

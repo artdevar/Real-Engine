@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonECS.h"
+#include "utils/UnorderedVector.h"
 #include <ctti/type_id.hpp>
 #include <unordered_map>
 #include <set>
@@ -20,13 +21,13 @@ public:
 
   void AddEntity(ecs::TEntity _Entity)
   {
-    if (m_Entities.insert(_Entity).second)
+    if (m_Entities.PushBackUnique(_Entity))
       OnEntityAdded(_Entity);
   }
 
   void DeleteEntity(ecs::TEntity _Entity)
   {
-    if (m_Entities.erase(_Entity))
+    if (m_Entities.SafeErase(_Entity))
       OnEntityDeleted(_Entity);
   }
 
@@ -44,8 +45,8 @@ protected:
 
 protected:
 
-  CCoordinator *         m_Coordinator;
-  std::set<ecs::TEntity> m_Entities;
+  CCoordinator *                 m_Coordinator;
+  CUnorderedVector<ecs::TEntity> m_Entities;
 };
 
 class CSystemManager

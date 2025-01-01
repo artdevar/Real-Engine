@@ -14,8 +14,9 @@ constexpr inline GLuint ATTRIB_LOC_BITANGENT = 4;
 constexpr inline GLuint ATTRIB_LOC_DRAW_ID   = 5;
 constexpr inline GLuint ATTRIB_LOC_TRANSFORM = 10;
 
-constexpr inline GLuint BINDING_TEXTURE_BUFFER  = 0;
-constexpr inline GLuint BINDING_LIGHTING_BUFFER = 1;
+constexpr inline GLuint BINDING_DIFF_TEXTURE_BUFFER = 0;
+constexpr inline GLuint BINDING_SPEC_TEXTURE_BUFFER = 1;
+constexpr inline GLuint BINDING_LIGHTING_BUFFER     = 5;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 

@@ -13,7 +13,7 @@ const std::map<ELogType, std::string_view> CLogger::MessageType = {
   { ELogType::Error,   "[ERROR] {}" }
 };
 
-void CLogger::Log(ELogType _Type, const std::string_view & _Log)
+void CLogger::DoLog(ELogType _Type, const std::string & _Log)
 {
   const std::string MessageToLog = std::vformat(MessageType.at(_Type), std::make_format_args(_Log));
 

@@ -1,4 +1,5 @@
 #pragma once
+
 #include "Coordinator.h"
 
 class CEntityBuilder

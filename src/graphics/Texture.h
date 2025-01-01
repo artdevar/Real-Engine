@@ -25,7 +25,7 @@ public:
     if (IsValid())
     {
       glDeleteTextures(1, &m_ID);
-      m_ID = GL_INVALID_VALUE;
+      m_ID = INVALID_VALUE;
     }
   }
 
@@ -38,7 +38,7 @@ public:
   void Unbind()
   {
     //glActiveTexture(0); opengl error
-    glBindTexture(m_Target, 0);
+    glBindTexture(m_Target, INVALID_VALUE);
   }
 
   GLuint Get() const
@@ -48,19 +48,17 @@ public:
 
   bool IsValid() const
   {
-    return m_ID != GL_INVALID_VALUE;
+    return m_ID != INVALID_VALUE;
   }
 
 protected:
 
   CTextureBase(GLenum _Target) :
-    m_ID(GL_INVALID_VALUE),
+    m_ID(INVALID_VALUE),
     m_Target(_Target)
   {}
 
-protected:
-
-  static constexpr inline GLuint INVALID_VALUE = GL_INVALID_VALUE;
+  static constexpr inline GLuint INVALID_VALUE = 0u;
 
         GLuint m_ID;
   const GLenum m_Target;

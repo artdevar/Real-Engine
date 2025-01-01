@@ -8,6 +8,32 @@
 
 void CModel::Shutdown()
 {
+}
+
+bool CModel::Load(const std::filesystem::path & _Path)
+{
+  tinygltf::TinyGLTF Loader;
+  std::string        Error, Warning;
+
+  const bool IsLoaded = Loader.LoadASCIIFromFile(&m_Model, &Error, &Warning, _Path.string());
+
+  if (!Warning.empty())
+    CLogger::Log(ELogType::Warning, "Model loading {} warning {}\n", _Path.c_str(), Warning);
+
+  if (!Error.empty())
+    CLogger::Log(ELogType::Error, "Model loading {} error {}\n", _Path.c_str(), Error);
+
+  if (IsLoaded)
+    CLogger::Log(ELogType::Info, "Model {} is loaded\n", _Path.c_str());
+  else
+    CLogger::Log(ELogType::Error, "Model loading {} failed\n", _Path.c_str());
+
+  return IsLoaded;
+}
+
+#if 0
+void CModel::Shutdown()
+{
   m_Meshes.clear();
 }
 
@@ -115,3 +141,5 @@ TMesh CModel::ProcessMesh(TLoadingParams & _Params, aiMesh * _Mesh)
 
   return TMesh(std::move(Vertices), std::move(Indices), std::move(Material));
 }
+
+#endif

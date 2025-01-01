@@ -77,6 +77,7 @@ void main()
       fragColor += CalcPointLight(LightPoints[i], normal, viewDir);
 
   o_FragColor = vec4(fragColor, 1.0);
+  o_FragColor = vec4(vec3(0), 1.0);
 }
 
 vec3 CalcDirLight(TLightDirectional _Light, vec3 _Normal, vec3 _ViewDir)

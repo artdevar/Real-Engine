@@ -11,15 +11,13 @@
 #include "utils/Common.h"
 #include <glm/glm.hpp>
 
+
+#include "tiny_gltf.h"
+
 namespace ecs
 {
 
-CModelRenderSystem::CModelRenderSystem() :
-  m_VBO(GL_DYNAMIC_DRAW),
-  m_MBO(GL_DYNAMIC_DRAW),
-  m_EBO(GL_DYNAMIC_DRAW),
-  m_IBO(GL_DYNAMIC_DRAW),
-  m_SBO(GL_DYNAMIC_DRAW)
+CModelRenderSystem::CModelRenderSystem()
 {
 }
 
@@ -27,202 +25,43 @@ void CModelRenderSystem::Init(CCoordinator * _Coordinator)
 {
   CSystem::Init(_Coordinator);
 
-  m_ModelShader = CEngine::Instance()->GetResourceManager()->LoadShader("../shaders/indir");
+  m_ModelShader = CEngine::Instance()->GetResourceManager()->LoadShader("../shaders/model");
 }
 
 void CModelRenderSystem::Render(CRenderer & _Renderer)
 {
-  if (m_Entities.empty())
+  if (m_Entities.Empty())
     return;
 
   std::shared_ptr<CShader> Shader = m_ModelShader.lock();
-
   _Renderer.SetShader(Shader);
 
-#if 0
-
-  unsigned int offsetIndices = 0;
-  unsigned int offsetVertices = 0;
-
-  m_VAO.Bind();
   for (ecs::TEntity Entity : m_Entities)
   {
     auto & TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
     auto & ModelComponent     = m_Coordinator->GetComponent<TModelComponent>(Entity);
 
-    m_ModelShader->SetUniform("u_Model", TransformComponent.Transform);
+    Shader->SetUniform("u_Model", TransformComponent.Transform);
 
-    GLint TextureIndex = 0;
-
-    const TMaterial & Material = ModelComponent.Model->GetMeshes()[0].Material;
-    if (Material.DiffuseTexture)
+    for (TModelComponent::TPrimitiveData & Primitive : ModelComponent.Primitives)
     {
-      Material.DiffuseTexture->Bind(GL_TEXTURE0 + TextureIndex);
-      m_ModelShader->SetUniform("u_Material.DiffuseTexture", TextureIndex);
-      TextureIndex++;
+      Primitive.VAO.Bind();
+      glDrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t*)0 + Primitive.Offset);
+      Primitive.VAO.Unbind();
     }
-
-    if (Material.SpecularTexture)
-    {
-      Material.SpecularTexture->Bind(GL_TEXTURE0 + TextureIndex);
-      m_ModelShader->SetUniform("u_Material.SpecularTexture", TextureIndex);
-      TextureIndex++;
-    }
-
-    m_ModelShader->SetUniform("u_Material.Shininess", Material.Shininess);
-
-    glDrawElementsBaseVertex(GL_TRIANGLES, ModelComponent.indices, GL_UNSIGNED_INT, (void *)(offsetIndices * sizeof(unsigned int)), offsetVertices);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    offsetVertices += ModelComponent.vertices;
-    offsetIndices  += ModelComponent.indices;
   }
-
-  m_VAO.Unbind();
-
-#endif
-
-  m_VAO.Bind();
-
-  m_MBO.Bind();
-  m_MBO.Clear();
-  m_MBO.Reserve(m_Entities.size() * sizeof(TTransformComponent::Transform));
-
-  std::vector<TDrawCommand> DrawCommands;
-  std::vector<GLuint64>     TextureHandles;
-
-  GLuint OffsetIndices  = 0;
-  GLuint OffsetVertices = 0;
-  GLuint Index          = 0;
-
-  for (auto & [Entity, BufferData] : m_EntityBufferData)
-  {
-    auto & TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
-    auto & ModelComponent     = m_Coordinator->GetComponent<TModelComponent>(Entity);
-
-    m_MBO.Push(glm::value_ptr(TransformComponent.Transform), sizeof(TransformComponent.Transform));
-
-    const TMaterial & Material = ModelComponent.Model->GetMeshes()[0].Material;
-    auto thandle = glGetTextureHandleARB(Material.DiffuseTexture->Get());
-    assert(thandle != 0);
-    TextureHandles.push_back(thandle);
-
-    TDrawCommand & DrawCommand = DrawCommands.emplace_back();
-
-    DrawCommand.Elements     = BufferData.Indices;
-    DrawCommand.Instances    = 1;
-    DrawCommand.FirstIndex   = OffsetIndices;
-    DrawCommand.BaseVertex   = OffsetVertices;
-    DrawCommand.BaseInstance = Index++;
-
-    OffsetVertices += BufferData.Vertices;
-    OffsetIndices  += BufferData.Indices;
-  }
-
-  m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_TRANSFORM + 0, 4, GL_FLOAT, sizeof(glm::mat4x4), (GLvoid*)0,  1);
-  m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_TRANSFORM + 1, 4, GL_FLOAT, sizeof(glm::mat4x4), (GLvoid*)16, 1);
-  m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_TRANSFORM + 2, 4, GL_FLOAT, sizeof(glm::mat4x4), (GLvoid*)32, 1);
-  m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_TRANSFORM + 3, 4, GL_FLOAT, sizeof(glm::mat4x4), (GLvoid*)48, 1);
-
-  m_IBO.Bind();
-  m_IBO.Assign(DrawCommands);
-  m_IBO.BindToTarget(GL_ARRAY_BUFFER); // so vertex attrib will work
-  m_VAO.EnableAttribWithDivisor(ATTRIB_LOC_DRAW_ID, 1, GL_UNSIGNED_INT, STRIDE_AND_OFFSET(TDrawCommand, BaseInstance), 1);
-
-  m_SBO.Bind();
-  m_SBO.Assign(TextureHandles);
-  m_SBO.BindToBase(BINDING_TEXTURE_BUFFER);
-
-  //for (GLuint64 t : TextureHandles)
-  //  glMakeTextureHandleResidentARB(t);
-
-  glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT, (GLvoid*)0, m_Entities.size(), 0);
-
-  //for (auto t : TextureHandles)
-  //  glMakeTextureHandleNonResidentARB(t);
-
-  m_VAO.Unbind();
 }
 
 void CModelRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
 {
   CSystem::OnEntityAdded(_Entity);
 
-  auto & ModelComponent = m_Coordinator->GetComponent<TModelComponent>(_Entity);
-
-  const TMesh & MESH = ModelComponent.Model->GetMeshes()[0];
-
-  std::vector<shared::TVertex> Vertices = MESH.Vertices;
-  std::vector<unsigned int>    Indices  = MESH.Indices;
-
-  //for (const auto & m : ModelComponent.Model->GetMeshes())
-  //{
-  //  Vertices.insert(Vertices.end(), m.Vertices.begin(), m.Vertices.end());
-  //  Indices.insert(Indices.end(), m.Indices.begin(), m.Indices.end());
-  //}
-
-  assert(!m_EntityBufferData.contains(_Entity));
-
-  TEntityBufferData  EntityBufferData;
-  EntityBufferData.VBOOffset = m_VBO.GetSize();
-  EntityBufferData.VBOSize   = Vertices.size() * sizeof(shared::TVertex);
-  EntityBufferData.EBOOffset = m_EBO.GetSize();
-  EntityBufferData.EBOSize   = Indices.size() * sizeof(unsigned int);
-  EntityBufferData.Vertices  = Vertices.size();
-  EntityBufferData.Indices   = Indices.size();
-
-  m_EntityBufferData.emplace(_Entity, EntityBufferData);
-
-  m_VAO.Bind();
-
-  m_VBO.Bind();
-  m_VBO.Push(Vertices);
-  OnVBOContentChanged();
-
-  m_EBO.Bind();
-  m_EBO.Push(Indices);
-
-  m_VAO.Unbind();
 }
 
 void CModelRenderSystem::OnEntityDeleted(ecs::TEntity _Entity)
 {
   CSystem::OnEntityDeleted(_Entity);
 
-  const auto DataIter = m_EntityBufferData.find(_Entity);
-  assert(DataIter != m_EntityBufferData.end());
-
-  const TEntityBufferData DeletedEntityData = DataIter->second;
-  m_EntityBufferData.erase(DataIter);
-
-  m_VAO.Bind();
-
-  m_VBO.Bind();
-  m_VBO.Erase(DeletedEntityData.VBOOffset, DeletedEntityData.VBOSize);
-  OnVBOContentChanged();
-
-  m_EBO.Bind();
-  m_EBO.Erase(DeletedEntityData.EBOOffset, DeletedEntityData.EBOSize);
-
-  for (auto & [Entity, BufferData] : m_EntityBufferData)
-  {
-    if (BufferData.VBOOffset > DeletedEntityData.VBOOffset)
-      BufferData.VBOOffset -= DeletedEntityData.VBOSize;
-
-    if (BufferData.EBOOffset > DeletedEntityData.EBOOffset)
-      BufferData.EBOOffset -= DeletedEntityData.EBOSize;
-  }
-
-  m_VAO.Unbind();
-}
-
-void CModelRenderSystem::OnVBOContentChanged()
-{
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION,  3, GL_FLOAT, STRIDE_AND_OFFSET(shared::TVertex, Position));
-  m_VAO.EnableAttrib(ATTRIB_LOC_NORMAL,    3, GL_FLOAT, STRIDE_AND_OFFSET(shared::TVertex, Normal));
-  m_VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS, 2, GL_FLOAT, STRIDE_AND_OFFSET(shared::TVertex, TexCoords));
-  m_VAO.EnableAttrib(ATTRIB_LOC_TANGENT,   3, GL_FLOAT, STRIDE_AND_OFFSET(shared::TVertex, Tangent));
-  m_VAO.EnableAttrib(ATTRIB_LOC_BITANGENT, 3, GL_FLOAT, STRIDE_AND_OFFSET(shared::TVertex, Bitangent));
 }
 
 // Skybox
@@ -249,7 +88,7 @@ void CSkyboxRenderSystem::Init(CCoordinator *_Coordinator)
 
 void CSkyboxRenderSystem::Render(CRenderer & _Renderer)
 {
-  if (m_Entities.empty())
+  if (m_Entities.Empty())
     return;
 
   std::shared_ptr<CShader> Shader = m_SkyboxShader.lock();
@@ -259,7 +98,7 @@ void CSkyboxRenderSystem::Render(CRenderer & _Renderer)
 
   glDepthFunc(GL_LEQUAL);
 
-  assert(m_Entities.size() <= 1); // it isn't supposed to be more than 1 skybox
+  assert(m_Entities.Size() <= 1); // it isn't supposed to be more than 1 skybox
 
   m_VAO.Bind();
   for (ecs::TEntity Entity : m_Entities)
@@ -267,12 +106,13 @@ void CSkyboxRenderSystem::Render(CRenderer & _Renderer)
     auto & SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
     const int TextureIndex = 0;
-    SkyboxComponent.Cubemap->Bind(GL_TEXTURE0 + TextureIndex);
+    glActiveTexture(GL_TEXTURE0 + TextureIndex);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, SkyboxComponent.TextureUnit);
     Shader->SetUniform("u_Cubemap", TextureIndex);
 
     _Renderer.DrawArrays(GL_TRIANGLES, ARRAY_SIZE(shared::SkyboxVertices) / 3);
 
-    SkyboxComponent.Cubemap->Unbind();
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
   }
   m_VAO.Unbind();
 

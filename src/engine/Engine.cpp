@@ -8,6 +8,7 @@
 #include "ui/EditorUI.h"
 #include "utils/Json.h"
 #include "utils/Logger.h"
+#include "utils/Stopwatch.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -65,15 +66,13 @@ void CEngine::Shutdown()
 
 int CEngine::Init()
 {
-  CLogger::Log(ELogType::Info, "Engine initialisation started\n");
-
-  CLogger::Log(ELogType::Info, std::format("Init GLFW. Version: {}\n", glfwGetVersionString()));
+  CLogger::Log(ELogType::Info, "Init GLFW. Version: {}\n", glfwGetVersionString());
   if (glfwInit() != GLFW_TRUE)
   {
     const char * ErrorDescription;
     const int    ErrorCode = glfwGetError(&ErrorDescription);
 
-    CLogger::Log(ELogType::Error, std::format("Init GLFW error: {}\n", ErrorDescription));
+    CLogger::Log(ELogType::Error, "Init GLFW error: {}\n", ErrorDescription);
 
     return ErrorCode;
   }
@@ -89,7 +88,7 @@ int CEngine::Init()
     const char * ErrorDescription;
     const int    ErrorCode = glfwGetError(&ErrorDescription);
 
-    CLogger::Log(ELogType::Error, std::format("GLFW window creation error: {}\n", ErrorDescription));
+    CLogger::Log(ELogType::Error, "GLFW window creation error: {}\n", ErrorDescription);
 
     return ErrorCode;
   }
@@ -99,7 +98,7 @@ int CEngine::Init()
   if (!gladLoadGL())
   {
     const int ErrorCode = glad_glGetError();
-    CLogger::Log(ELogType::Error, std::format("glad load gl failed: {}\n", ErrorCode));
+    CLogger::Log(ELogType::Error, "glad load gl failed: {}\n", ErrorCode);
     return ErrorCode;
   }
 
@@ -127,8 +126,6 @@ int CEngine::Init()
   m_ResourceManager->Init();
   m_World->Init();
   m_EditorUI->Init(this);
-
-  CLogger::Log(ELogType::Info, "Engine initialisation finished\n");
 
   return EXIT_SUCCESS;
 }
@@ -160,14 +157,18 @@ int CEngine::Run()
     const std::string Title = std::format("FPS={}", FPS);
     glfwSetWindowTitle(m_Window, Title.c_str());
 
-    m_Camera->Update(FrameDelta);
-    m_World->Update(FrameDelta);
-    if (m_IsEditorMode)
-      m_EditorUI->Update(FrameDelta);
+    {
+      m_Camera->Update(FrameDelta);
+      m_World->Update(FrameDelta);
+      if (m_IsEditorMode)
+        m_EditorUI->Update(FrameDelta);
+    }
 
-    m_World->Render(Renderer);
-    if (m_IsEditorMode)
-      m_EditorUI->Render(Renderer);
+    {
+      m_World->Render(Renderer);
+      if (m_IsEditorMode)
+        m_EditorUI->Render(Renderer);
+    }
 
     glfwSwapBuffers(m_Window);
     glfwPollEvents();
@@ -356,5 +357,5 @@ void CEngine::OnGLErrorOccured(GLenum _Error)
     }
   };
 
-  CLogger::Log(ELogType::Error, std::format("OpenGL: {} (0x{:x})\n", GetErrorDescription(_Error), _Error));
+  CLogger::Log(ELogType::Error, "OpenGL: {} (0x{:x})\n", GetErrorDescription(_Error), _Error);
 }
