@@ -26,6 +26,8 @@ public:
 
   void Render(CRenderer & _Renderer) override;
 
+  void SetVisibility(ecs::TEntity _Entity, bool _IsVisible);
+
 protected:
 
   void OnEntityAdded(ecs::TEntity _Entity) override;
@@ -34,7 +36,8 @@ protected:
 
 protected:
 
-  std::weak_ptr<CShader> m_ModelShader;
+  std::weak_ptr<CShader>         m_ModelShader;
+  CUnorderedVector<ecs::TEntity> m_HiddenEntities;
 };
 
 // --------------------------------------------------

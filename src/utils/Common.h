@@ -8,11 +8,6 @@
   Class(const Class &) = delete; \
   Class & operator=(const Class &) = delete;
 
-#define DISABLE_CLASS_COPY_MOVE(Class) \
-  DISABLE_CLASS_COPY(Class); \
-  Class(Class &&) = delete;  \
-  Class & operator=(Class &&) = delete;
-
 #define ENABLE_CLASS_MOVE(Class) \
   Class(Class &&) = default; \
   Class & operator=(Class &&) = default;
@@ -41,4 +36,3 @@ inline void FastMemSet(Destination * _Dst, T && _Value, uint32_t _SizeInBytes)
 {
   std::fill(std::execution::par, (uint8_t*)_Dst, (uint8_t*)_Dst + _SizeInBytes, std::forward<T>(_Value));
 }
-

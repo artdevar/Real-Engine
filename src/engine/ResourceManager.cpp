@@ -2,12 +2,13 @@
 #include "graphics/Shader.h"
 #include "graphics/Model.h"
 #include "graphics/Texture.h"
+#include "graphics/TinyGLTFParseStrategy.h"
 
 const std::filesystem::path CResourceManager::DEFAULT_TEXTURE_PATH = "../assets/textures/default.jpg";
 
 static inline bool operator<(const std::string & _L, const std::filesystem::path & _R)
 {
-  return _L < _R.c_str();
+  return _L < _R.native();
 }
 
 void CResourceManager::Init()
@@ -28,7 +29,7 @@ std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path 
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<IAsset> Model = std::make_shared<CModel>();
+    std::shared_ptr<IAsset> Model = std::make_shared<CModel>(std::make_unique<CTinyGLTFParseStrategy>());
     if (Model->Load(_Path))
       Iter = m_Assets.emplace(_Path.string(), std::move(Model)).first;
     else
@@ -46,6 +47,8 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::pat
     std::shared_ptr<IAsset> Shader = std::make_shared<CShader>();
     if (Shader->Load(_Path))
       Iter = m_Assets.emplace(_Path.string(), std::move(Shader)).first;
+    else
+      return nullptr;
   }
 
   return std::static_pointer_cast<CShader>(Iter->second);

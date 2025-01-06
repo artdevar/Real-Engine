@@ -21,7 +21,7 @@ public:
 
   void AddEntity(ecs::TEntity _Entity)
   {
-    if (m_Entities.PushBackUnique(_Entity))
+    if (m_Entities.PushUnique(_Entity))
       OnEntityAdded(_Entity);
   }
 

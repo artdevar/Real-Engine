@@ -1,34 +1,37 @@
 #include "Model.h"
-#include "engine/Engine.h"
-#include "engine/ResourceManager.h"
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-#include <assimp/material.h>
+#include "utils/Logger.h"
+
+CModel::CModel(std::unique_ptr<IModelParseStrategy> && _ParseStrategy) :
+  m_ParseStrategy(std::move(_ParseStrategy))
+{
+}
 
 void CModel::Shutdown()
 {
+  m_ParseStrategy.reset();
+  m_Model.reset();
 }
 
 bool CModel::Load(const std::filesystem::path & _Path)
 {
-  tinygltf::TinyGLTF Loader;
-  std::string        Error, Warning;
+  m_Model = std::make_unique<TModelData>();
 
-  const bool IsLoaded = Loader.LoadASCIIFromFile(&m_Model, &Error, &Warning, _Path.string());
+  const bool IsParsed = m_ParseStrategy->Parse(_Path, *m_Model);
+  if (!IsParsed)
+    m_Model.reset();
 
-  if (!Warning.empty())
-    CLogger::Log(ELogType::Warning, "Model loading {} warning {}\n", _Path.c_str(), Warning);
+  return IsParsed;
+}
 
-  if (!Error.empty())
-    CLogger::Log(ELogType::Error, "Model loading {} error {}\n", _Path.c_str(), Error);
+bool CModel::IsLoaded() const
+{
+  return m_Model != nullptr;
+}
 
-  if (IsLoaded)
-    CLogger::Log(ELogType::Info, "Model {} is loaded\n", _Path.c_str());
-  else
-    CLogger::Log(ELogType::Error, "Model loading {} failed\n", _Path.c_str());
-
-  return IsLoaded;
+const TModelData & CModel::GetModelData() const
+{
+  assert(IsLoaded());
+  return *m_Model;
 }
 
 #if 0

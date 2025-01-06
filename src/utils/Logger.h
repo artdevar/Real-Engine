@@ -47,12 +47,12 @@ private:
   static void LogToConsole(const std::string & _Log);
   static void LogToFile(const std::string & _Log);
 
+private:
+
   using LogCallback = void(*)(const std::string &);
 
   static constexpr std::size_t CallbacksAmount = 2;
   static CStaticArray<LogCallback, CallbacksAmount> LogCallbacks;
-
-private:
 
   static const std::string_view                     Filename;
   static const std::map<ELogType, std::string_view> MessageType;

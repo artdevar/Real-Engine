@@ -17,6 +17,7 @@ target_sources(Real_Engine PRIVATE
   src/graphics/Renderer.cpp
   src/graphics/Shader.cpp
   src/graphics/Model.cpp
+  src/graphics/TinyGLTFParseStrategy.cpp
   src/ecs/Systems.cpp
   src/ecs/EntityManager.cpp
   src/ecs/ComponentsFactory.cpp

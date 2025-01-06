@@ -1,12 +1,14 @@
 #include "ComponentsFactory.h"
-#include "tiny_gltf.h"
 #include "graphics/Model.h"
 #include "graphics/ShaderTypes.h"
 #include "graphics/Texture.h"
 
+#include "utils/Stopwatch.h"
+
 namespace ecs
 {
 
+#if 0
 static void ParseMesh(const tinygltf::Model & _Model, const tinygltf::Mesh & _Mesh, TModelComponent & _Component)
 {
   for (const tinygltf::Primitive & Primitive : _Mesh.primitives)
@@ -86,6 +88,76 @@ void CComponentsFactory::CreateModelComponent(const std::shared_ptr<CModel> & _M
   {
     assert(NodeIndex >= 0 && NodeIndex < NativeModel.nodes.size());
     ParseNodes(NativeModel, NativeModel.nodes[NodeIndex], _Component);
+  }
+}
+#endif
+
+static void ParseMesh(const TModelData & _Model, const TMesh & _Mesh, TModelComponent & _Component)
+{
+  for (const TPrimitive & Primitive : _Mesh.Primitives)
+  {
+    TModelComponent::TPrimitiveData & PrimitiveData = _Component.Primitives.emplace_back();
+
+    for (const auto & [Type, Attribute] : Primitive.Attributes)
+    {
+      const GLuint AttributeLoc = Type == EAttributeType::Position  ? ATTRIB_LOC_POSITION  :
+                                  Type == EAttributeType::Normal    ? ATTRIB_LOC_NORMAL    :
+                                  Type == EAttributeType::TexCoords ? ATTRIB_LOC_TEXCOORDS :
+                                                                      GLuint(-1);
+
+      assert(AttributeLoc != GLuint(-1));
+
+      PrimitiveData.VAO.Bind();
+
+      CVertexBuffer VBO(GL_STATIC_DRAW);
+      VBO.Bind();
+      VBO.Assign(Attribute.Data);
+
+      PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Size, Attribute.Type, Attribute.ByteStride, (int8_t*)0 + Attribute.ByteOffset);
+      PrimitiveData.VAO.Unbind();
+    }
+
+    if (!Primitive.Indices.empty())
+    {
+      PrimitiveData.Indices = Primitive.count;
+      PrimitiveData.Offset  = Primitive.offset;
+
+      PrimitiveData.VAO.Bind();
+
+      CElementBuffer EBO(GL_STATIC_DRAW);
+      EBO.Bind();
+      EBO.Assign(Primitive.Indices);
+
+      PrimitiveData.VAO.Unbind();
+    }
+  }
+}
+
+static void ParseNodes(const TModelData & _Model, const TNode & _Node, TModelComponent & _Component)
+{
+  if (_Node.Mesh >= 0)
+    ParseMesh(_Model, _Model.Meshes[_Node.Mesh], _Component);
+
+  for (int NodeChild : _Node.Children)
+  {
+    assert(NodeChild >= 0 && NodeChild < _Model.Nodes.size());
+    ParseNodes(_Model, _Model.Nodes[NodeChild], _Component);
+  }
+}
+
+void CComponentsFactory::CreateModelComponent(const std::shared_ptr<CModel> & _Model, TModelComponent & _Component)
+{
+  CStopwatch s("CreateModelComponent");
+
+  const TModelData & ModelData = _Model->GetModelData();
+
+  for (const TScene & Scene : ModelData.Scenes)
+  {
+    for (int NodeIndex : Scene.Nodes)
+    {
+      assert(NodeIndex >= 0 && NodeIndex < ModelData.Nodes.size());
+      ParseNodes(ModelData, ModelData.Nodes[NodeIndex], _Component);
+    }
   }
 }
 

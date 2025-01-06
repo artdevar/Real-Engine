@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <vector>
 #include <algorithm>
 #include <iostream>
@@ -43,16 +44,6 @@ public:
     return m_Data[_Index];
   }
 
-  constexpr T & Front()
-  {
-    return m_Data[0];
-  }
-
-  constexpr const T & Front() const
-  {
-    return m_Data[0];
-  }
-
   constexpr bool Empty() const
   {
     return m_Data.empty();
@@ -63,10 +54,15 @@ public:
     return m_Data.size();
   }
 
+  constexpr void Reserve(size_t _Elements)
+  {
+    m_Data.reserve(_Elements);
+  }
+
   constexpr void Erase(IteratorType _Iterator)
   {
     *_Iterator = std::move(m_Data.data()[Size() - 1]);
-    PopBack();
+    m_Data.pop_back();
   }
 
   constexpr void Erase(const T & _Value)
@@ -103,33 +99,30 @@ public:
   }
 
   template <std::convertible_to<T> U>
-  constexpr void PushBack(U && _Value)
+  constexpr void Push(U && _Value)
   {
     m_Data.push_back(std::forward<U>(_Value));
   }
 
   template <std::convertible_to<T> U>
-  constexpr bool PushBackUnique(U && _Value)
+  constexpr bool PushUnique(U && _Value)
   {
     const bool NeedPush = !Contains(std::forward<U>(_Value));
 
     if (NeedPush)
-      PushBack(std::forward<U>(_Value));
+      Push(std::forward<U>(_Value));
 
     return NeedPush;
   }
 
-  constexpr void PopBack()
+  friend std::ostream & operator<<(std::ostream & _Stream, const CUnorderedVector & _Vector)
   {
-    m_Data.pop_back();
-  }
+    _Stream << "{ ";
+    for (const T & Val : _Vector.m_Data)
+      _Stream << Val << ' ';
+    _Stream << "}\n";
 
-  void Print() const
-  {
-    std::cout << "{ ";
-    for (const T & Val : m_Data)
-      std::cout << Val << ' ';
-    std::cout << "}\n";
+    return _Stream;
   }
 
 private:
