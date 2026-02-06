@@ -1,5 +1,6 @@
 #pragma once
 
+#if ENABLE_EDITOR
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
 #include "interfaces/Renderable.h"
@@ -14,10 +15,9 @@ class CEngine;
 class CObject;
 class CShader;
 
-class CEditorUI :
-  public IUpdateable,
-  public IRenderable,
-  public IShutdownable
+class CEditorUI : public IUpdateable,
+                  public IRenderable,
+                  public IShutdownable
 {
   enum TEntityType
   {
@@ -29,17 +29,14 @@ class CEditorUI :
   };
 
 public:
-
   void Shutdown() override;
 
-  void Init(CEngine * _Game);
+  void Init(CEngine *_Engine);
 
   void Update(float _TimeDelta) override;
-
-  void Render(CRenderer & _Renderer) override;
+  void Render(CRenderer &_Renderer) override;
 
 private:
-
   void RenderBegin();
 
   void RenderEnd();
@@ -49,18 +46,17 @@ private:
   void SpawnEntity(TEntityType _Type);
 
   void RenderEntityData(ecs::TEntity _Entity);
-  void RenderEntityData(ecs::TModelComponent & _Mesh);
-  void RenderEntityData(ecs::TTransformComponent & _Transform);
-  void RenderEntityData(ecs::TLightComponent & _Light);
+  void RenderEntityData(ecs::TModelComponent &_Mesh);
+  void RenderEntityData(ecs::TTransformComponent &_Transform);
+  void RenderEntityData(ecs::TLightComponent &_Light);
 
 private:
-
-  int GetCurrentEntityIndex(const std::vector<ecs::TEntity> & _Entities) const;
+  int GetSelectedEntityIndex(const std::vector<ecs::TEntity> &_Entities) const;
 
 private:
+  CEngine *m_Engine;
 
-  CEngine * m_Engine;
-
-  std::optional<ecs::TEntity> m_CurrentEntity;
-
+  std::optional<ecs::TEntity> m_SelectedEntity;
 };
+
+#endif

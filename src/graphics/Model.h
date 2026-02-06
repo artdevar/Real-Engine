@@ -12,19 +12,17 @@ class CModel : public IAsset
   DISABLE_CLASS_COPY(CModel);
 
 public:
-
-  CModel(std::unique_ptr<IModelParseStrategy> && _ParseStrategy);
+  CModel(std::unique_ptr<IModelParseStrategy> _ParseStrategy);
 
   void Shutdown() override;
 
-  bool Load(const std::filesystem::path & _Path) override;
+  bool Load(const std::filesystem::path &_Path) override;
 
   bool IsLoaded() const;
 
-  const TModelData & GetModelData() const;
+  const TModelData &GetModelData() const;
 
 protected:
-
   std::unique_ptr<IModelParseStrategy> m_ParseStrategy;
-  std::unique_ptr<TModelData>          m_Model;
+  std::unique_ptr<TModelData> m_Model;
 };

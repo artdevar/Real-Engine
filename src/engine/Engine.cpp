@@ -1,131 +1,97 @@
 #include "Engine.h"
+#include "Display.h"
+#include "InputManager.h"
 #include "Camera.h"
 #include "ResourceManager.h"
-#include "World.h"
+#include "scenes/World.h"
 #include "graphics/Renderer.h"
-#include "graphics/Model.h"
-#include "graphics/Shader.h"
-#include "ui/EditorUI.h"
-#include "utils/Json.h"
-#include "utils/Logger.h"
-#include "utils/Stopwatch.h"
+#include "editor/EditorUI.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <nlohmann/json.hpp>
-#include <format>
 #include <string>
-#include <fstream>
 
-const std::string CEngine::ConfigPath = "configs/data.json";
-CEngine * CEngine::Singleton = nullptr;
+CEngine *CEngine::Singleton = nullptr;
 
-CEngine::CEngine() :
-  m_Window(nullptr),
-  m_Camera(nullptr),
-  m_IsEditorMode(false),
-  m_PrevCursorPosX(0.0),
-  m_PrevCursorPosY(0.0)
+CEngine::CEngine() : m_Display(std::make_unique<CDisplay>()),
+                     m_InputManager(std::make_shared<CInputManager>()),
+                     m_ResourceManager(std::make_shared<CResourceManager>()),
+                     m_World(std::make_shared<CWorld>()),
+                     m_Camera(std::make_shared<CCamera>())
 {
-  m_ResourceManager = std::make_shared<CResourceManager>();
-  m_World           = new CWorld;
-  m_Camera          = std::make_shared<CCamera>();
-  m_EditorUI        = new CEditorUI;
+#if ENABLE_EDITOR
+  m_EditorUI = new CEditorUI;
+#endif
 }
 
 CEngine::~CEngine() = default;
 
-CEngine * CEngine::Instance()
+CEngine &CEngine::Instance()
 {
   if (!Singleton)
     Singleton = new CEngine;
 
-  return Singleton;
+  return *Singleton;
 }
 
 void CEngine::Shutdown()
 {
+#if ENABLE_EDITOR
   m_EditorUI->Shutdown();
   delete m_EditorUI;
+#endif
 
   m_World->Shutdown();
-  delete m_World;
+  m_World.reset();
 
   m_Camera.reset();
 
   m_ResourceManager->Shutdown();
   m_ResourceManager.reset();
 
-  glfwDestroyWindow(m_Window);
-  glfwTerminate();
+  m_InputManager.reset();
 
-  m_Window = nullptr;
+  m_Display->Shutdown();
+  m_Display.reset();
 
   delete Singleton;
 }
 
-int CEngine::Init()
+int CEngine::Init(const std::string &_ConfigPath, const std::string &_GameTitle)
 {
-  CLogger::Log(ELogType::Info, "Init GLFW. Version: {}\n", glfwGetVersionString());
-  if (glfwInit() != GLFW_TRUE)
-  {
-    const char * ErrorDescription;
-    const int    ErrorCode = glfwGetError(&ErrorDescription);
+  const int DisplayInitCode = m_Display->Init(_GameTitle);
+  if (DisplayInitCode != EXIT_SUCCESS)
+    return DisplayInitCode;
 
-    CLogger::Log(ELogType::Error, "Init GLFW error: {}\n", ErrorDescription);
+  m_Display->SetResizeCallback([this](int w, int h)
+                               { OnWindowResized(w, h); });
 
-    return ErrorCode;
-  }
+  m_Display->SetMouseButtonCallback([this](int b, int a, int m)
+                                    {
+                                      m_InputManager->OnMouseButton(b, a, m);
+                                      DispatchMouseButton(b, a, m); });
+  m_Display->SetMouseScrollCallback([this](float x, float y)
+                                    { m_InputManager->OnMouseScroll(x, y); });
 
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-  glfwWindowHint(GLFW_SAMPLES, 4);
+  m_Display->SetMouseMoveCallback([this](float x, float y)
+                                  {
+                                    m_InputManager->OnMouseMove(x, y);
+                                    DispatchMouseMove(x, y); });
 
-  m_Window = glfwCreateWindow(WindowWidth, WindowHeight, "Game", nullptr, nullptr);
-  if (!m_Window)
-  {
-    const char * ErrorDescription;
-    const int    ErrorCode = glfwGetError(&ErrorDescription);
+  m_Display->SetKeyCallback([this](int k, int a, int m)
+                            {
+                              m_InputManager->OnKeyEvent(k, a, m);
+                              DispatchKeyInput(k, a, m); });
 
-    CLogger::Log(ELogType::Error, "GLFW window creation error: {}\n", ErrorDescription);
-
-    return ErrorCode;
-  }
-
-  glfwMakeContextCurrent(m_Window);
-
-  if (!gladLoadGL())
-  {
-    const int ErrorCode = glad_glGetError();
-    CLogger::Log(ELogType::Error, "glad load gl failed: {}\n", ErrorCode);
-    return ErrorCode;
-  }
-
-  if (!GLAD_GL_ARB_bindless_texture)
-  {
-    CLogger::Log(ELogType::Error, "ARB_bindless_texture isn't supported by the GPU\n");
-    //return EXIT_FAILURE;
-  }
-
-  glViewport(0, 0, WindowWidth, WindowHeight);
-  glfwSwapInterval(1); // VSYNC
-  glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  glEnable(GL_DEPTH_TEST);
-  glEnable(GL_STENCIL_TEST);
-  glEnable(GL_BLEND);
-  glEnable(GL_MULTISAMPLE);
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-  InitCallbacks();
+#if ENABLE_EDITOR
+  m_Display->SetCursorMode(GLFW_CURSOR_NORMAL);
+#else
+  m_Display->SetCursorMode(GLFW_CURSOR_DISABLED);
+#endif
 
   m_ResourceManager->Init();
   m_World->Init();
+#if ENABLE_EDITOR
   m_EditorUI->Init(this);
+#endif
 
   return EXIT_SUCCESS;
 }
@@ -138,43 +104,50 @@ int CEngine::Run()
   m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
 
   double LastFrameTime = 0.0;
-  while (!glfwWindowShouldClose(m_Window))
+  while (!m_Display->ShouldClose())
   {
-    if (GLenum Error = glGetError(); Error != GL_NO_ERROR)
-      OnGLErrorOccured(Error);
-
-    const auto WindowSize = GetWindowSize();
+    const glm::ivec2 WindowSize = GetWindowSize();
 
     Renderer.SetViewport(WindowSize.x, WindowSize.y);
-    Renderer.ClearColor(0.4f, 0.4f, 0.4f, 1.0f);
-    Renderer.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    Renderer.BeginFrame(0.4f, 0.4f, 0.4f, 1.0f);
 
     const double CurrentFrameTime = glfwGetTime();
     const float FrameDelta = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
     LastFrameTime = CurrentFrameTime;
 
-    const int FPS = std::lround(1000.0f / FrameDelta);
-    const std::string Title = std::format("FPS={}", FPS);
-    glfwSetWindowTitle(m_Window, Title.c_str());
+    // const int FPS = std::lround(1000.0f / FrameDelta);
+    // const std::string Title = std::format("FPS={}", FPS);
+    // m_Display->SetTitle(Title);
 
-    {
-      m_Camera->Update(FrameDelta);
-      m_World->Update(FrameDelta);
-      if (m_IsEditorMode)
-        m_EditorUI->Update(FrameDelta);
-    }
+    Update(FrameDelta);
+    Render(Renderer);
 
-    {
-      m_World->Render(Renderer);
-      if (m_IsEditorMode)
-        m_EditorUI->Render(Renderer);
-    }
-
-    glfwSwapBuffers(m_Window);
-    glfwPollEvents();
+    Renderer.EndFrame();
+    m_Display->SwapBuffers();
+    m_Display->PollEvents();
   }
 
   return EXIT_SUCCESS;
+}
+
+void CEngine::Update(float _TimeDelta)
+{
+  m_InputManager->Update();
+  ProcessInput(_TimeDelta);
+
+  m_Camera->Update(_TimeDelta);
+  m_World->Update(_TimeDelta);
+#if ENABLE_EDITOR
+  m_EditorUI->Update(_TimeDelta);
+#endif
+}
+
+void CEngine::Render(CRenderer &_Renderer)
+{
+  m_World->Render(_Renderer);
+#if ENABLE_EDITOR
+  m_EditorUI->Render(_Renderer);
+#endif
 }
 
 void CEngine::LoadConfig()
@@ -200,12 +173,15 @@ void CEngine::SaveConfig()
 
 glm::ivec2 CEngine::GetWindowSize() const
 {
-  glm::ivec2 Size;
-  glfwGetWindowSize(m_Window, &Size.x, &Size.y);
-  return Size;
+  return m_Display->GetSize();
 }
 
-CWorld * CEngine::GetWorld() const
+CDisplay *CEngine::GetDisplay() const
+{
+  return m_Display.get();
+}
+
+std::shared_ptr<CWorld> CEngine::GetWorld() const
 {
   return m_World;
 }
@@ -220,142 +196,79 @@ std::shared_ptr<CResourceManager> CEngine::GetResourceManager() const
   return m_ResourceManager;
 }
 
-void CEngine::InitCallbacks()
+std::shared_ptr<CInputManager> CEngine::GetInputManager() const
 {
-  glfwSetWindowUserPointer(m_Window, this);
-
-  constexpr auto OnWindowResizedProxy = [](GLFWwindow * window, int width, int height)
-  {
-    static_cast<CEngine *>(glfwGetWindowUserPointer(window))->OnWindowResized(width, height);
-  };
-
-  constexpr auto OnMousePressedProxy = [](GLFWwindow * window, int button, int action, int mods)
-  {
-    static_cast<CEngine *>(glfwGetWindowUserPointer(window))->OnMousePressed(button, action, mods);
-  };
-
-  constexpr auto OnMouseScrollProxy = [](GLFWwindow * window, double xoffset, double yoffset)
-  {
-    static_cast<CEngine *>(glfwGetWindowUserPointer(window))->OnMouseScroll(static_cast<float>(xoffset), static_cast<float>(yoffset));
-  };
-
-  constexpr auto ProcessKeyInputProxy = [](GLFWwindow * window, int key, int scancode, int action, int mods)
-  {
-    static_cast<CEngine *>(glfwGetWindowUserPointer(window))->ProcessKeyInput(key, action, mods);
-  };
-
-  constexpr auto ProcessMouseMoveProxy = [](GLFWwindow * window, double xpos, double ypos)
-  {
-    static_cast<CEngine *>(glfwGetWindowUserPointer(window))->ProcessMouseMove(xpos, ypos);
-  };
-
-  constexpr auto OnErrorOccuredProxy = [](int error_code, const char * description)
-  {
-    CLogger::Log(ELogType::Error, std::format("GLFW error occured. Code: {}.\nDescription: {}.\n", error_code, description));
-  };
-
-  glfwSetFramebufferSizeCallback(m_Window, OnWindowResizedProxy);
-  glfwSetMouseButtonCallback(m_Window, OnMousePressedProxy);
-  glfwSetCursorPosCallback(m_Window, ProcessMouseMoveProxy);
-  glfwSetScrollCallback(m_Window, OnMouseScrollProxy);
-  glfwSetKeyCallback(m_Window, ProcessKeyInputProxy);
-  glfwSetErrorCallback(OnErrorOccuredProxy);
+  return m_InputManager;
 }
 
 // Callbacks
 
 void CEngine::OnWindowResized(int _Width, int _Height)
 {
-  glViewport(0, 0, _Width, _Height);
 }
 
-void CEngine::OnMousePressed(int _Button, int _Action, int _Mods)
+void CEngine::ProcessInput(float _TimeDelta)
 {
-  if (m_IsEditorMode)
-    return;
-
-  m_Camera->OnMousePressed(_Button, _Action, _Mods);
+#if !ENABLE_EDITOR
+  if (m_InputManager->IsKeyJustPressed(GLFW_KEY_ESCAPE))
+    m_Display->SetShouldClose(true);
+#endif
 }
 
-void CEngine::OnMouseScroll(float _OffsetX, float _OffsetY)
+void CEngine::DispatchKeyInput(int _Key, int _Action, int _Mods)
 {
-  if (m_IsEditorMode)
-    return;
+  if (m_Camera)
+    m_Camera->ProcessKeyInput(_Key, _Action, _Mods);
 }
 
-void CEngine::ProcessMouseMove(float _X, float _Y)
+void CEngine::DispatchMouseButton(int _Button, int _Action, int _Mods)
 {
-  if (m_IsEditorMode)
-    return;
-
-  bool Handled = false;
-  Handled = m_Camera->ProcessMouseMove(_X, _Y);
-}
-
-void CEngine::ProcessKeyInput(int _Key, int _Action, int _Mods)
-{
-  if (_Key == GLFW_KEY_F2 && _Action == GLFW_PRESS)
-    EnableDebugMode(!m_IsEditorMode);
-
-  if (m_IsEditorMode)
-    return;
-
-  bool Handled = false;
-  Handled = m_Camera->ProcessKeyInput(_Key, _Action, _Mods);
-
-  if (Handled)
-    return;
-
-  glfwSetWindowShouldClose(m_Window, _Key == GLFW_KEY_ESCAPE && _Action == GLFW_PRESS);
-}
-
-void CEngine::EnableDebugMode(bool _Enable)
-{
-  m_IsEditorMode = _Enable;
-
-  if (m_IsEditorMode)
+#if ENABLE_EDITOR
+  if (_Button == GLFW_MOUSE_BUTTON_RIGHT)
   {
-    glfwGetCursorPos(m_Window, &m_PrevCursorPosX, &m_PrevCursorPosY);
-    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  }
-  else
-  {
-    glfwSetCursorPos(m_Window, m_PrevCursorPosX, m_PrevCursorPosY);
-    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-  }
-}
-
-void CEngine::OnGLErrorOccured(GLenum _Error)
-{
-  auto GetErrorDescription = [](GLenum _Error) -> std::string_view
-  {
-    switch (_Error)
+    if (_Action == GLFW_PRESS)
     {
-      case GL_INVALID_ENUM:
-        return "GL_INVALID_ENUM";
-
-      case GL_INVALID_VALUE:
-        return "GL_INVALID_VALUE";
-
-      case GL_INVALID_OPERATION:
-        return "GL_INVALID_OPERATION";
-
-      case GL_STACK_OVERFLOW:
-        return "GL_STACK_OVERFLOW";
-
-      case GL_STACK_UNDERFLOW:
-        return "GL_STACK_UNDERFLOW";
-
-      case GL_OUT_OF_MEMORY:
-        return "GL_OUT_OF_MEMORY";
-
-      case GL_INVALID_FRAMEBUFFER_OPERATION:
-        return "GL_INVALID_FRAMEBUFFER_OPERATION";
-
-      default:
-        return "UNDEFINED";
+      m_CameraDragActive = true;
     }
-  };
+    else if (_Action == GLFW_RELEASE)
+    {
+      m_CameraDragActive = false;
+      m_Camera->ResetInputState();
+    }
+  }
+#endif
 
-  CLogger::Log(ELogType::Error, "OpenGL: {} (0x{:x})\n", GetErrorDescription(_Error), _Error);
+  if (m_Camera)
+    m_Camera->OnMousePressed(_Button, _Action, _Mods);
+}
+
+void CEngine::DispatchMouseMove(float _X, float _Y)
+{
+  static bool firstMouse = true;
+  static float lastX = 0.0f;
+  static float lastY = 0.0f;
+
+#if ENABLE_EDITOR
+  if (!m_CameraDragActive)
+  {
+    firstMouse = true;
+    return;
+  }
+#endif
+
+  if (firstMouse)
+  {
+    lastX = _X;
+    lastY = _Y;
+    firstMouse = false;
+    return;
+  }
+
+  float deltaX = _X - lastX;
+  float deltaY = lastY - _Y;
+  lastX = _X;
+  lastY = _Y;
+
+  if (m_Camera)
+    m_Camera->ProcessMouseMove(deltaX, deltaY);
 }

@@ -6,9 +6,9 @@
 
 const std::filesystem::path CResourceManager::DEFAULT_TEXTURE_PATH = "../assets/textures/default.jpg";
 
-static inline bool operator<(const std::string & _L, const std::filesystem::path & _R)
+static inline bool operator<(const std::string &_L, const std::filesystem::path &_R)
 {
-  return _L < _R.native();
+  return _L < _R.c_str();
 }
 
 void CResourceManager::Init()
@@ -18,13 +18,13 @@ void CResourceManager::Init()
 
 void CResourceManager::Shutdown()
 {
-  for (auto & [Path, Asset] : m_Assets)
+  for (auto &[Path, Asset] : m_Assets)
     Asset->Shutdown();
 
   m_Assets.clear();
 }
 
-std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path & _Path)
+std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path &_Path)
 {
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())
@@ -39,7 +39,7 @@ std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path 
   return std::static_pointer_cast<CModel>(Iter->second);
 }
 
-std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::path & _Path)
+std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::path &_Path)
 {
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())
@@ -54,7 +54,7 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::pat
   return std::static_pointer_cast<CShader>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path & _Path)
+std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
 {
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())
@@ -69,7 +69,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
   return std::static_pointer_cast<CTextureBase>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesystem::path & _Path)
+std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesystem::path &_Path)
 {
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())

@@ -14,7 +14,6 @@ class CTextureBase : public IAsset
   DISABLE_CLASS_COPY(CTextureBase);
 
 public:
-
   ~CTextureBase() override
   {
     assert(!IsValid() && "The texture isn't completely shutted down");
@@ -37,7 +36,7 @@ public:
 
   void Unbind()
   {
-    //glActiveTexture(0); opengl error
+    // glActiveTexture(0); opengl error
     glBindTexture(m_Target, INVALID_VALUE);
   }
 
@@ -52,15 +51,14 @@ public:
   }
 
 protected:
-
-  CTextureBase(GLenum _Target) :
-    m_ID(INVALID_VALUE),
-    m_Target(_Target)
-  {}
+  CTextureBase(GLenum _Target) : m_ID(INVALID_VALUE),
+                                 m_Target(_Target)
+  {
+  }
 
   static constexpr inline GLuint INVALID_VALUE = 0u;
 
-        GLuint m_ID;
+  GLuint m_ID;
   const GLenum m_Target;
 };
 
@@ -69,22 +67,21 @@ protected:
 class CTexture final : public CTextureBase
 {
 public:
-
   CTexture() : CTextureBase(GL_TEXTURE_2D) {}
 
-  bool Load(const std::filesystem::path & _Path) override
+  bool Load(const std::filesystem::path &_Path) override
   {
     shared::TImage Image;
     Image.Data = stbi_load(_Path.c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
 
     if (!Image.Data)
     {
-      CLogger::Log(ELogType::Error, std::format("Texture '{}' failed to load\n", _Path.c_str()));
+      CLogger::Log(ELogType::Error, std::format("Texture '{}' failed to load", _Path.c_str()));
       return false;
     }
 
-    constexpr GLenum Formats[] = { GL_RED, GL_RED, GL_RGB, GL_RGBA };
-    const     GLenum Format    = Formats[Image.Channels - 1];
+    constexpr GLenum Formats[] = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
+    const GLenum Format = Formats[Image.Channels - 1];
 
     glGenTextures(1, &m_ID);
     glBindTexture(m_Target, m_ID);
@@ -98,7 +95,7 @@ public:
 
     stbi_image_free(Image.Data);
 
-    CLogger::Log(ELogType::Info, std::format("Texture '{}' loaded successfully\n", _Path.c_str()));
+    CLogger::Log(ELogType::Info, std::format("Texture '{}' loaded successfully", _Path.c_str()));
 
     return true;
   }
@@ -109,14 +106,13 @@ class CCubemap final : public CTextureBase
   friend CTextureBase;
 
 public:
-
   CCubemap() : CTextureBase(GL_TEXTURE_CUBE_MAP) {}
 
-  bool Load(const std::filesystem::path & _Path) override
+  bool Load(const std::filesystem::path &_Path) override
   {
     assert(_Path.extension() == ".json");
     const nlohmann::json JsonContent = utils::ParseJson(_Path.string());
-    const auto           Faces       = JsonContent["Faces"].get<std::vector<std::string>>();
+    const auto Faces = JsonContent["Faces"].get<std::vector<std::string>>();
     assert(Faces.size() == shared::CUBEMAP_FACES);
 
     CStaticArray<shared::TImage, shared::CUBEMAP_FACES> Images;
@@ -140,7 +136,7 @@ public:
 
       for (int i = 0; i < Images.GetActualSize(); ++i)
       {
-        const shared::TImage & Image = Images[i];
+        const shared::TImage &Image = Images[i];
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, Image.Width, Image.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, Image.Data);
       }
 
@@ -150,14 +146,14 @@ public:
       glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-      CLogger::Log(ELogType::Info, std::format("Texture '{}' loaded successfully\n", _Path.c_str()));
+      CLogger::Log(ELogType::Info, std::format("Texture '{}' loaded successfully", _Path.c_str()));
     }
     else
     {
-      CLogger::Log(ELogType::Error, std::format("Texture '{}' failed to load\n", _Path.c_str()));
+      CLogger::Log(ELogType::Error, std::format("Texture '{}' failed to load", _Path.c_str()));
     }
 
-    for (shared::TImage & Image : Images)
+    for (shared::TImage &Image : Images)
       stbi_image_free(Image.Data);
 
     return Success;

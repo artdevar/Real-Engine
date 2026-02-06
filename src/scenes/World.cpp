@@ -1,5 +1,5 @@
 #include "World.h"
-#include "Engine.h"
+#include "engine/Engine.h"
 #include "Shared.h"
 #include "ecs/Coordinator.h"
 #include "ecs/CommonECS.h"
@@ -29,7 +29,7 @@ void CWorld::Update(float _TimeDelta)
   m_EntitiesCoordinator->GetSystem<ecs::CPhysicsSystem>()->Update(_TimeDelta);
 }
 
-void CWorld::Render(CRenderer & _Renderer)
+void CWorld::Render(CRenderer &_Renderer)
 {
   TShaderLighting ShaderLight = m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->ComposeLightingData();
 
@@ -44,7 +44,7 @@ void CWorld::RemoveEntity(ecs::TEntity _Entity)
   m_EntitiesCoordinator->DestroyEntity(_Entity);
 }
 
-const std::vector<ecs::TEntity> & CWorld::GetAllEntities() const
+const std::vector<ecs::TEntity> &CWorld::GetAllEntities() const
 {
   return m_EntitiesCoordinator->GetExistingEntities();
 }

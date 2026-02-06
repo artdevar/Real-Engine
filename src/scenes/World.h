@@ -14,41 +14,34 @@ class CEngine;
 class CCoordinator;
 class CEntityBuilder;
 
-class CWorld :
-  public IIdentifiable,
-  public IUpdateable,
-  public IRenderable,
-  public IShutdownable
+class CWorld : public IIdentifiable,
+               public IUpdateable,
+               public IRenderable,
+               public IShutdownable
 {
   DISABLE_CLASS_COPY(CWorld);
 
 public:
-
   CWorld();
 
   ~CWorld();
 
   void Init();
-
   void Shutdown() override;
 
   void Update(float _TimeDelta) override;
-
-  void Render(CRenderer & _Renderer) override;
+  void Render(CRenderer &_Renderer) override;
 
 public:
-
   void RemoveEntity(ecs::TEntity _Entity);
 
-  const std::vector<ecs::TEntity> & GetAllEntities() const;
+  const std::vector<ecs::TEntity> &GetAllEntities() const;
 
   CEntityBuilder GetEntityBuilder() const;
 
-private:
-
-  void InitECS();
+protected:
+  virtual void InitECS();
 
 public:
-
   std::unique_ptr<CCoordinator> m_EntitiesCoordinator;
 };

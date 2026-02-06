@@ -73,11 +73,11 @@ void main()
   vec3 fragColor = CalcDirLight(LightDirectional, normal, viewDir);
        fragColor += CalcSpotLight(LightSpot, normal, viewDir);
 
-  for(int i = 0; i < PointLightsCount; i++)
+  for (int i = 0; i < PointLightsCount; i++)
       fragColor += CalcPointLight(LightPoints[i], normal, viewDir);
 
   o_FragColor = vec4(fragColor, 1.0);
-  o_FragColor = vec4(vec3(0), 1.0);
+  //o_FragColor = vec4(vec3(0), 1.0);
 }
 
 vec3 CalcDirLight(TLightDirectional _Light, vec3 _Normal, vec3 _ViewDir)

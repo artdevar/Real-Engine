@@ -1,12 +1,14 @@
 #pragma once
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/vec2.hpp>
 #include <memory>
 #include <vector>
 #include <string>
+#include "Defines.h"
 #include "interfaces/Shutdownable.h"
+#include "interfaces/Updateable.h"
+#include "interfaces/Renderable.h"
+#include "utils/Common.h"
 
 class CWorld;
 class CEditorUI;
@@ -14,80 +16,65 @@ class CShader;
 class CCamera;
 class CResourceManager;
 class CModel;
+class CDisplay;
+class CInputManager;
 
-class CEngine final :
-  public IShutdownable
+class CEngine final : public IShutdownable,
+                      private IUpdateable,
+                      private IRenderable
 {
-protected:
+  DISABLE_CLASS_COPY(CEngine);
 
+protected:
   CEngine();
 
   ~CEngine();
 
 public:
-
-  static CEngine * Instance();
+  static CEngine &Instance();
 
   void Shutdown();
 
-  int Init();
-
+  int Init(const std::string &_ConfigPath, const std::string &_GameTitle);
   int Run();
 
   void LoadConfig();
-
   void SaveConfig();
 
 public:
-
   glm::ivec2 GetWindowSize() const;
 
-  CWorld * GetWorld() const;
-
+  CDisplay *GetDisplay() const;
+  std::shared_ptr<CWorld> GetWorld() const;
   std::shared_ptr<CCamera> GetCamera() const;
-
   std::shared_ptr<CResourceManager> GetResourceManager() const;
+  std::shared_ptr<CInputManager> GetInputManager() const;
 
 private:
-
-  void InitCallbacks();
-
-private: // Callbacks
+  void Update(float _TimeDelta) override;
+  void Render(CRenderer &_Renderer) override;
 
   void OnWindowResized(int _Width, int _Height);
-
-  void OnMousePressed(int _Button, int _Action, int _Mods);
-
-  void OnMouseScroll(float _OffsetX, float _OffsetY);
-
-  void ProcessMouseMove(float _X, float _Y);
-
-  void ProcessKeyInput(int _Key, int _Action, int _Mods);
-
-  void EnableDebugMode(bool _Enable);
-
-  void OnGLErrorOccured(GLenum _Error);
+  void ProcessInput(float _TimeDelta);
+  void DispatchKeyInput(int _Key, int _Action, int _Mods);
+  void DispatchMouseButton(int _Button, int _Action, int _Mods);
+  void DispatchMouseMove(float _X, float _Y);
 
 private:
+  static CEngine *Singleton;
 
-  static constexpr int WindowWidth  = 1200;
-  static constexpr int WindowHeight = 800;
+#if ENABLE_EDITOR
+  bool m_CameraDragActive{false};
+#endif
 
-  static const std::string ConfigPath;
-  static CEngine * Singleton;
-
-public:
-
-  GLFWwindow * m_Window;
+private:
+  std::unique_ptr<CDisplay> m_Display;
+  std::shared_ptr<CInputManager> m_InputManager;
   std::shared_ptr<CCamera> m_Camera;
-
-  CWorld *    m_World;
-  CEditorUI * m_EditorUI;
-
+  std::shared_ptr<CWorld> m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
 
-  bool   m_IsEditorMode;
-  double m_PrevCursorPosX, m_PrevCursorPosY;
-
-
+#if ENABLE_EDITOR
+  CEditorUI *m_EditorUI;
+#endif
 };

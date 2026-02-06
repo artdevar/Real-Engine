@@ -5,7 +5,7 @@
 #include <fstream>
 #include <sstream>
 
-static inline bool operator<(const std::string & _L, const std::string_view & _R)
+static inline bool operator<(const std::string &_L, const std::string_view &_R)
 {
   return _L < _R;
 }
@@ -14,7 +14,8 @@ template <class>
 static constexpr bool AlwaysFalse = false;
 
 CShader::CShader() : m_ID(INVALID_VALUE)
-{}
+{
+}
 
 CShader::~CShader()
 {
@@ -29,7 +30,7 @@ void CShader::Shutdown()
   constexpr GLsizei MaxCount = 10;
 
   GLsizei Count = 0;
-  GLuint  Shaders[MaxCount] = { 0 };
+  GLuint Shaders[MaxCount] = {0};
 
   glGetAttachedShaders(m_ID, MaxCount, &Count, Shaders);
 
@@ -40,7 +41,7 @@ void CShader::Shutdown()
   m_ID = INVALID_VALUE;
 }
 
-bool CShader::Load(const std::filesystem::path & _Path)
+bool CShader::Load(const std::filesystem::path &_Path)
 {
   const std::filesystem::path VertexShaderPath = std::filesystem::path(_Path).replace_extension(".vs");
   const GLuint VertexShader = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);
@@ -69,7 +70,7 @@ bool CShader::Load(const std::filesystem::path & _Path)
   {
     char ErrorLog[512] = {'\0'};
     glGetShaderInfoLog(m_ID, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, std::format("Shader '{}' linkage error:\n{}\n", _Path.c_str(), ErrorLog));
+    CLogger::Log(ELogType::Error, std::format("Shader '{}' linkage error:\n{}", _Path.c_str(), ErrorLog));
     Shutdown();
     return false;
   }
@@ -93,7 +94,7 @@ bool CShader::IsValid() const
   return m_ID != INVALID_VALUE;
 }
 
-void CShader::SetUniform(const std::string_view & _Name, const UniformType & _Value)
+void CShader::SetUniform(const std::string_view &_Name, const UniformType &_Value)
 {
   assert(IsValid());
   assert(IsUsed());
@@ -102,8 +103,8 @@ void CShader::SetUniform(const std::string_view & _Name, const UniformType & _Va
   if (UniformLocIter == m_UniformsCache.end())
     UniformLocIter = m_UniformsCache.emplace(_Name.data(), glGetUniformLocation(GetID(), _Name.data())).first;
 
-  std::visit([UniformLoc = UniformLocIter->second](auto && _Arg)
-  {
+  std::visit([UniformLoc = UniformLocIter->second](auto &&_Arg)
+             {
     using Type = std::decay_t<decltype(_Arg)>;
     if constexpr (std::is_same_v<Type, GLint>)
       glUniform1i(UniformLoc, _Arg);
@@ -122,8 +123,7 @@ void CShader::SetUniform(const std::string_view & _Name, const UniformType & _Va
     else if constexpr (std::is_same_v<Type, glm::vec4>)
       glUniform4fv(UniformLoc, 1, glm::value_ptr(_Arg));
     else
-      static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor");
-  }, _Value);
+      static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor"); }, _Value);
 }
 
 void CShader::Validate()
@@ -140,12 +140,12 @@ bool CShader::IsUsed() const
   return GLuint(Program) == GetID();
 }
 
-GLuint CShader::LoadShader(const std::filesystem::path & _Path, GLenum _ShaderType)
+GLuint CShader::LoadShader(const std::filesystem::path &_Path, GLenum _ShaderType)
 {
   std::ifstream ShaderFile(_Path);
   if (!ShaderFile.is_open())
   {
-    CLogger::Log(ELogType::Error, std::format("Shader '{}' is absent\n", _Path.c_str()));
+    CLogger::Log(ELogType::Error, std::format("Shader '{}' is absent", _Path.c_str()));
     return INVALID_VALUE;
   }
 
@@ -157,7 +157,7 @@ GLuint CShader::LoadShader(const std::filesystem::path & _Path, GLenum _ShaderTy
   GLuint Shader = glCreateShader(_ShaderType);
   assert(Shader != INVALID_VALUE && "Shader is not created");
 
-  const GLchar * ShaderCode = FileContent.c_str();
+  const GLchar *ShaderCode = FileContent.c_str();
   glShaderSource(Shader, 1, &ShaderCode, nullptr);
   glCompileShader(Shader);
 
@@ -167,7 +167,7 @@ GLuint CShader::LoadShader(const std::filesystem::path & _Path, GLenum _ShaderTy
   {
     char ErrorLog[512] = {'\0'};
     glGetShaderInfoLog(Shader, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, std::format("Shader '{}' compilation error:\n{}\n", _Path.c_str(), ErrorLog));
+    CLogger::Log(ELogType::Error, std::format("Shader '{}' compilation error:\n{}", _Path.c_str(), ErrorLog));
     glDeleteShader(Shader);
     Shader = INVALID_VALUE;
   }

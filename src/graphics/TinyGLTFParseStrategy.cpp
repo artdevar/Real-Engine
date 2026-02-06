@@ -1,116 +1,188 @@
 #include "TinyGLTFParseStrategy.h"
 #include "utils/Logger.h"
-
 #include "utils/Stopwatch.h"
+#include <glm/gtc/type_ptr.hpp>
 
-bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path & _Path, TModelData & _Model)
+bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelData &_Model)
 {
-  tinygltf::Model    NativeModel;
+  tinygltf::Model NativeModel;
   tinygltf::TinyGLTF Loader;
-  std::string        Error, Warning;
+  std::string Error, Warning;
 
   const bool IsLoaded = Loader.LoadASCIIFromFile(&NativeModel, &Error, &Warning, _Path.string());
 
   if (!Warning.empty())
-    CLogger::Log(ELogType::Warning, "Model loading {} warning {}\n", _Path.c_str(), Warning);
+    CLogger::Log(ELogType::Warning, "Model loading {} warning: {}", _Path.string(), Warning);
 
   if (!Error.empty())
-    CLogger::Log(ELogType::Error, "Model loading {} error {}\n", _Path.c_str(), Error);
+    CLogger::Log(ELogType::Error, "Model loading {} error: {}", _Path.string(), Error);
 
   if (!IsLoaded)
   {
-    CLogger::Log(ELogType::Error, "Model loading {} failed\n", _Path.c_str());
+    CLogger::Log(ELogType::Error, "Model loading {} failed", _Path.string());
     return false;
   }
 
-  CLogger::Log(ELogType::Info, "Model {} is loaded\n", _Path.c_str());
+  CLogger::Log(ELogType::Info, "Model {} loaded successfully", _Path.string());
 
-  CStopwatch s("TinyGltf Parse");
-  ParseModel(NativeModel, _Model);
+  {
+    MEASURE_ZONE("Parse GLTF Model");
+    ParseModel(NativeModel, _Model, _Path.parent_path());
+  }
 
   return true;
 }
 
-void CTinyGLTFParseStrategy::ParseModel(const tinygltf::Model & _ParseModel, TModelData & _Model)
+void CTinyGLTFParseStrategy::ParseModel(const tinygltf::Model &_Source, TModelData &_Target, const std::filesystem::path &_ModelDirectory)
 {
-  const tinygltf::Scene & ParseScene = _ParseModel.scenes[_ParseModel.defaultScene];
+  ParseImages(_Source, _Target, _ModelDirectory);
+  ParseMaterials(_Source, _Target);
+  ParseMeshes(_Source, _Target);
+  ParseNodes(_Source, _Target);
+  ParseScene(_Source, _Target);
+}
 
-  TScene & Scene = _Model.Scenes.emplace_back();
-  Scene.Nodes.reserve(ParseScene.nodes.size());
-  std::copy(ParseScene.nodes.begin(), ParseScene.nodes.end(), std::back_inserter(Scene.Nodes));
+void CTinyGLTFParseStrategy::ParseScene(const tinygltf::Model &_Source, TModelData &_Target)
+{
+  const tinygltf::Scene &Scene = _Source.scenes[_Source.defaultScene];
+  _Target.RootNodes.reserve(Scene.nodes.size());
+  _Target.RootNodes.insert(_Target.RootNodes.end(), Scene.nodes.begin(), Scene.nodes.end());
+}
 
-  for (const tinygltf::Node & ParseNode : _ParseModel.nodes)
+void CTinyGLTFParseStrategy::ParseNodes(const tinygltf::Model &_Source, TModelData &_Target)
+{
+  _Target.Nodes.reserve(_Source.nodes.size());
+
+  for (const tinygltf::Node &SourceNode : _Source.nodes)
   {
-    TNode & Node = _Model.Nodes.emplace_back();
-    Node.Mesh = ParseNode.mesh;
-    Node.Children.reserve(ParseNode.children.size());
-    std::copy(ParseNode.children.begin(), ParseNode.children.end(), std::back_inserter(Node.Children));
-  }
+    TNode &Node = _Target.Nodes.emplace_back();
+    Node.MeshIndex = SourceNode.mesh;
+    Node.Children.reserve(SourceNode.children.size());
+    Node.Children.insert(Node.Children.end(), SourceNode.children.begin(), SourceNode.children.end());
 
-  for (const tinygltf::Mesh & ParseMesh : _ParseModel.meshes)
-  {
-    TMesh & Mesh = _Model.Meshes.emplace_back();
-
-    for (const tinygltf::Primitive & ParsePrimitive : ParseMesh.primitives)
+    if (!SourceNode.translation.empty())
     {
-      TPrimitive & Primitive = Mesh.Primitives.emplace_back();
+      Node.Translation = glm::vec3(
+          SourceNode.translation[0],
+          SourceNode.translation[1],
+          SourceNode.translation[2]);
+    }
 
-      if (auto IterPosition = ParsePrimitive.attributes.find("POSITION"); IterPosition != ParsePrimitive.attributes.end())
-      {
-        const tinygltf::Accessor &   Accessor   = _ParseModel.accessors[IterPosition->second];
-        const tinygltf::BufferView & BufferView = _ParseModel.bufferViews[Accessor.bufferView];
-        const tinygltf::Buffer &     Buffer     = _ParseModel.buffers[BufferView.buffer];
+    if (!SourceNode.rotation.empty())
+    {
+      Node.Rotation = glm::quat(
+          static_cast<float>(SourceNode.rotation[3]),
+          static_cast<float>(SourceNode.rotation[0]),
+          static_cast<float>(SourceNode.rotation[1]),
+          static_cast<float>(SourceNode.rotation[2]));
+    }
 
-        TAttribute Attribute;
-        Attribute.ByteOffset = Accessor.byteOffset;
-        Attribute.ByteStride = Accessor.ByteStride(BufferView);
-        Attribute.Size       = Accessor.type;
-        Attribute.Type       = Accessor.componentType;
-
-        const size_t ActualOffset = BufferView.byteOffset;
-        const size_t SizeInBytes  = BufferView.byteLength;
-
-        Attribute.Data.reserve(SizeInBytes);
-        std::copy(Buffer.data.begin() + ActualOffset, Buffer.data.begin() + ActualOffset + SizeInBytes, std::back_inserter(Attribute.Data));
-
-        Primitive.Attributes.emplace(EAttributeType::Position, std::move(Attribute));
-      }
-
-      if (auto IterNormal = ParsePrimitive.attributes.find("NORMAL"); IterNormal != ParsePrimitive.attributes.end())
-      {
-        const tinygltf::Accessor &   Accessor   = _ParseModel.accessors[IterNormal->second];
-        const tinygltf::BufferView & BufferView = _ParseModel.bufferViews[Accessor.bufferView];
-        const tinygltf::Buffer &     Buffer     = _ParseModel.buffers[BufferView.buffer];
-
-        TAttribute Attribute;
-        Attribute.ByteOffset = Accessor.byteOffset;
-        Attribute.ByteStride = Accessor.ByteStride(BufferView);
-        Attribute.Size       = Accessor.type;
-        Attribute.Type       = Accessor.componentType;
-
-        const size_t ActualOffset = BufferView.byteOffset;
-        const size_t SizeInBytes  = BufferView.byteLength;
-
-        Attribute.Data.reserve(SizeInBytes);
-        std::copy(Buffer.data.begin() + ActualOffset, Buffer.data.begin() + ActualOffset + SizeInBytes, std::back_inserter(Attribute.Data));
-
-        Primitive.Attributes.emplace(EAttributeType::Normal, std::move(Attribute));
-      }
-
-      if (ParsePrimitive.indices >= 0)
-      {
-        const tinygltf::Accessor &   Accessor   = _ParseModel.accessors[ParsePrimitive.indices];
-        const tinygltf::BufferView & BufferView = _ParseModel.bufferViews[Accessor.bufferView];
-        const tinygltf::Buffer &     Buffer     = _ParseModel.buffers[BufferView.buffer];
-
-        Primitive.count  = Accessor.count;
-        Primitive.offset = Accessor.byteOffset;
-
-        Primitive.Indices.reserve(BufferView.byteLength);
-        std::copy(Buffer.data.begin() + BufferView.byteOffset, Buffer.data.begin() + BufferView.byteOffset + BufferView.byteLength, std::back_inserter(Primitive.Indices));
-      }
+    if (!SourceNode.scale.empty())
+    {
+      Node.Scale = glm::vec3(
+          SourceNode.scale[0],
+          SourceNode.scale[1],
+          SourceNode.scale[2]);
     }
   }
 }
 
+void CTinyGLTFParseStrategy::ParseMeshes(const tinygltf::Model &_Source, TModelData &_Target)
+{
+  _Target.Meshes.reserve(_Source.meshes.size());
 
+  for (const tinygltf::Mesh &SourceMesh : _Source.meshes)
+  {
+    TMesh &Mesh = _Target.Meshes.emplace_back();
+    Mesh.Primitives.reserve(SourceMesh.primitives.size());
+
+    for (const tinygltf::Primitive &SourcePrimitive : SourceMesh.primitives)
+    {
+      TPrimitive &Primitive = Mesh.Primitives.emplace_back();
+      Primitive.MaterialIndex = SourcePrimitive.material;
+
+      ParseAttributes(_Source, SourcePrimitive, Primitive);
+      ParseIndices(_Source, SourcePrimitive, Primitive);
+    }
+  }
+}
+
+void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, const tinygltf::Primitive &_SourcePrimitive, TPrimitive &_TargetPrimitive)
+{
+  for (const auto &[Name, AccessorIndex] : _SourcePrimitive.attributes)
+  {
+    const EAttributeType Type = Name == "POSITION" ? EAttributeType::Position : Name == "NORMAL"   ? EAttributeType::Normal
+                                                                            : Name == "TEXCOORD_0" ? EAttributeType::TexCoords
+                                                                                                   : static_cast<EAttributeType>(-1);
+
+    if (Type == static_cast<EAttributeType>(-1))
+      continue;
+
+    const tinygltf::Accessor &Accessor = _Source.accessors[AccessorIndex];
+    const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
+    const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
+
+    TAttribute Attribute;
+    Attribute.ComponentType = Accessor.componentType;
+    Attribute.ByteStride = Accessor.ByteStride(BufferView);
+
+    const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
+    const size_t Size = BufferView.byteLength;
+
+    Attribute.Data.reserve(Size);
+    Attribute.Data.insert(Attribute.Data.end(), Buffer.data.begin() + Offset, Buffer.data.begin() + Offset + Size);
+
+    _TargetPrimitive.Attributes.emplace(Type, std::move(Attribute));
+  }
+}
+
+void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const tinygltf::Primitive &_SourcePrimitive, TPrimitive &_TargetPrimitive)
+{
+  if (_SourcePrimitive.indices < 0)
+    return;
+
+  const tinygltf::Accessor &Accessor = _Source.accessors[_SourcePrimitive.indices];
+  const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
+  const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
+
+  _TargetPrimitive.IndicesCount = Accessor.count;
+
+  const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
+  const size_t Size = BufferView.byteLength;
+
+  _TargetPrimitive.Indices.reserve(Size);
+  _TargetPrimitive.Indices.insert(_TargetPrimitive.Indices.end(), Buffer.data.begin() + Offset, Buffer.data.begin() + Offset + Size);
+}
+
+void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TModelData &_Target)
+{
+  _Target.Materials.reserve(_Source.materials.size());
+
+  for (const tinygltf::Material &SourceMaterial : _Source.materials)
+  {
+    TMaterial &Material = _Target.Materials.emplace_back();
+    const tinygltf::PbrMetallicRoughness &PBR = SourceMaterial.pbrMetallicRoughness;
+
+    if (PBR.baseColorTexture.index >= 0)
+      Material.BaseColorTextureIndex = PBR.baseColorTexture.index;
+
+    if (PBR.metallicRoughnessTexture.index >= 0)
+      Material.MetallicRoughnessTextureIndex = PBR.metallicRoughnessTexture.index;
+
+    const std::vector<double> &Factor = PBR.baseColorFactor;
+    Material.BaseColorFactor = glm::vec4(Factor[0], Factor[1], Factor[2], Factor[3]);
+    Material.MetallicFactor = static_cast<float>(PBR.metallicFactor);
+    Material.RoughnessFactor = static_cast<float>(PBR.roughnessFactor);
+  }
+}
+
+void CTinyGLTFParseStrategy::ParseImages(const tinygltf::Model &_Source, TModelData &_Target, const std::filesystem::path &_ModelDirectory)
+{
+  _Target.Images.reserve(_Source.images.size());
+
+  for (const tinygltf::Image &SourceImage : _Source.images)
+  {
+    TImage &Image = _Target.Images.emplace_back();
+    Image.URI = (_ModelDirectory / SourceImage.uri).string();
+  }
+}

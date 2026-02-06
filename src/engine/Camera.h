@@ -1,30 +1,20 @@
 #pragma once
 
-#include "interfaces/Updateable.h"
-#include "interfaces/InputHandler.h"
 #include <glm/vec2.hpp>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
-#include <optional>
-#include <set>
+#include "interfaces/Updateable.h"
+#include "interfaces/InputHandler.h"
 
-class CCamera final :
-  public IUpdateable,
-  public IInputHandler
+class CCamera final : public IUpdateable,
+                      public IInputHandler
 {
 public:
-
   CCamera();
 
   void Update(float _TimeDelta) override;
 
-  bool OnMousePressed(int _Button, int _Action, int _Mods) override;
-
-  bool ProcessKeyInput(int _Key, int _Action, int _Mods) override;
-
-  bool ProcessMouseMove(float _X, float _Y) override;
-
-  void SetPosition(const glm::vec3 & _Pos);
+  void SetPosition(const glm::vec3 &_Pos);
 
   glm::vec3 GetPosition() const;
 
@@ -38,8 +28,16 @@ public:
 
   float GetFOV() const;
 
-private:
+public: // Input
+  bool OnMousePressed(int _Button, int _Action, int _Mods) override;
 
+  bool ProcessKeyInput(int _Key, int _Action, int _Mods) override;
+
+  bool ProcessMouseMove(float _X, float _Y) override;
+
+  void ResetInputState();
+
+private:
   glm::vec3 m_Position;
   glm::vec3 m_Forward;
   glm::vec3 m_Up;
@@ -48,6 +46,11 @@ private:
   float m_Yaw;
   float m_Pitch;
 
-  std::optional<glm::vec2> m_PrevMousePos;
-  std::set<int>            m_PressedKeys;
+  // Input state
+  bool m_MoveForward{false};
+  bool m_MoveBackward{false};
+  bool m_MoveLeft{false};
+  bool m_MoveRight{false};
+  float m_SpeedMultiplier{1.0f};
+  glm::vec2 m_MouseDelta{0.0f, 0.0f};
 };

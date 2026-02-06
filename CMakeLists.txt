@@ -11,9 +11,11 @@ target_sources(Real_Engine PRIVATE
   src/Main.cpp
   src/tiny_gltf.cc
   src/engine/Engine.cpp
+  src/engine/Display.cpp
+  src/engine/InputManager.cpp
   src/engine/Camera.cpp
-  src/engine/World.cpp
   src/engine/ResourceManager.cpp
+  src/scenes/World.cpp
   src/graphics/Renderer.cpp
   src/graphics/Shader.cpp
   src/graphics/Model.cpp
@@ -21,8 +23,9 @@ target_sources(Real_Engine PRIVATE
   src/ecs/Systems.cpp
   src/ecs/EntityManager.cpp
   src/ecs/ComponentsFactory.cpp
-  src/ui/EditorUI.cpp
+  src/editor/EditorUI.cpp
   src/utils/Logger.cpp
+  src/utils/Resource.cpp
   src/glad/glad.c
   src/imgui/imgui.cpp
   src/imgui/imgui_draw.cpp
@@ -34,9 +37,9 @@ target_sources(Real_Engine PRIVATE
 )
 
 if (WIN32)
-  target_sources(Real_Engine PRIVATE src/platform/SysUtils_Window.cpp)
+  target_sources(Real_Engine PRIVATE src/editor/platform/SysUtils_Window.cpp)
 elseif (UNIX AND NOT APPLE)
-  target_sources(Real_Engine PRIVATE src/platform/SysUtils_Unix.cpp)
+  target_sources(Real_Engine PRIVATE src/editor/platform/SysUtils_Unix.cpp)
 endif ()
 
 find_package(OpenGL REQUIRED)
@@ -45,6 +48,9 @@ link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 target_link_libraries(Real_Engine glfw)
 target_link_libraries(Real_Engine assimp)
+target_link_libraries(Real_Engine tbb)
+
+target_compile_definitions(Real_Engine PRIVATE ENABLE_EDITOR=1)
 
 target_include_directories(Real_Engine
   PUBLIC ${PROJECT_SOURCE_DIR}/lib

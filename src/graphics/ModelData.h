@@ -3,35 +3,47 @@
 #include <vector>
 #include <map>
 #include <cstdint>
+#include <string>
+#include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/quaternion.hpp>
 
-enum class EAttributeType
+enum EAttributeType : uint32_t
 {
   Position,
   Normal,
   TexCoords
 };
 
-struct TNode
+struct TImage
 {
-  std::vector<int> Children;
-  int Mesh = -1;
+  std::string URI;
+};
+
+struct TMaterial
+{
+  glm::vec4 BaseColorFactor = glm::vec4(1.0f);
+  float MetallicFactor = 1.0f;
+  float RoughnessFactor = 1.0f;
+
+  int BaseColorTextureIndex = -1;
+  int MetallicRoughnessTextureIndex = -1;
 };
 
 struct TAttribute
 {
   std::vector<uint8_t> Data;
-  int Size;
-  int Type;
+  int ComponentType;
   int ByteStride;
-  int ByteOffset;
 };
 
 struct TPrimitive
 {
   std::map<EAttributeType, TAttribute> Attributes;
-  std::vector<uint8_t>                 Indices;
-
-  int count, offset;
+  std::vector<uint8_t> Indices;
+  int IndicesCount = 0;
+  int MaterialIndex = -1;
 };
 
 struct TMesh
@@ -39,20 +51,21 @@ struct TMesh
   std::vector<TPrimitive> Primitives;
 };
 
-struct TScene
+struct TNode
 {
-  std::vector<int> Nodes;
-};
+  std::vector<int> Children;
+  int MeshIndex = -1;
 
-struct TAccessor
-{
-
+  glm::vec3 Translation = glm::vec3(0.0f);
+  glm::quat Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+  glm::vec3 Scale = glm::vec3(1.0f);
 };
 
 struct TModelData
 {
-  std::vector<TScene>    Scenes;
-  std::vector<TNode>     Nodes;
-  std::vector<TMesh>     Meshes;
-  std::vector<TAccessor> Accessors;
+  std::vector<int> RootNodes;
+  std::vector<TNode> Nodes;
+  std::vector<TMesh> Meshes;
+  std::vector<TMaterial> Materials;
+  std::vector<TImage> Images;
 };

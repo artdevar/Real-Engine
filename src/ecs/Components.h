@@ -9,7 +9,6 @@
 #include "utils/Common.h"
 #include "Shared.h"
 
-
 class CModel;
 class CTextureBase;
 
@@ -23,44 +22,54 @@ enum class ELightType
 namespace ecs
 {
 
-struct TTransformComponent
-{
-  glm::mat4x4 Transform = glm::mat4x4(1.0f);
-};
-
-struct TModelComponent
-{
-  struct TPrimitiveData
+  struct TTransformComponent
   {
-    CVertexArray VAO;
-    uint32_t     Indices;
-    uint32_t     Offset;
+    glm::mat4x4 Transform = glm::mat4x4(1.0f);
   };
 
-  std::vector<TPrimitiveData> Primitives;
-};
+  struct TModelComponent
+  {
+    struct TPrimitiveData
+    {
+      CVertexArray VAO;
+      uint32_t Indices = 0;
+      uint32_t Offset = 0;
+      int MaterialIndex = -1;
+    };
 
-struct TLightComponent
-{
-  ELightType Type;
+    struct TMaterialData
+    {
+      std::shared_ptr<CTextureBase> BaseColorTexture;
+      std::shared_ptr<CTextureBase> MetallicRoughnessTexture;
+      glm::vec4 BaseColorFactor = glm::vec4(1.0f);
+      float MetallicFactor = 1.0f;
+      float RoughnessFactor = 1.0f;
+    };
 
-  glm::vec3 Position;
-  glm::vec3 Direction;
-  glm::vec3 Ambient;
-  glm::vec3 Diffuse;
-  glm::vec3 Specular;
+    std::vector<TPrimitiveData> Primitives;
+    std::vector<TMaterialData> Materials;
+  };
 
-  float Constant    = 1.0f;
-  float Linear      = 0.09f;
-  float Quadratic   = 0.032f;
-  float CutOff      = 0.0f;
-  float OuterCutOff = 0.0f;
-};
+  struct TLightComponent
+  {
+    ELightType Type;
 
-struct TSkyboxComponent
-{
-  GLuint TextureUnit;
-};
+    glm::vec3 Position = glm::vec3(0.0f);
+    glm::vec3 Direction = glm::vec3(0.0f);
+    glm::vec3 Ambient = glm::vec3(0.0f);
+    glm::vec3 Diffuse = glm::vec3(0.0f);
+    glm::vec3 Specular = glm::vec3(0.0f);
 
+    float Constant = 1.0f;
+    float Linear = 0.09f;
+    float Quadratic = 0.032f;
+    float CutOff = 0.0f;
+    float OuterCutOff = 0.0f;
+  };
+
+  struct TSkyboxComponent
+  {
+    GLuint TextureUnit;
+  };
 
 }

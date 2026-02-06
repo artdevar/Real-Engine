@@ -1,15 +1,42 @@
 #include "Renderer.h"
 #include "Shader.h"
 #include "engine/Camera.h"
+#include "utils/Logger.h"
 #include <glm/gtc/type_ptr.hpp>
 
-CRenderer::CRenderer() :
-  m_LightingUBO(GL_DYNAMIC_DRAW)
+CRenderer::CRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
 {
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
   m_LightingUBO.BindToBase(BINDING_LIGHTING_BUFFER);
   m_LightingUBO.Unbind();
+}
+
+void CRenderer::BeginFrame(float _R, float _G, float _B, float _A, unsigned int _ClearFlags)
+{
+  glClearColor(_R, _G, _B, _A);
+
+  GLbitfield GLFlags = 0;
+  if (_ClearFlags & Clear_Color)
+    GLFlags |= GL_COLOR_BUFFER_BIT;
+  if (_ClearFlags & Clear_Depth)
+    GLFlags |= GL_DEPTH_BUFFER_BIT;
+  if (_ClearFlags & Clear_Stencil)
+    GLFlags |= GL_STENCIL_BUFFER_BIT;
+
+  glClear(GLFlags);
+}
+
+void CRenderer::EndFrame()
+{
+  CheckErrors();
+}
+
+void CRenderer::CheckErrors()
+{
+  GLenum Error = glGetError();
+  if (Error != GL_NO_ERROR)
+    CLogger::Log(ELogType::Error, "OpenGL Error: {}", Error);
 }
 
 void CRenderer::Clear(GLbitfield _Mask)
@@ -42,19 +69,19 @@ const std::shared_ptr<CCamera> &CRenderer::GetCamera() const
   return m_Camera;
 }
 
-void CRenderer::SetShader(const std::shared_ptr<CShader> & _Shader)
+void CRenderer::SetShader(const std::shared_ptr<CShader> &_Shader)
 {
   m_CurrentShader = _Shader;
 
   InitShaderValues();
 }
 
-const std::shared_ptr<CShader> & CRenderer::GetShader() const
+const std::shared_ptr<CShader> &CRenderer::GetShader() const
 {
   return m_CurrentShader;
 }
 
-void CRenderer::SetLightingData(TShaderLighting && _Data)
+void CRenderer::SetLightingData(TShaderLighting &&_Data)
 {
   IS_SAME_TYPE(m_Lighting, _Data);
   FastMemCpy(&m_Lighting, &_Data, sizeof(m_Lighting));
@@ -65,8 +92,8 @@ void CRenderer::InitShaderValues()
   m_CurrentShader->Use();
   m_CurrentShader->Validate();
   m_CurrentShader->SetUniform("u_Projection", m_Camera->GetProjection());
-  m_CurrentShader->SetUniform("u_ViewPos",    m_Camera->GetPosition());
-  m_CurrentShader->SetUniform("u_View",       m_Camera->GetView());
+  m_CurrentShader->SetUniform("u_ViewPos", m_Camera->GetPosition());
+  m_CurrentShader->SetUniform("u_View", m_Camera->GetView());
 
   GLuint LightingDataLoc = glGetUniformBlockIndex(m_CurrentShader->GetID(), "u_Lighting");
 

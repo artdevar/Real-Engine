@@ -3,123 +3,53 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-CCamera::CCamera() :
-  m_Position(0.0f, 0.0f, 8.0f),
-  m_Forward (0.0f, 0.0f, -1.0f),
-  m_Up      (0.0f, 1.0f, 0.0f),
-  m_FOV     (45.0f),
-  m_Yaw     (-90.0f),
-  m_Pitch   (0.0f)
+CCamera::CCamera() : m_Position(0.0f, 0.0f, 8.0f),
+                     m_Forward(0.0f, 0.0f, -1.0f),
+                     m_Up(0.0f, 1.0f, 0.0f),
+                     m_FOV(45.0f),
+                     m_Yaw(-90.0f),
+                     m_Pitch(0.0f)
 {
-  // Empty
 }
 
 void CCamera::Update(float _TimeDelta)
 {
-  if (!m_PressedKeys.empty())
+  glm::vec3 movementDirection(0.0f);
+
+  if (m_MoveForward)
+    movementDirection += m_Forward;
+  if (m_MoveBackward)
+    movementDirection -= m_Forward;
+  if (m_MoveLeft)
+    movementDirection -= glm::normalize(glm::cross(m_Forward, m_Up));
+  if (m_MoveRight)
+    movementDirection += glm::normalize(glm::cross(m_Forward, m_Up));
+
+  if (glm::length(movementDirection) > 0.0f)
   {
-    const bool  IsShiftPressed  = m_PressedKeys.contains(GLFW_KEY_LEFT_SHIFT);
-    const float CameraSpeedMult = 0.005f * _TimeDelta * (IsShiftPressed ? 4.0f : 1.0f);
-
-    for (int Key : m_PressedKeys)
-    {
-      switch (Key)
-      {
-        case GLFW_KEY_W:
-          m_Position += CameraSpeedMult * m_Forward;
-          break;
-
-        case GLFW_KEY_S:
-          m_Position -= CameraSpeedMult * m_Forward;
-          break;
-
-        case GLFW_KEY_A:
-          m_Position -= glm::normalize(glm::cross(m_Forward, m_Up)) * CameraSpeedMult;
-          break;
-
-        case GLFW_KEY_D:
-          m_Position += glm::normalize(glm::cross(m_Forward, m_Up)) * CameraSpeedMult;
-          break;
-      }
-    }
+    const float CameraSpeedMult = 0.005f * _TimeDelta * m_SpeedMultiplier;
+    m_Position += glm::normalize(movementDirection) * CameraSpeedMult;
   }
+
+  if (m_MouseDelta.x != 0.0f || m_MouseDelta.y != 0.0f)
+  {
+    const float Sensitivity = 0.1f;
+
+    m_Yaw += m_MouseDelta.x * Sensitivity;
+    m_Pitch = std::max(-89.0f, std::min(89.0f, m_Pitch + m_MouseDelta.y * Sensitivity));
+
+    const glm::vec3 Direction(
+        cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)),
+        sin(glm::radians(m_Pitch)),
+        sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
+
+    m_Forward = glm::normalize(Direction);
+  }
+
+  m_MouseDelta = glm::vec2(0.0f, 0.0f);
 }
 
-bool CCamera::OnMousePressed(int _Button, int _Action, int _Mods)
-{
-  if (_Button != GLFW_MOUSE_BUTTON_RIGHT)
-    return false;
-
-  if (_Action == GLFW_RELEASE)
-  {
-    m_PressedKeys.erase(GLFW_MOUSE_BUTTON_RIGHT);
-    m_FOV = 45.0f;
-  }
-  else
-  {
-    m_PressedKeys.insert(GLFW_MOUSE_BUTTON_RIGHT);
-    m_FOV = 20.0f;
-  }
-
-  return true;
-}
-
-bool CCamera::ProcessKeyInput(int _Key, int _Action, int _Mods)
-{
-  if (_Action == GLFW_RELEASE)
-  {
-    const auto Iter    = m_PressedKeys.find(_Key);
-    const bool Handled = (Iter != m_PressedKeys.end());
-
-    if (Iter != m_PressedKeys.end())
-      m_PressedKeys.erase(Iter);
-
-    return Handled;
-  }
-
-  switch (_Key)
-  {
-    case GLFW_KEY_W:
-    case GLFW_KEY_S:
-    case GLFW_KEY_A:
-    case GLFW_KEY_D:
-    case GLFW_KEY_LEFT_SHIFT:
-      m_PressedKeys.insert(_Key);
-      return true;
-
-    default:
-      return false;
-  }
-}
-
-bool CCamera::ProcessMouseMove(float _X, float _Y)
-{
-  if (!m_PrevMousePos.has_value())
-    m_PrevMousePos.emplace(_X, _Y);
-
-  float OffsetX = _X - m_PrevMousePos->x;
-  float OffsetY = m_PrevMousePos->y - _Y;
-
-  m_PrevMousePos.emplace(_X, _Y);
-
-  const float Sensitivity = 0.1f;
-  OffsetX *= Sensitivity;
-  OffsetY *= Sensitivity;
-
-  m_Yaw  += OffsetX;
-  m_Pitch = std::max(-89.0f, std::min(89.0f, m_Pitch + OffsetY));
-
-  const glm::vec3 Direction(
-      cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)),
-      sin(glm::radians(m_Pitch)),
-      sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch))
-    );
-
-  m_Forward = glm::normalize(Direction);
-  return true;
-}
-
-void CCamera::SetPosition(const glm::vec3 & _Pos)
+void CCamera::SetPosition(const glm::vec3 &_Pos)
 {
   m_Position = _Pos;
 }
@@ -146,11 +76,91 @@ glm::mat4 CCamera::GetView() const
 
 glm::mat4 CCamera::GetProjection() const
 {
-  const glm::ivec2 WindowSize = CEngine::Instance()->GetWindowSize();
+  const glm::ivec2 WindowSize = CEngine::Instance().GetWindowSize();
   return glm::perspective(glm::radians(GetFOV()), WindowSize.x / float(WindowSize.y), 0.1f, 100.0f);
 }
 
 float CCamera::GetFOV() const
 {
   return m_FOV;
+}
+
+bool CCamera::OnMousePressed(int _Button, int _Action, int _Mods)
+{
+  return false;
+}
+
+bool CCamera::ProcessKeyInput(int _Key, int _Action, int _Mods)
+{
+  if (_Action == GLFW_PRESS)
+  {
+    switch (_Key)
+    {
+    case GLFW_KEY_W:
+      m_MoveForward = true;
+      return true;
+    case GLFW_KEY_S:
+      m_MoveBackward = true;
+      return true;
+    case GLFW_KEY_A:
+      m_MoveLeft = true;
+      return true;
+    case GLFW_KEY_D:
+      m_MoveRight = true;
+      return true;
+    case GLFW_KEY_LEFT_SHIFT:
+      m_SpeedMultiplier = 4.0f;
+      return true;
+    case GLFW_KEY_Q:
+      m_FOV = 20.0f;
+      return true;
+    default:
+      return false;
+    }
+  }
+  else if (_Action == GLFW_RELEASE)
+  {
+    switch (_Key)
+    {
+    case GLFW_KEY_W:
+      m_MoveForward = false;
+      return true;
+    case GLFW_KEY_S:
+      m_MoveBackward = false;
+      return true;
+    case GLFW_KEY_A:
+      m_MoveLeft = false;
+      return true;
+    case GLFW_KEY_D:
+      m_MoveRight = false;
+      return true;
+    case GLFW_KEY_LEFT_SHIFT:
+      m_SpeedMultiplier = 1.0f;
+      return true;
+    case GLFW_KEY_Q:
+      m_FOV = 45.0f;
+      return true;
+    default:
+      return false;
+    }
+  }
+
+  return false;
+}
+
+bool CCamera::ProcessMouseMove(float _X, float _Y)
+{
+  m_MouseDelta.x += _X;
+  m_MouseDelta.y += _Y;
+  return true;
+}
+
+void CCamera::ResetInputState()
+{
+  m_MoveForward = false;
+  m_MoveBackward = false;
+  m_MoveLeft = false;
+  m_MoveRight = false;
+  m_SpeedMultiplier = 1.0f;
+  m_MouseDelta = glm::vec2(0.0f, 0.0f);
 }
