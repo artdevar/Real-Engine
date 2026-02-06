@@ -30,7 +30,7 @@ std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path 
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Model = std::make_shared<CModel>(std::make_unique<CTinyGLTFParseStrategy>());
-    if (Model->Load(_Path))
+    if (Model->Load(_Path, CResourceManagerKey{}))
       Iter = m_Assets.emplace(_Path.string(), std::move(Model)).first;
     else
       return nullptr;
@@ -45,7 +45,7 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::pat
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Shader = std::make_shared<CShader>();
-    if (Shader->Load(_Path))
+    if (Shader->Load(_Path, CResourceManagerKey{}))
       Iter = m_Assets.emplace(_Path.string(), std::move(Shader)).first;
     else
       return nullptr;
@@ -60,7 +60,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Texture = std::make_shared<CTexture>();
-    if (Texture->Load(_Path))
+    if (Texture->Load(_Path, CResourceManagerKey{}))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
       Iter = m_Assets.find(DEFAULT_TEXTURE_PATH);
@@ -75,7 +75,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesyste
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Texture = std::make_shared<CCubemap>();
-    if (Texture->Load(_Path))
+    if (Texture->Load(_Path, CResourceManagerKey{}))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
       Iter = m_Assets.find(DEFAULT_TEXTURE_PATH);

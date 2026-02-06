@@ -69,7 +69,7 @@ class CTexture final : public CTextureBase
 public:
   CTexture() : CTextureBase(GL_TEXTURE_2D) {}
 
-  bool Load(const std::filesystem::path &_Path) override
+  bool Load(const std::filesystem::path &_Path, CResourceManagerKey) override
   {
     shared::TImage Image;
     Image.Data = stbi_load(_Path.c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
@@ -108,7 +108,7 @@ class CCubemap final : public CTextureBase
 public:
   CCubemap() : CTextureBase(GL_TEXTURE_CUBE_MAP) {}
 
-  bool Load(const std::filesystem::path &_Path) override
+  bool Load(const std::filesystem::path &_Path, CResourceManagerKey) override
   {
     assert(_Path.extension() == ".json");
     const nlohmann::json JsonContent = utils::ParseJson(_Path.string());

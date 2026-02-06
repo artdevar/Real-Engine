@@ -41,7 +41,7 @@ void CShader::Shutdown()
   m_ID = INVALID_VALUE;
 }
 
-bool CShader::Load(const std::filesystem::path &_Path)
+bool CShader::Load(const std::filesystem::path &_Path, CResourceManagerKey)
 {
   const std::filesystem::path VertexShaderPath = std::filesystem::path(_Path).replace_extension(".vs");
   const GLuint VertexShader = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);

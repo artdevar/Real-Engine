@@ -13,7 +13,6 @@ class CShader final : public IAsset
   using UniformType = std::variant<GLint, GLuint, GLfloat, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
 
 public:
-
   CShader();
 
   CShader(const CShader &) = delete;
@@ -22,7 +21,7 @@ public:
 
   void Shutdown() override;
 
-  bool Load(const std::filesystem::path & _Path) override;
+  bool Load(const std::filesystem::path &_Path, CResourceManagerKey) override;
 
   GLuint GetID() const;
 
@@ -30,21 +29,18 @@ public:
 
   bool IsValid() const;
 
-  void SetUniform(const std::string_view & _Name, const UniformType & _Value);
+  void SetUniform(const std::string_view &_Name, const UniformType &_Value);
 
   void Validate();
 
 private:
-
   bool IsUsed() const;
 
-  GLuint LoadShader(const std::filesystem::path & _Path, GLenum _ShaderType);
+  GLuint LoadShader(const std::filesystem::path &_Path, GLenum _ShaderType);
 
 private:
-
   static constexpr inline GLuint INVALID_VALUE = 0u;
 
   GLuint m_ID;
   std::map<std::string, GLuint, std::less<>> m_UniformsCache;
-
 };
