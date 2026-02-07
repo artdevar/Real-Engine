@@ -20,7 +20,10 @@ target_sources(Real_Engine PRIVATE
   src/graphics/Shader.cpp
   src/graphics/Model.cpp
   src/graphics/TinyGLTFParseStrategy.cpp
-  src/ecs/Systems.cpp
+  src/ecs/systems/ModelRenderSystem.cpp
+  src/ecs/systems/SkyboxRenderSystem.cpp
+  src/ecs/systems/PhysicsSystem.cpp
+  src/ecs/systems/LightingSystem.cpp
   src/ecs/EntityManager.cpp
   src/ecs/ComponentsFactory.cpp
   src/editor/EditorUI.cpp
@@ -59,4 +62,8 @@ target_include_directories(Real_Engine
   PUBLIC ${PROJECT_SOURCE_DIR}/lib/glm-1.0.1
   PUBLIC ${PROJECT_SOURCE_DIR}/src
   PUBLIC ${PROJECT_SOURCE_DIR}/src/imgui
+)
+
+target_precompile_headers(Real_Engine PRIVATE
+  $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_SOURCE_DIR}/src/pch.h>
 )

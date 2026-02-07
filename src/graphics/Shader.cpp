@@ -94,7 +94,7 @@ bool CShader::IsValid() const
   return m_ID != INVALID_VALUE;
 }
 
-void CShader::SetUniform(const std::string_view &_Name, const UniformType &_Value)
+void CShader::SetUniform(std::string_view _Name, const UniformType &_Value)
 {
   assert(IsValid());
   assert(IsUsed());
@@ -123,7 +123,8 @@ void CShader::SetUniform(const std::string_view &_Name, const UniformType &_Valu
     else if constexpr (std::is_same_v<Type, glm::vec4>)
       glUniform4fv(UniformLoc, 1, glm::value_ptr(_Arg));
     else
-      static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor"); }, _Value);
+      static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor"); },
+             _Value);
 }
 
 void CShader::Validate()

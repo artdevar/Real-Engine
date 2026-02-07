@@ -87,6 +87,14 @@ void CRenderer::SetLightingData(TShaderLighting &&_Data)
   FastMemCpy(&m_Lighting, &_Data, sizeof(m_Lighting));
 }
 
+void CRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)
+{
+  if (!m_CurrentShader)
+    return;
+
+  m_CurrentShader->SetUniform(_Name, _Value);
+}
+
 void CRenderer::InitShaderValues()
 {
   m_CurrentShader->Use();

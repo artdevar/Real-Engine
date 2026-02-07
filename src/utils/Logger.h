@@ -7,6 +7,7 @@
 
 enum class ELogType
 {
+  Debug,
   Info,
   Warning,
   Error,
@@ -34,6 +35,11 @@ public:
       LogCallbacks.PushBack(CLogger::LogToConsole);
   }
 
+  static constexpr void SetVerbosity(ELogType _Verbosity)
+  {
+    Verbosity = _Verbosity;
+  }
+
   template <typename... Args>
   static void Log(ELogType _Type, std::string_view _Format, Args... _Args)
   {
@@ -42,6 +48,7 @@ public:
 
 private:
   static void DoLog(ELogType _Type, const std::string &_Log);
+  static bool IsLoggable(ELogType _Type);
 
   static void LogToConsole(const std::string &_Log);
   static void LogToFile(const std::string &_Log);
@@ -54,4 +61,6 @@ private:
 
   static const std::string_view Filename;
   static const std::map<ELogType, std::string_view> MessageType;
+
+  static ELogType Verbosity;
 };

@@ -13,7 +13,8 @@ enum EAttributeType : uint32_t
 {
   Position,
   Normal,
-  TexCoords
+  TexCoords,
+  Tangent
 };
 
 struct TImage
@@ -29,6 +30,7 @@ struct TMaterial
 
   int BaseColorTextureIndex = -1;
   int MetallicRoughnessTextureIndex = -1;
+  int NormalTextureIndex = -1;
 };
 
 struct TAttribute
@@ -36,6 +38,7 @@ struct TAttribute
   std::vector<uint8_t> Data;
   int ComponentType;
   int ByteStride;
+  int Type;
 };
 
 struct TPrimitive

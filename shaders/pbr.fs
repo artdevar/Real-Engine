@@ -49,6 +49,7 @@ struct TMaterial
 {
   sampler2D BaseColorTexture;
   sampler2D RoughnessTexture;
+  sampler2D NormalTexture;
 
   vec4  BaseColorFactor;
   float MetallicFactor;
@@ -61,6 +62,7 @@ uniform vec3      u_ViewPos;
 in vec3 io_Normal;
 in vec3 io_FragPos;
 in vec2 io_TexCoords;
+in mat3 io_TBN;
 
 out vec4 o_FragColor;
 
@@ -106,14 +108,22 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
 
 void main()
 {
-    vec3 albedo = pow(texture(u_Material.BaseColorTexture, io_TexCoords).rgb * u_Material.BaseColorFactor.rgb, vec3(2.2)); // sRGB to linear
+    vec4 baseColorSample = texture(u_Material.BaseColorTexture, io_TexCoords) * u_Material.BaseColorFactor;
+    if (baseColorSample.a < 0.5)
+      discard;
+
+    vec3 albedo = pow(baseColorSample.rgb, vec3(2.2)); // sRGB to linear
     vec3 ambientColor = LightDirectional.Ambient * albedo;
 
     vec2 mrSample   = texture(u_Material.RoughnessTexture, io_TexCoords).bg;
     float metallic  = clamp(mrSample.r * u_Material.MetallicFactor, 0.0, 1.0);
     float roughness = clamp(mrSample.g * u_Material.RoughnessFactor, 0.05, 1.0); // avoid 0 roughness
 
-    vec3 N = normalize(io_Normal);
+    vec3 normal = texture(u_Material.NormalTexture, io_TexCoords).rgb;
+    normal = normal * 2.0 - 1.0;
+    normal = normalize(io_TBN * normal);
+
+    vec3 N = normalize(normal);
     vec3 V = normalize(u_ViewPos - io_FragPos);
     vec3 L = normalize(-LightDirectional.Direction);
     vec3 H = normalize(V + L);

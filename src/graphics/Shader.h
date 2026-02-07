@@ -1,17 +1,15 @@
 #pragma once
 
-#include "interfaces/Asset.h"
 #include <glad/glad.h>
 #include <glm/fwd.hpp>
+#include "ShaderTypes.h"
+#include "interfaces/Asset.h"
 #include <string>
 #include <string_view>
-#include <variant>
 #include <map>
 
 class CShader final : public IAsset
 {
-  using UniformType = std::variant<GLint, GLuint, GLfloat, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
-
 public:
   CShader();
 
@@ -29,7 +27,7 @@ public:
 
   bool IsValid() const;
 
-  void SetUniform(const std::string_view &_Name, const UniformType &_Value);
+  void SetUniform(std::string_view _Name, const UniformType &_Value);
 
   void Validate();
 

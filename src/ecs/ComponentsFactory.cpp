@@ -27,6 +27,7 @@ namespace ecs
       {
         const GLuint AttributeLoc = Type == EAttributeType::Position ? ATTRIB_LOC_POSITION : Type == EAttributeType::Normal  ? ATTRIB_LOC_NORMAL
                                                                                          : Type == EAttributeType::TexCoords ? ATTRIB_LOC_TEXCOORDS
+                                                                                         : Type == EAttributeType::Tangent   ? ATTRIB_LOC_TANGENT
                                                                                                                              : GLuint(-1);
 
         assert(AttributeLoc != GLuint(-1));
@@ -37,11 +38,7 @@ namespace ecs
         VBO.Bind();
         VBO.Assign(Attribute.Data);
 
-        const int ComponentCount = Type == EAttributeType::Position ? 3 : Type == EAttributeType::Normal  ? 3
-                                                                      : Type == EAttributeType::TexCoords ? 2
-                                                                                                          : 0;
-
-        PrimitiveData.VAO.EnableAttrib(AttributeLoc, ComponentCount, Attribute.ComponentType, Attribute.ByteStride, (void *)0);
+        PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, Attribute.ComponentType, Attribute.ByteStride, (void *)0);
         PrimitiveData.VAO.Unbind();
       }
 
@@ -89,6 +86,7 @@ namespace ecs
 
       Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTextureIndex);
       Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTextureIndex);
+      Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTextureIndex);
     }
 
     for (int NodeIndex : ModelData.RootNodes)
@@ -100,7 +98,7 @@ namespace ecs
 
   void CComponentsFactory::CreateSkyboxComponent(const std::shared_ptr<CTextureBase> &_Skybox, TSkyboxComponent &_Component)
   {
-    _Component.TextureUnit = _Skybox->Get();
+    _Component.SkyboxTexture = _Skybox;
   }
 
 }

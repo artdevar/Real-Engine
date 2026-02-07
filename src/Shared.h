@@ -9,68 +9,24 @@
 namespace shared
 {
 
-struct TVertex
-{
-  glm::vec3 Position;
-  glm::vec3 Normal;
-  glm::vec2 TexCoords;
-  glm::vec3 Tangent;
-  glm::vec3 Bitangent;
-};
+  struct TVertex
+  {
+    glm::vec3 Position;
+    glm::vec3 Normal;
+    glm::vec2 TexCoords;
+    glm::vec3 Tangent;
+    glm::vec3 Bitangent;
+  };
 
-constexpr inline int CUBEMAP_FACES = 6;
+  constexpr inline int CUBEMAP_FACES = 6;
 
-struct TImage
-{
-  unsigned char * Data;
+  struct TImage
+  {
+    unsigned char *Data;
 
-  int Width;
-  int Height;
-  int Channels;
-};
-
-constexpr inline float SkyboxVertices[] = {
-  -1.0f,  1.0f, -1.0f,
-  -1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f,  1.0f, -1.0f,
-  -1.0f,  1.0f, -1.0f,
-
-  -1.0f, -1.0f,  1.0f,
-  -1.0f, -1.0f, -1.0f,
-  -1.0f,  1.0f, -1.0f,
-  -1.0f,  1.0f, -1.0f,
-  -1.0f,  1.0f,  1.0f,
-  -1.0f, -1.0f,  1.0f,
-
-  1.0f, -1.0f, -1.0f,
-  1.0f, -1.0f,  1.0f,
-  1.0f,  1.0f,  1.0f,
-  1.0f,  1.0f,  1.0f,
-  1.0f,  1.0f, -1.0f,
-  1.0f, -1.0f, -1.0f,
-
-  -1.0f, -1.0f,  1.0f,
-  -1.0f,  1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-   1.0f, -1.0f,  1.0f,
-  -1.0f, -1.0f,  1.0f,
-
-  -1.0f,  1.0f, -1.0f,
-   1.0f,  1.0f, -1.0f,
-   1.0f,  1.0f,  1.0f,
-   1.0f,  1.0f,  1.0f,
-  -1.0f,  1.0f,  1.0f,
-  -1.0f,  1.0f, -1.0f,
-
-  -1.0f, -1.0f, -1.0f,
-  -1.0f, -1.0f,  1.0f,
-   1.0f, -1.0f, -1.0f,
-   1.0f, -1.0f, -1.0f,
-  -1.0f, -1.0f,  1.0f,
-   1.0f, -1.0f,  1.0f
-};
+    int Width;
+    int Height;
+    int Channels;
+  };
 
 }

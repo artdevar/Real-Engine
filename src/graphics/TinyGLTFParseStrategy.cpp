@@ -113,6 +113,7 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
   {
     const EAttributeType Type = Name == "POSITION" ? EAttributeType::Position : Name == "NORMAL"   ? EAttributeType::Normal
                                                                             : Name == "TEXCOORD_0" ? EAttributeType::TexCoords
+                                                                            : Name == "TANGENT"    ? EAttributeType::Tangent
                                                                                                    : static_cast<EAttributeType>(-1);
 
     if (Type == static_cast<EAttributeType>(-1))
@@ -125,9 +126,20 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
     TAttribute Attribute;
     Attribute.ComponentType = Accessor.componentType;
     Attribute.ByteStride = Accessor.ByteStride(BufferView);
+    Attribute.Type = Accessor.type;
 
     const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
-    const size_t Size = BufferView.byteLength;
+    const size_t ComponentSize = tinygltf::GetComponentSizeInBytes(Accessor.componentType);
+    const size_t ComponentCount = tinygltf::GetNumComponentsInType(Accessor.type);
+    const size_t ElementSize = ComponentSize * ComponentCount;
+    const size_t Stride = Attribute.ByteStride == 0 ? ElementSize : static_cast<size_t>(Attribute.ByteStride);
+    const size_t Size = static_cast<size_t>(Accessor.count) * Stride;
+
+    if (Offset + Size > Buffer.data.size())
+    {
+      CLogger::Log(ELogType::Error, "Attribute data out of bounds (name: {}, offset: {}, size: {}, buffer: {})", Name, Offset, Size, Buffer.data.size());
+      continue;
+    }
 
     Attribute.Data.reserve(Size);
     Attribute.Data.insert(Attribute.Data.end(), Buffer.data.begin() + Offset, Buffer.data.begin() + Offset + Size);
@@ -148,7 +160,14 @@ void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const 
   _TargetPrimitive.IndicesCount = Accessor.count;
 
   const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
-  const size_t Size = BufferView.byteLength;
+  const size_t ComponentSize = tinygltf::GetComponentSizeInBytes(Accessor.componentType);
+  const size_t Size = static_cast<size_t>(Accessor.count) * ComponentSize;
+
+  if (Offset + Size > Buffer.data.size())
+  {
+    CLogger::Log(ELogType::Error, "Index data out of bounds (offset: {}, size: {}, buffer: {})", Offset, Size, Buffer.data.size());
+    return;
+  }
 
   _TargetPrimitive.Indices.reserve(Size);
   _TargetPrimitive.Indices.insert(_TargetPrimitive.Indices.end(), Buffer.data.begin() + Offset, Buffer.data.begin() + Offset + Size);
@@ -168,6 +187,9 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
 
     if (PBR.metallicRoughnessTexture.index >= 0)
       Material.MetallicRoughnessTextureIndex = PBR.metallicRoughnessTexture.index;
+
+    if (SourceMaterial.normalTexture.index >= 0)
+      Material.NormalTextureIndex = SourceMaterial.normalTexture.index;
 
     const std::vector<double> &Factor = PBR.baseColorFactor;
     Material.BaseColorFactor = glm::vec4(Factor[0], Factor[1], Factor[2], Factor[3]);

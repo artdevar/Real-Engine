@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
   stbi_set_flip_vertically_on_load(false);
 
   CLogger::SetSinks(CLogger::Console | CLogger::File);
+  CLogger::SetVerbosity(ELogType::Debug);
 
   CEngine &Engine = CEngine::Instance();
 

@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <memory>
+#include <string_view>
 #include "ShaderTypes.h"
 #include "Buffer.h"
 
@@ -38,6 +39,7 @@ public:
   void SetShader(const std::shared_ptr<CShader> &_Shader);
   const std::shared_ptr<CShader> &GetShader() const;
 
+  void SetUniform(std::string_view _Name, const UniformType &_Value);
   void SetLightingData(TShaderLighting &&_Data);
 
 private:

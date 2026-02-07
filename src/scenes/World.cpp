@@ -1,11 +1,16 @@
+#include "pch.h"
+
 #include "World.h"
 #include "engine/Engine.h"
 #include "Shared.h"
 #include "ecs/Coordinator.h"
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
-#include "ecs/Systems.h"
 #include "ecs/EntityBuilder.h"
+#include "ecs/systems/ModelRenderSystem.h"
+#include "ecs/systems/SkyboxRenderSystem.h"
+#include "ecs/systems/LightingSystem.h"
+#include "ecs/systems/PhysicsSystem.h"
 #include "graphics/Shader.h"
 #include "graphics/Renderer.h"
 #include <nlohmann/json.hpp>

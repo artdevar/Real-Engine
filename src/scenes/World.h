@@ -6,9 +6,6 @@
 #include "interfaces/Renderable.h"
 #include "interfaces/Shutdownable.h"
 #include "ecs/CommonECS.h"
-#include <glm/mat4x4.hpp>
-#include <memory>
-#include <vector>
 
 class CEngine;
 class CCoordinator;

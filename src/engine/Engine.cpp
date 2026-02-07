@@ -109,7 +109,7 @@ int CEngine::Run()
     const glm::ivec2 WindowSize = GetWindowSize();
 
     Renderer.SetViewport(WindowSize.x, WindowSize.y);
-    Renderer.BeginFrame(0.4f, 0.4f, 0.4f, 1.0f);
+    Renderer.BeginFrame(0.86f, 0.86f, 0.86f, 1.0f);
 
     const double CurrentFrameTime = glfwGetTime();
     const float FrameDelta = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;

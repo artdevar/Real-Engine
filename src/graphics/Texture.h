@@ -76,7 +76,7 @@ public:
 
     if (!Image.Data)
     {
-      CLogger::Log(ELogType::Error, std::format("Texture '{}' failed to load", _Path.c_str()));
+      CLogger::Log(ELogType::Error, std::format("[CTexture] Texture '{}' failed to load", _Path.c_str()));
       return false;
     }
 
@@ -90,12 +90,12 @@ public:
 
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-    glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     stbi_image_free(Image.Data);
 
-    CLogger::Log(ELogType::Info, std::format("Texture '{}' loaded successfully", _Path.c_str()));
+    CLogger::Log(ELogType::Debug, std::format("[CTexture] Texture '{}' loaded successfully", _Path.c_str()));
 
     return true;
   }
@@ -146,11 +146,11 @@ public:
       glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
       glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
-      CLogger::Log(ELogType::Info, std::format("Texture '{}' loaded successfully", _Path.c_str()));
+      CLogger::Log(ELogType::Info, std::format("[CCubemap] Texture '{}' loaded successfully", _Path.c_str()));
     }
     else
     {
-      CLogger::Log(ELogType::Error, std::format("Texture '{}' failed to load", _Path.c_str()));
+      CLogger::Log(ELogType::Error, std::format("[CCubemap] Texture '{}' failed to load", _Path.c_str()));
     }
 
     for (shared::TImage &Image : Images)

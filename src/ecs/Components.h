@@ -41,6 +41,7 @@ namespace ecs
     {
       std::shared_ptr<CTextureBase> BaseColorTexture;
       std::shared_ptr<CTextureBase> MetallicRoughnessTexture;
+      std::shared_ptr<CTextureBase> NormalTexture;
       glm::vec4 BaseColorFactor = glm::vec4(1.0f);
       float MetallicFactor = 1.0f;
       float RoughnessFactor = 1.0f;
@@ -69,7 +70,7 @@ namespace ecs
 
   struct TSkyboxComponent
   {
-    GLuint TextureUnit;
+    std::shared_ptr<CTextureBase> SkyboxTexture;
   };
 
 }
