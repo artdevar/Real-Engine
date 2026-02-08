@@ -1,7 +1,9 @@
 #include "Renderer.h"
 #include "Shader.h"
 #include "engine/Camera.h"
+#include "engine/Config.h"
 #include "utils/Logger.h"
+#include <cstring>
 #include <glm/gtc/type_ptr.hpp>
 
 CRenderer::CRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
@@ -10,21 +12,14 @@ CRenderer::CRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
   m_LightingUBO.BindToBase(BINDING_LIGHTING_BUFFER);
   m_LightingUBO.Unbind();
+
+  std::memset(&m_Lighting, 0, sizeof(m_Lighting));
 }
 
-void CRenderer::BeginFrame(float _R, float _G, float _B, float _A, unsigned int _ClearFlags)
+void CRenderer::BeginFrame(float _R, float _G, float _B, float _A, ClearFlags _ClearFlags)
 {
   glClearColor(_R, _G, _B, _A);
-
-  GLbitfield GLFlags = 0;
-  if (_ClearFlags & Clear_Color)
-    GLFlags |= GL_COLOR_BUFFER_BIT;
-  if (_ClearFlags & Clear_Depth)
-    GLFlags |= GL_DEPTH_BUFFER_BIT;
-  if (_ClearFlags & Clear_Stencil)
-    GLFlags |= GL_STENCIL_BUFFER_BIT;
-
-  glClear(GLFlags);
+  glClear(static_cast<GLbitfield>(_ClearFlags));
 }
 
 void CRenderer::EndFrame()
@@ -36,7 +31,7 @@ void CRenderer::CheckErrors()
 {
   GLenum Error = glGetError();
   if (Error != GL_NO_ERROR)
-    CLogger::Log(ELogType::Error, "OpenGL Error: {}", Error);
+    CLogger::Log(ELogType::Error, "[OpenGL Error: {}", Error);
 }
 
 void CRenderer::Clear(GLbitfield _Mask)
@@ -54,9 +49,21 @@ void CRenderer::SetViewport(GLsizei _Width, GLsizei _Height)
   glViewport(0, 0, _Width, _Height);
 }
 
+glm::ivec2 CRenderer::GetViewport() const
+{
+  GLint Viewport[4] = {0, 0, 0, 0};
+  glGetIntegerv(GL_VIEWPORT, Viewport);
+  return glm::ivec2(Viewport[2], Viewport[3]);
+}
+
 void CRenderer::DrawArrays(GLenum _Mode, GLsizei _Count)
 {
   glDrawArrays(_Mode, 0, _Count);
+}
+
+void CRenderer::DrawElements(GLenum _Mode, GLsizei _Count, GLenum _Type, const void *_Offset)
+{
+  glDrawElements(_Mode, _Count, _Type, _Offset);
 }
 
 void CRenderer::SetCamera(const std::shared_ptr<CCamera> &_Camera)
@@ -84,7 +91,39 @@ const std::shared_ptr<CShader> &CRenderer::GetShader() const
 void CRenderer::SetLightingData(TShaderLighting &&_Data)
 {
   IS_SAME_TYPE(m_Lighting, _Data);
-  FastMemCpy(&m_Lighting, &_Data, sizeof(m_Lighting));
+  std::memcpy(&m_Lighting, &_Data, sizeof(m_Lighting));
+  m_LightSpaceMatrixDirty = true;
+}
+
+glm::mat4 CRenderer::GetLightSpaceMatrix() const
+{
+  if (m_LightSpaceMatrixDirty)
+  {
+    const float NearPlane = CConfig::Instance().GetLightSpaceMatrixZNear();
+    const float FarPlane = CConfig::Instance().GetLightSpaceMatrixZFar();
+
+    const glm::vec3 LightDir = m_Lighting.LightDirectional.Direction * -1.0f;
+    const glm::mat4 LightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, NearPlane, FarPlane);
+    const glm::mat4 LightView = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+
+    m_LightSpaceMatrix = LightProjection * LightView;
+    m_LightSpaceMatrixDirty = false;
+  }
+
+  return m_LightSpaceMatrix;
+}
+
+void CRenderer::SetAlphaBlending(bool _Enabled)
+{
+  if (_Enabled)
+  {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  }
+  else
+  {
+    glDisable(GL_BLEND);
+  }
 }
 
 void CRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)

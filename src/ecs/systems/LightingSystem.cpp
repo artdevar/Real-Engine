@@ -2,6 +2,7 @@
 #include "ecs/Components.h"
 #include "ecs/Coordinator.h"
 #include "utils/Common.h"
+#include <cstring>
 #include <cassert>
 
 namespace ecs
@@ -10,7 +11,7 @@ namespace ecs
     TShaderLighting CLightingSystem::ComposeLightingData() const
     {
         TShaderLighting Lighting;
-        FastMemSet(&Lighting, 0x00, sizeof(Lighting));
+        std::memset(&Lighting, 0x00, sizeof(Lighting));
 
         int PointLightIndex = 0;
 

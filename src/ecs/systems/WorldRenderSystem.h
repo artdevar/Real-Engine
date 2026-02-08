@@ -10,19 +10,20 @@ class CShader;
 namespace ecs
 {
 
-    class CModelRenderSystem : public IRenderable,
+    class CWorldRenderSystem : public IRenderable,
                                public CSystem
     {
     public:
-        CModelRenderSystem();
+        CWorldRenderSystem();
 
         void Init(CCoordinator *_Coordinator) override;
 
-        void Render(CRenderer &_Renderer) override;
-
         void SetVisibility(ecs::TEntity _Entity, bool _IsVisible);
 
-    protected:
+    private:
+        bool ShouldBeRendered() const override;
+        void RenderInternal(CRenderer &_Renderer) override;
+
         void OnEntityAdded(ecs::TEntity _Entity) override;
 
         void OnEntityDeleted(ecs::TEntity _Entity) override;

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <glm/vec2.hpp>
-#include <glm/vec3.hpp>
-#include <glm/mat4x4.hpp>
 #include "interfaces/Updateable.h"
 #include "interfaces/InputHandler.h"
 
@@ -11,8 +8,6 @@ class CCamera final : public IUpdateable,
 {
 public:
   CCamera();
-
-  void Update(float _TimeDelta) override;
 
   void SetPosition(const glm::vec3 &_Pos);
 
@@ -26,8 +21,6 @@ public:
 
   glm::mat4 GetProjection() const;
 
-  float GetFOV() const;
-
 public: // Input
   bool OnMousePressed(int _Button, int _Action, int _Mods) override;
 
@@ -38,11 +31,13 @@ public: // Input
   void ResetInputState();
 
 private:
+  void UpdateInternal(float _TimeDelta) override;
+
+private:
   glm::vec3 m_Position;
   glm::vec3 m_Forward;
   glm::vec3 m_Up;
 
-  float m_FOV;
   float m_Yaw;
   float m_Pitch;
 

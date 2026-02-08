@@ -1,18 +1,19 @@
+#include "pch.h"
+
 #include "Camera.h"
+#include "Config.h"
 #include "Engine.h"
-#include <GLFW/glfw3.h>
-#include <glm/gtc/matrix_transform.hpp>
+#include "GLFW/glfw3.h"
 
 CCamera::CCamera() : m_Position(0.0f, 0.0f, 8.0f),
                      m_Forward(0.0f, 0.0f, -1.0f),
                      m_Up(0.0f, 1.0f, 0.0f),
-                     m_FOV(45.0f),
                      m_Yaw(-90.0f),
                      m_Pitch(0.0f)
 {
 }
 
-void CCamera::Update(float _TimeDelta)
+void CCamera::UpdateInternal(float _TimeDelta)
 {
   glm::vec3 movementDirection(0.0f);
 
@@ -77,12 +78,11 @@ glm::mat4 CCamera::GetView() const
 glm::mat4 CCamera::GetProjection() const
 {
   const glm::ivec2 WindowSize = CEngine::Instance().GetWindowSize();
-  return glm::perspective(glm::radians(GetFOV()), WindowSize.x / float(WindowSize.y), 0.1f, 100.0f);
-}
-
-float CCamera::GetFOV() const
-{
-  return m_FOV;
+  return glm::perspective(
+      glm::radians(CConfig::Instance().GetCameraFOV()),
+      WindowSize.x / float(WindowSize.y),
+      CConfig::Instance().GetCameraZNear(),
+      CConfig::Instance().GetCameraZFar());
 }
 
 bool CCamera::OnMousePressed(int _Button, int _Action, int _Mods)
@@ -111,9 +111,6 @@ bool CCamera::ProcessKeyInput(int _Key, int _Action, int _Mods)
     case GLFW_KEY_LEFT_SHIFT:
       m_SpeedMultiplier = 4.0f;
       return true;
-    case GLFW_KEY_Q:
-      m_FOV = 20.0f;
-      return true;
     default:
       return false;
     }
@@ -136,9 +133,6 @@ bool CCamera::ProcessKeyInput(int _Key, int _Action, int _Mods)
       return true;
     case GLFW_KEY_LEFT_SHIFT:
       m_SpeedMultiplier = 1.0f;
-      return true;
-    case GLFW_KEY_Q:
-      m_FOV = 45.0f;
       return true;
     default:
       return false;

@@ -9,10 +9,11 @@ out vec3 io_Normal;
 out vec3 io_FragPos;
 out vec2 io_TexCoords;
 out mat3 io_TBN;
+out vec4 io_FragLightPos;
 
 uniform mat4 u_Model;
-uniform mat4 u_View;
-uniform mat4 u_Projection;
+uniform mat4 u_MVP;
+uniform mat4 u_LightSpaceMatrix;
 
 void main()
 {
@@ -21,9 +22,10 @@ void main()
   T = normalize(T - dot(T, N) * N);
   vec3 B = cross(N, T);
 
-  io_TBN       = mat3(T, B, N);
-  io_FragPos   = vec3(u_Model * vec4(aPos, 1.0));
-  io_Normal    = mat3(u_Model) * aNormal;
+  io_TBN = mat3(T, B, N);
+  io_FragPos = vec3(u_Model * vec4(aPos, 1.0));
+  io_Normal = mat3(u_Model) * aNormal;
   io_TexCoords = aTexCoords;
-  gl_Position  = u_Projection * u_View * u_Model * vec4(aPos, 1.0);
+  io_FragLightPos = u_LightSpaceMatrix * vec4(io_FragPos, 1.0);
+  gl_Position = u_MVP * vec4(aPos, 1.0);
 }

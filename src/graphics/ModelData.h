@@ -17,6 +17,13 @@ enum EAttributeType : uint32_t
   Tangent
 };
 
+enum class EModelAlphaMode
+{
+  Opaque,
+  Mask,
+  Blend
+};
+
 struct TImage
 {
   std::string URI;
@@ -27,6 +34,8 @@ struct TMaterial
   glm::vec4 BaseColorFactor = glm::vec4(1.0f);
   float MetallicFactor = 1.0f;
   float RoughnessFactor = 1.0f;
+  float AlphaCutoff = 0.5f;
+  EModelAlphaMode AlphaMode = EModelAlphaMode::Opaque;
 
   int BaseColorTextureIndex = -1;
   int MetallicRoughnessTextureIndex = -1;

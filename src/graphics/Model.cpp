@@ -11,7 +11,7 @@ void CModel::Shutdown()
   m_Model.reset();
 }
 
-bool CModel::Load(const std::filesystem::path &_Path, CResourceManagerKey)
+bool CModel::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
   m_Model = std::make_unique<TModelData>();
 

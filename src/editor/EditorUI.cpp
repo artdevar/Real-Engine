@@ -1,7 +1,7 @@
 #include "EditorUI.h"
 
-#if ENABLE_EDITOR
-#include "Shared.h"
+#if EDITOR_ENABLED
+#include "engine/Config.h"
 #include "engine/Engine.h"
 #include "engine/Display.h"
 #include "scenes/World.h"
@@ -21,6 +21,26 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+namespace
+{
+  bool ProjectWorldToScreen(const glm::vec3 &_WorldPos, const glm::mat4 &_View, const glm::mat4 &_Proj, const glm::ivec2 &_Viewport, ImVec2 &_Out)
+  {
+    const glm::vec4 Clip = _Proj * _View * glm::vec4(_WorldPos, 1.0f);
+    if (Clip.w <= 0.0001f)
+      return false;
+
+    const glm::vec3 Ndc = glm::vec3(Clip) / Clip.w;
+    if (Ndc.x < -1.0f || Ndc.x > 1.0f || Ndc.y < -1.0f || Ndc.y > 1.0f)
+      return false;
+
+    const float X = (Ndc.x * 0.5f + 0.5f) * _Viewport.x;
+    const float Y = (1.0f - (Ndc.y * 0.5f + 0.5f)) * _Viewport.y;
+    _Out = ImVec2(X, Y);
+    return true;
+  }
+}
 
 void CEditorUI::Shutdown()
 {
@@ -40,11 +60,16 @@ void CEditorUI::Init(CEngine *_Engine)
   ImGui::StyleColorsDark();
 }
 
-void CEditorUI::Update(float _TimeDelta)
+void CEditorUI::UpdateInternal(float _TimeDelta)
 {
 }
 
-void CEditorUI::Render(CRenderer &_Renderer)
+bool CEditorUI::ShouldBeRendered() const
+{
+  return m_Engine != nullptr;
+}
+
+void CEditorUI::RenderInternal(CRenderer &_Renderer)
 {
   RenderBegin();
 
@@ -57,6 +82,7 @@ void CEditorUI::Render(CRenderer &_Renderer)
     m_Engine->SaveConfig();
 
   RenderEntities();
+  RenderLightDebugLines();
 
   RenderEnd();
 }
@@ -76,6 +102,29 @@ void CEditorUI::RenderEnd()
   ImGui::EndFrame();
 }
 
+void CEditorUI::RenderGlobalParams()
+{
+  float CameraZNear = CConfig::Instance().GetCameraZNear();
+  if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 0.5f, -50.0f, 100.0f))
+    CConfig::Instance().SetCameraZNear(CameraZNear, CPasskey(this));
+
+  float CameraZFar = CConfig::Instance().GetCameraZFar();
+  if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 10.0f, 1.0f, 10000.0f))
+    CConfig::Instance().SetCameraZFar(CameraZFar, CPasskey(this));
+
+  float CameraFOV = CConfig::Instance().GetCameraFOV();
+  if (ImGui::DragFloat("Camera FOV", &CameraFOV, 1.0f, 0.0f, 180.0f))
+    CConfig::Instance().SetCameraFOV(CameraFOV, CPasskey(this));
+
+  float LightZNear = CConfig::Instance().GetLightSpaceMatrixZNear();
+  if (ImGui::DragFloat("Light ZNear", &LightZNear, 0.5f, -50.0f, 100.0f))
+    CConfig::Instance().SetLightSpaceMatrixZNear(LightZNear, CPasskey(this));
+
+  float LightZFar = CConfig::Instance().GetLightSpaceMatrixZFar();
+  if (ImGui::DragFloat("Light ZFar", &LightZFar, 10.0f, 1.0f, 1000.0f))
+    CConfig::Instance().SetLightSpaceMatrixZFar(LightZFar, CPasskey(this));
+}
+
 void CEditorUI::RenderEntities()
 {
   CWorld &World = *m_Engine->GetWorld();
@@ -93,9 +142,9 @@ void CEditorUI::RenderEntities()
     {
       constexpr std::pair<const char *, TEntityType> EntityTypes[] = {
           std::make_pair("Static mesh", TEntityType::StaticMesh),
-          std::make_pair("Point light", TEntityType::PointLight),
+          // std::make_pair("Point light", TEntityType::PointLight),
           std::make_pair("Directional light", TEntityType::DirectionalLight),
-          std::make_pair("Spotlight", TEntityType::Spotlight),
+          // std::make_pair("Spotlight", TEntityType::Spotlight),
           std::make_pair("Skybox", TEntityType::Skybox)};
       static int CurrentIndex = -1;
 
@@ -169,6 +218,58 @@ void CEditorUI::RenderEntities()
     if (m_SelectedEntity.has_value())
       RenderEntityData(m_SelectedEntity.value());
   }
+
+  if (ImGui::CollapsingHeader("Global parameters##GlobalParamsWindow"))
+  {
+    RenderGlobalParams();
+  }
+}
+
+void CEditorUI::RenderLightDebugLines()
+{
+  if (!m_SelectedEntity.has_value())
+    return;
+
+  CWorld &World = *m_Engine->GetWorld();
+  const auto Camera = m_Engine->GetCamera();
+  if (!Camera)
+    return;
+
+  const glm::mat4 View = Camera->GetView();
+  const glm::mat4 Proj = Camera->GetProjection();
+  const glm::ivec2 Viewport = m_Engine->GetWindowSize();
+
+  ImDrawList *DrawList = ImGui::GetForegroundDrawList();
+
+  auto *Light = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TLightComponent>(m_SelectedEntity.value());
+  if (!Light)
+    return;
+
+  glm::vec3 Direction = Light->Direction;
+  if (glm::length(Direction) < 0.0001f)
+    Direction = glm::vec3(0.0f, 1.0f, 0.0f);
+  else
+    Direction = glm::normalize(Direction);
+
+  glm::vec3 StartWorld = Light->Position;
+  if (auto *Transform = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(m_SelectedEntity.value()); Transform)
+    StartWorld = glm::vec3(Transform->Transform[3]);
+  const glm::vec3 EndWorld = StartWorld + Direction * 1.0f;
+
+  ImVec2 StartScreen;
+  ImVec2 EndScreen;
+  if (!ProjectWorldToScreen(StartWorld, View, Proj, Viewport, StartScreen) ||
+      !ProjectWorldToScreen(EndWorld, View, Proj, Viewport, EndScreen))
+    return;
+
+  ImU32 Color = IM_COL32(255, 255, 0, 200);
+  if (Light->Type == ELightType::Directional)
+    Color = IM_COL32(255, 180, 0, 200);
+  else if (Light->Type == ELightType::Spotlight)
+    Color = IM_COL32(0, 200, 255, 200);
+
+  DrawList->AddLine(StartScreen, EndScreen, Color, 2.0f);
+  DrawList->AddCircleFilled(StartScreen, 3.0f, Color);
 }
 
 void CEditorUI::RenderEntityData(ecs::TEntity _Entity)
@@ -251,12 +352,12 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
 {
   int LightTypeVal = static_cast<int>(_Light.Type);
 
-  ImGui::RadioButton("Directional", &LightTypeVal, static_cast<int>(ELightType::Directional));
-  ImGui::SameLine();
-  ImGui::RadioButton("Point", &LightTypeVal, static_cast<int>(ELightType::Point));
-  ImGui::SameLine();
-  ImGui::RadioButton("Spotlight", &LightTypeVal, static_cast<int>(ELightType::Spotlight));
-  ImGui::Separator();
+  // ImGui::RadioButton("Directional", &LightTypeVal, static_cast<int>(ELightType::Directional));
+  // ImGui::SameLine();
+  // ImGui::RadioButton("Point", &LightTypeVal, static_cast<int>(ELightType::Point));
+  // ImGui::SameLine();
+  // ImGui::RadioButton("Spotlight", &LightTypeVal, static_cast<int>(ELightType::Spotlight));
+  // ImGui::Separator();
 
   switch ((_Light.Type = static_cast<ELightType>(LightTypeVal)))
   {
@@ -343,7 +444,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     if (!Model)
       return;
 
-    CEntityBuilder Builder = m_Engine->GetWorld()->GetEntityBuilder();
+    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
 
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TTransformComponent>(glm::mat4x4(1.0f)));
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TModelComponent>(Model));
@@ -362,7 +463,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     if (!Cubemap)
       return;
 
-    CEntityBuilder Builder = m_Engine->GetWorld()->GetEntityBuilder();
+    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TSkyboxComponent>(Cubemap));
     m_SelectedEntity = Builder.GetEntity();
 
@@ -371,7 +472,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
 
   case TEntityType::PointLight:
   {
-    CEntityBuilder Builder = m_Engine->GetWorld()->GetEntityBuilder();
+    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Point));
     m_SelectedEntity = Builder.GetEntity();
     break;
@@ -379,7 +480,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
 
   case TEntityType::DirectionalLight:
   {
-    CEntityBuilder Builder = m_Engine->GetWorld()->GetEntityBuilder();
+    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Directional));
     m_SelectedEntity = Builder.GetEntity();
     break;
@@ -387,7 +488,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
 
   case TEntityType::Spotlight:
   {
-    CEntityBuilder Builder = m_Engine->GetWorld()->GetEntityBuilder();
+    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Spotlight));
     m_SelectedEntity = Builder.GetEntity();
     break;

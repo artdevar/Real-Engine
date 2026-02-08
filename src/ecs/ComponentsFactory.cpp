@@ -8,10 +8,23 @@
 
 namespace ecs
 {
+  static EAlphaMode GetAlphaMode(EModelAlphaMode _ModelAlphaMode)
+  {
+    switch (_ModelAlphaMode)
+    {
+    case EModelAlphaMode::Mask:
+      return EAlphaMode::Mask;
+    case EModelAlphaMode::Blend:
+      return EAlphaMode::Blend;
+    default:
+      return EAlphaMode::Opaque;
+    }
+  }
+
   static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, int _ImageIndex)
   {
     if (_ImageIndex < 0 || _ImageIndex >= _ModelData.Images.size())
-      return nullptr;
+      return resource::GetFallbackTexture();
 
     return resource::LoadTexture(_ModelData.Images[_ImageIndex].URI);
   }
@@ -38,7 +51,7 @@ namespace ecs
         VBO.Bind();
         VBO.Assign(Attribute.Data);
 
-        PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, Attribute.ComponentType, Attribute.ByteStride, (void *)0);
+        PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, Attribute.ComponentType, Attribute.ByteStride);
         PrimitiveData.VAO.Unbind();
       }
 
@@ -83,6 +96,8 @@ namespace ecs
       Material.BaseColorFactor = SrcMaterial.BaseColorFactor;
       Material.MetallicFactor = SrcMaterial.MetallicFactor;
       Material.RoughnessFactor = SrcMaterial.RoughnessFactor;
+      Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
+      Material.AlphaMode = GetAlphaMode(SrcMaterial.AlphaMode);
 
       Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTextureIndex);
       Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTextureIndex);

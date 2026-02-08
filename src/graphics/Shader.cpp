@@ -1,3 +1,5 @@
+#include "pch.h"
+
 #include "Shader.h"
 #include "utils/Logger.h"
 #include <glm/glm.hpp>
@@ -27,21 +29,11 @@ void CShader::Shutdown()
   if (!IsValid())
     return;
 
-  constexpr GLsizei MaxCount = 10;
-
-  GLsizei Count = 0;
-  GLuint Shaders[MaxCount] = {0};
-
-  glGetAttachedShaders(m_ID, MaxCount, &Count, Shaders);
-
-  for (int i = 0; i < Count; ++i)
-    glDeleteShader(Shaders[i]);
-
-  glDeleteProgram(m_ID);
+  UnloadShader(m_ID);
   m_ID = INVALID_VALUE;
 }
 
-bool CShader::Load(const std::filesystem::path &_Path, CResourceManagerKey)
+bool CShader::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
   const std::filesystem::path VertexShaderPath = std::filesystem::path(_Path).replace_extension(".vs");
   const GLuint VertexShader = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);
@@ -70,10 +62,25 @@ bool CShader::Load(const std::filesystem::path &_Path, CResourceManagerKey)
   {
     char ErrorLog[512] = {'\0'};
     glGetShaderInfoLog(m_ID, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, std::format("Shader '{}' linkage error:\n{}", _Path.c_str(), ErrorLog));
+    CLogger::Log(ELogType::Error, std::format("[CShader] Shader '{}' linkage error:\n{}", _Path.c_str(), ErrorLog));
     Shutdown();
     return false;
   }
+
+  CLogger::Log(ELogType::Debug, std::format("[CShader] Shader '{}' loaded successfully", _Path.c_str()));
+
+#if SHADERS_HOT_RELOAD
+  m_BasePath = _Path;
+
+  std::error_code Error;
+  m_VertexTimestamp = std::filesystem::last_write_time(VertexShaderPath, Error);
+  if (Error)
+    m_VertexTimestamp = std::filesystem::file_time_type{};
+
+  m_FragmentTimestamp = std::filesystem::last_write_time(FragmentShaderPath, Error);
+  if (Error)
+    m_FragmentTimestamp = std::filesystem::file_time_type{};
+#endif
 
   return true;
 }
@@ -129,8 +136,69 @@ void CShader::SetUniform(std::string_view _Name, const UniformType &_Value)
 
 void CShader::Validate()
 {
-#ifdef SHADER_HOT_RELOAD
+#if SHADERS_HOT_RELOAD
+  if (m_BasePath.empty())
+    return;
 
+  const std::filesystem::path VertexShaderPath = std::filesystem::path(m_BasePath).replace_extension(".vs");
+  const std::filesystem::path FragmentShaderPath = std::filesystem::path(m_BasePath).replace_extension(".fs");
+
+  auto GetWriteTime = [](const std::filesystem::path &_Path, std::filesystem::file_time_type &_Out)
+  {
+    std::error_code Error;
+    _Out = std::filesystem::last_write_time(_Path, Error);
+    return !Error;
+  };
+
+  std::filesystem::file_time_type NewVertexTimestamp{};
+  std::filesystem::file_time_type NewFragmentTimestamp{};
+
+  if (!GetWriteTime(VertexShaderPath, NewVertexTimestamp) || !GetWriteTime(FragmentShaderPath, NewFragmentTimestamp))
+    return;
+
+  if (NewVertexTimestamp == m_VertexTimestamp && NewFragmentTimestamp == m_FragmentTimestamp)
+    return;
+
+  const GLuint NewVertex = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);
+  if (NewVertex == INVALID_VALUE)
+    return;
+
+  const GLuint NewFragment = LoadShader(FragmentShaderPath, GL_FRAGMENT_SHADER);
+  if (NewFragment == INVALID_VALUE)
+  {
+    glDeleteShader(NewVertex);
+    return;
+  }
+
+  const GLuint NewProgram = glCreateProgram();
+  glAttachShader(NewProgram, NewVertex);
+  glAttachShader(NewProgram, NewFragment);
+  glLinkProgram(NewProgram);
+  glDeleteShader(NewVertex);
+  glDeleteShader(NewFragment);
+
+  GLint Success = GL_FALSE;
+  glGetProgramiv(NewProgram, GL_LINK_STATUS, &Success);
+  if (Success == GL_FALSE)
+  {
+    char ErrorLog[512] = {'\0'};
+    glGetProgramInfoLog(NewProgram, 512, NULL, ErrorLog);
+    CLogger::Log(ELogType::Error, "[CShader] Hot reload linkage error for '{}':\n{}", m_BasePath.c_str(), ErrorLog);
+    glDeleteProgram(NewProgram);
+    return;
+  }
+
+  const GLuint OldProgram = m_ID;
+  m_ID = NewProgram;
+  m_UniformsCache.clear();
+  m_VertexTimestamp = NewVertexTimestamp;
+  m_FragmentTimestamp = NewFragmentTimestamp;
+  glUseProgram(m_ID);
+
+  if (OldProgram != INVALID_VALUE)
+    UnloadShader(OldProgram);
+
+  CLogger::Log(ELogType::Debug, "[CShader] Hot reloaded '{}'", m_BasePath.c_str());
 #endif
 }
 
@@ -174,4 +242,19 @@ GLuint CShader::LoadShader(const std::filesystem::path &_Path, GLenum _ShaderTyp
   }
 
   return Shader;
+}
+
+void CShader::UnloadShader(GLuint _ShaderID)
+{
+  constexpr GLsizei MaxCount = 10;
+
+  GLsizei Count = 0;
+  GLuint Shaders[MaxCount] = {0};
+
+  glGetAttachedShaders(_ShaderID, MaxCount, &Count, Shaders);
+
+  for (int i = 0; i < Count; ++i)
+    glDeleteShader(Shaders[i]);
+
+  glDeleteProgram(_ShaderID);
 }

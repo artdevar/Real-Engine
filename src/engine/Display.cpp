@@ -1,6 +1,16 @@
 #include "Display.h"
 #include "utils/Logger.h"
 #include <format>
+#include <cstdlib>
+#include <cstring>
+
+static inline void ApplyInitHints()
+{
+#if defined(__linux__)
+    // Force X11 only on Linux (needed for apitrace / GLX)
+    glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_X11);
+#endif
+}
 
 CDisplay::CDisplay() : m_Window(nullptr)
 {
@@ -10,6 +20,8 @@ CDisplay::~CDisplay() = default;
 
 int CDisplay::Init(const std::string &_Title)
 {
+    ApplyInitHints();
+
     CLogger::Log(ELogType::Info, "Init GLFW. Version: {}", glfwGetVersionString());
     if (glfwInit() != GLFW_TRUE)
     {
@@ -23,6 +35,7 @@ int CDisplay::Init(const std::string &_Title)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_SAMPLES, 8);
+    // glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
 
     m_Window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, _Title.c_str(), nullptr, nullptr);
     if (!m_Window)
@@ -58,6 +71,7 @@ int CDisplay::Init(const std::string &_Title)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
     InitCallbacks();
 

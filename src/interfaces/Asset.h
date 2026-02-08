@@ -2,18 +2,14 @@
 
 #include <filesystem>
 #include "Shutdownable.h"
+#include "engine/Passkey.h"
 
-class CResourceManagerKey
-{
-private:
-  CResourceManagerKey() = default;
-  friend class CResourceManager;
-};
+class CResourceManager;
 
 class IAsset : public IShutdownable
 {
 public:
   virtual ~IAsset() = default;
 
-  virtual bool Load(const std::filesystem::path &_Path, CResourceManagerKey) = 0;
+  virtual bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) = 0;
 };

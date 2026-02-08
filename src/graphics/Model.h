@@ -16,7 +16,7 @@ public:
 
   void Shutdown() override;
 
-  bool Load(const std::filesystem::path &_Path, CResourceManagerKey) override;
+  bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) override;
 
   bool IsLoaded() const;
 

@@ -6,8 +6,8 @@
 #include <memory>
 #include <map>
 #include "graphics/Buffer.h"
+#include "graphics/ShaderTypes.h"
 #include "utils/Common.h"
-#include "Shared.h"
 
 class CModel;
 class CTextureBase;
@@ -45,6 +45,8 @@ namespace ecs
       glm::vec4 BaseColorFactor = glm::vec4(1.0f);
       float MetallicFactor = 1.0f;
       float RoughnessFactor = 1.0f;
+      float AlphaCutoff = 0.5f;
+      EAlphaMode AlphaMode = EAlphaMode::Opaque;
     };
 
     std::vector<TPrimitiveData> Primitives;

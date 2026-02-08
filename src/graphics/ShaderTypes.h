@@ -4,9 +4,6 @@
 #include <glm/glm.hpp>
 #include <variant>
 
-#define STRIDE_AND_OFFSET(Type, Property) \
-  sizeof(Type), (GLvoid *)offsetof(Type, Property)
-
 using UniformType = std::variant<GLint, GLuint, GLfloat, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
 
 constexpr inline GLuint ATTRIB_LOC_POSITION = 0;
@@ -22,6 +19,13 @@ constexpr inline GLuint BINDING_SPEC_TEXTURE_BUFFER = 1;
 constexpr inline GLuint BINDING_LIGHTING_BUFFER = 5;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
+
+enum EAlphaMode : GLuint
+{
+  Opaque,
+  Mask,
+  Blend
+};
 
 struct TLightDirectional
 {

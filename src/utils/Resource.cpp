@@ -30,4 +30,15 @@ namespace resource
         return Get()->LoadCubemap(std::move(_Path));
     }
 
+    std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name,
+                                                const TTextureParams &_Params)
+    {
+        return Get()->CreateTexture(_Name, _Params);
+    }
+
+    std::shared_ptr<CTextureBase> GetFallbackTexture()
+    {
+        return Get()->GetFallbackTexture();
+    }
+
 }

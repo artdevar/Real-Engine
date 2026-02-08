@@ -10,7 +10,6 @@
 #include "engine/Engine.h"
 #include "engine/ResourceManager.h"
 #include "engine/Camera.h"
-#include "Shared.h"
 #include "utils/Common.h"
 
 namespace ecs
@@ -78,11 +77,8 @@ namespace ecs
         m_VAO.Unbind();
     }
 
-    void CSkyboxRenderSystem::Render(CRenderer &_Renderer)
+    void CSkyboxRenderSystem::RenderInternal(CRenderer &_Renderer)
     {
-        if (m_Entities.Empty())
-            return;
-
         std::shared_ptr<CShader> Shader = m_SkyboxShader.lock();
 
         _Renderer.SetShader(Shader);
@@ -108,6 +104,11 @@ namespace ecs
         m_VAO.Unbind();
 
         glDepthFunc(GL_LESS);
+    }
+
+    bool CSkyboxRenderSystem::ShouldBeRendered() const
+    {
+        return !m_Entities.Empty();
     }
 
 }

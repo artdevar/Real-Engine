@@ -3,8 +3,13 @@
 namespace ecs
 {
 
-    void CPhysicsSystem::Update(float _TimeDelta)
+    void CPhysicsSystem::UpdateInternal(float _TimeDelta)
     {
+    }
+
+    bool CPhysicsSystem::ShouldBeUpdated() const
+    {
+        return IUpdateable::ShouldBeUpdated() && !m_Entities.Empty();
     }
 
 }

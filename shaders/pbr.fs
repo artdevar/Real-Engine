@@ -54,15 +54,20 @@ struct TMaterial
   vec4  BaseColorFactor;
   float MetallicFactor;
   float RoughnessFactor;
+  float AlphaCutoff;
+  int   AlphaMode;
 };
 
 uniform TMaterial u_Material;
+uniform sampler2D u_ShadowMap;
+uniform mat4      u_LightSpaceMatrix;
 uniform vec3      u_ViewPos;
 
 in vec3 io_Normal;
 in vec3 io_FragPos;
 in vec2 io_TexCoords;
 in mat3 io_TBN;
+in vec4 io_FragLightPos;
 
 out vec4 o_FragColor;
 
@@ -106,10 +111,27 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
     return ggx1 * ggx2;
 }
 
+float CalculateShadow(vec4 fragLightPos)
+{
+    // Perform perspective divide
+    vec3 projCoords = fragLightPos.xyz / fragLightPos.w;
+
+    // Transform to [0,1] range
+    projCoords = projCoords * 0.5 + 0.5;
+
+    // Sample depth from shadow map
+    float closestDepth = texture(u_ShadowMap, projCoords.xy).r; // Assuming shadow map is in BaseColorTexture
+    float currentDepth = projCoords.z;
+
+    // Simple shadow test with bias
+    float bias = 0.005;
+    return (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+}
+
 void main()
 {
     vec4 baseColorSample = texture(u_Material.BaseColorTexture, io_TexCoords) * u_Material.BaseColorFactor;
-    if (baseColorSample.a < 0.5)
+  if (u_Material.AlphaMode == 2 && baseColorSample.a < u_Material.AlphaCutoff)
       discard;
 
     vec3 albedo = pow(baseColorSample.rgb, vec3(2.2)); // sRGB to linear
@@ -144,6 +166,8 @@ void main()
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
 
+    //float shadow = CalculateShadow(io_FragLightPos);
     vec3 color = (kD * albedo / PI + specular) * LightDirectional.Diffuse * NdotL + ambientColor;
+    //float outAlpha = (u_AlphaMode == 2) ? baseColorSample.a : 1.0;
     o_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

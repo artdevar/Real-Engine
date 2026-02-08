@@ -2,10 +2,8 @@
 
 #include "interfaces/Shutdownable.h"
 #include "utils/Common.h"
-#include <filesystem>
-#include <memory>
+#include "graphics/TextureParams.h"
 #include <string>
-#include <map>
 
 class CModel;
 class CShader;
@@ -27,9 +25,11 @@ public:
 
   std::shared_ptr<CShader> LoadShader(const std::filesystem::path &_Path);
 
+  std::shared_ptr<CTextureBase> GetFallbackTexture() const;
   std::shared_ptr<CTextureBase> LoadTexture(const std::filesystem::path &_Path);
-
   std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path);
+  std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name,
+                                              const TTextureParams &_Params = {});
 
 private:
   static const std::filesystem::path DEFAULT_TEXTURE_PATH;

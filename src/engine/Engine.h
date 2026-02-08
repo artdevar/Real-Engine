@@ -51,8 +51,9 @@ public:
   std::shared_ptr<CInputManager> GetInputManager() const;
 
 private:
-  void Update(float _TimeDelta) override;
-  void Render(CRenderer &_Renderer) override;
+  void UpdateInternal(float _TimeDelta) override;
+  void RenderInternal(CRenderer &_Renderer) override;
+  bool ShouldBeRendered() const override;
 
   void OnWindowResized(int _Width, int _Height);
   void ProcessInput(float _TimeDelta);
@@ -63,7 +64,7 @@ private:
 private:
   static CEngine *Singleton;
 
-#if ENABLE_EDITOR
+#if EDITOR_ENABLED
   bool m_CameraDragActive{false};
 #endif
 
@@ -74,7 +75,7 @@ private:
   std::shared_ptr<CWorld> m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
 
-#if ENABLE_EDITOR
+#if EDITOR_ENABLED
   CEditorUI *m_EditorUI;
 #endif
 };

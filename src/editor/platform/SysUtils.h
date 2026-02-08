@@ -1,6 +1,6 @@
 #pragma once
 
-#if ENABLE_EDITOR
+#if EDITOR_ENABLED
 
 #include <filesystem>
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <glm/vec2.hpp>
 #include <memory>
 #include <string_view>
 #include "ShaderTypes.h"
@@ -9,11 +10,11 @@
 class CShader;
 class CCamera;
 
-enum ClearFlags
+enum ClearFlags : GLbitfield
 {
-  Clear_Color = 0x01,
-  Clear_Depth = 0x02,
-  Clear_Stencil = 0x04
+  Clear_Color = GL_COLOR_BUFFER_BIT,
+  Clear_Depth = GL_DEPTH_BUFFER_BIT,
+  Clear_Stencil = GL_STENCIL_BUFFER_BIT
 };
 
 class CRenderer final
@@ -21,7 +22,7 @@ class CRenderer final
 public:
   CRenderer();
 
-  void BeginFrame(float _R, float _G, float _B, float _A, unsigned int _ClearFlags = Clear_Color | Clear_Depth);
+  void BeginFrame(float _R, float _G, float _B, float _A, ClearFlags _ClearFlags = static_cast<ClearFlags>(Clear_Color | Clear_Depth));
   void EndFrame();
   void CheckErrors();
 
@@ -29,26 +30,33 @@ public:
   void ClearColor(GLfloat _R, GLfloat _G, GLfloat _B, GLfloat _A);
 
   void SetViewport(GLsizei _Width, GLsizei _Height);
+  glm::ivec2 GetViewport() const;
 
-  void DrawElements(GLenum _Mode, GLsizei _Count, GLenum _Type);
+  void DrawElements(GLenum _Mode, GLsizei _Count, GLenum _Type, const void *_Offset = nullptr);
   void DrawArrays(GLenum _Mode, GLsizei _Count);
 
   void SetCamera(const std::shared_ptr<CCamera> &_Camera);
   const std::shared_ptr<CCamera> &GetCamera() const;
 
   void SetShader(const std::shared_ptr<CShader> &_Shader);
+  void SetUniform(std::string_view _Name, const UniformType &_Value);
   const std::shared_ptr<CShader> &GetShader() const;
 
-  void SetUniform(std::string_view _Name, const UniformType &_Value);
   void SetLightingData(TShaderLighting &&_Data);
+  glm::mat4 GetLightSpaceMatrix() const;
+
+  void SetAlphaBlending(bool _Enabled);
 
 private:
   void InitShaderValues();
 
-private:
+public:
   std::shared_ptr<CCamera> m_Camera;
   std::shared_ptr<CShader> m_CurrentShader;
 
   TShaderLighting m_Lighting;
   CUniformBuffer m_LightingUBO;
+
+  mutable glm::mat4 m_LightSpaceMatrix;
+  mutable bool m_LightSpaceMatrixDirty = true;
 };

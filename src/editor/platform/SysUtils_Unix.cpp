@@ -1,7 +1,8 @@
 #include "SysUtils.h"
 
-#if ENABLE_EDITOR
+#if EDITOR_ENABLED
 #include "utils/Common.h"
+#include <cstring>
 
 namespace utils
 {
@@ -9,7 +10,7 @@ namespace utils
   std::filesystem::path OpenFileDialog()
   {
     char PathBuffer[256];
-    FastMemSet(PathBuffer, 0x00, sizeof(PathBuffer));
+    std::memset(PathBuffer, 0x00, sizeof(PathBuffer));
 
     FILE *File = popen("zenity \"$@\" 2>/dev/null --file-selection --title=\"Select a file\"", "r");
 

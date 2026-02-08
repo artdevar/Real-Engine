@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#include "ModelRenderSystem.h"
+#include "WorldRenderSystem.h"
 #include "ecs/Components.h"
 #include "ecs/Coordinator.h"
 #include "graphics/Shader.h"
@@ -8,33 +8,44 @@
 #include "graphics/Renderer.h"
 #include "graphics/Model.h"
 #include "graphics/Texture.h"
-#include "engine/Engine.h"
-#include "engine/ResourceManager.h"
 #include "engine/Camera.h"
 #include "utils/Common.h"
+#include "utils/Resource.h"
+#include "ecs/systems/ShadowRenderSystem.h"
 #include "tiny_gltf.h"
 
 namespace ecs
 {
 
-    CModelRenderSystem::CModelRenderSystem()
+    CWorldRenderSystem::CWorldRenderSystem()
     {
     }
 
-    void CModelRenderSystem::Init(CCoordinator *_Coordinator)
+    void CWorldRenderSystem::Init(CCoordinator *_Coordinator)
     {
         CSystem::Init(_Coordinator);
 
-        m_ModelShader = CEngine::Instance().GetResourceManager()->LoadShader("../shaders/pbr");
+        m_ModelShader = resource::LoadShader("../shaders/pbr");
     }
 
-    void CModelRenderSystem::Render(CRenderer &_Renderer)
+    void CWorldRenderSystem::RenderInternal(CRenderer &_Renderer)
     {
-        if (m_Entities.Empty())
-            return;
+        const std::shared_ptr<CCamera> &Camera = _Renderer.GetCamera();
+        const glm::mat4 ViewProjection = Camera->GetProjection() * Camera->GetView();
 
-        std::shared_ptr<CShader> Shader = m_ModelShader.lock();
-        _Renderer.SetShader(Shader);
+        _Renderer.SetShader(m_ModelShader.lock());
+        _Renderer.SetUniform("u_ViewPos", Camera->GetPosition());
+        _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
+
+        std::shared_ptr<CTextureBase> ShadowMapTexture;
+        if (ShadowMapTexture)
+        {
+            ShadowMapTexture->Bind(GL_TEXTURE20);
+            _Renderer.SetUniform("u_ShadowMap", 20);
+        }
+
+        if (auto ShadowSystem = m_Coordinator->GetSystem<ecs::CShadowRenderSystem>()) // TODO
+            ShadowMapTexture = ShadowSystem->m_DepthMap;
 
         for (ecs::TEntity Entity : m_Entities)
         {
@@ -42,6 +53,7 @@ namespace ecs
             auto &ModelComponent = m_Coordinator->GetComponent<TModelComponent>(Entity);
 
             _Renderer.SetUniform("u_Model", TransformComponent.Transform);
+            _Renderer.SetUniform("u_MVP", ViewProjection * TransformComponent.Transform);
 
             for (TModelComponent::TPrimitiveData &Primitive : ModelComponent.Primitives)
             {
@@ -75,16 +87,19 @@ namespace ecs
                     _Renderer.SetUniform("u_Material.BaseColorFactor", Material.BaseColorFactor);
                     _Renderer.SetUniform("u_Material.MetallicFactor", Material.MetallicFactor);
                     _Renderer.SetUniform("u_Material.RoughnessFactor", Material.RoughnessFactor);
+                    _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
+                    _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
+                    _Renderer.SetAlphaBlending(Material.AlphaMode == EAlphaMode::Blend);
                 }
 
                 Primitive.VAO.Bind();
-                glDrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
+                _Renderer.DrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
                 Primitive.VAO.Unbind();
             }
         }
     }
 
-    void CModelRenderSystem::SetVisibility(ecs::TEntity _Entity, bool _IsVisible)
+    void CWorldRenderSystem::SetVisibility(ecs::TEntity _Entity, bool _IsVisible)
     {
         if (_IsVisible)
         {
@@ -104,12 +119,17 @@ namespace ecs
         }
     }
 
-    void CModelRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
+    bool CWorldRenderSystem::ShouldBeRendered() const
+    {
+        return !m_Entities.Empty();
+    }
+
+    void CWorldRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
     {
         CSystem::OnEntityAdded(_Entity);
     }
 
-    void CModelRenderSystem::OnEntityDeleted(ecs::TEntity _Entity)
+    void CWorldRenderSystem::OnEntityDeleted(ecs::TEntity _Entity)
     {
         CSystem::OnEntityDeleted(_Entity);
 

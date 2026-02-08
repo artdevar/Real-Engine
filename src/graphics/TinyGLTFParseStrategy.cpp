@@ -195,6 +195,14 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
     Material.BaseColorFactor = glm::vec4(Factor[0], Factor[1], Factor[2], Factor[3]);
     Material.MetallicFactor = static_cast<float>(PBR.metallicFactor);
     Material.RoughnessFactor = static_cast<float>(PBR.roughnessFactor);
+    Material.AlphaCutoff = static_cast<float>(SourceMaterial.alphaCutoff);
+
+    if (SourceMaterial.alphaMode == "MASK")
+      Material.AlphaMode = EModelAlphaMode::Mask;
+    else if (SourceMaterial.alphaMode == "BLEND")
+      Material.AlphaMode = EModelAlphaMode::Blend;
+    else
+      Material.AlphaMode = EModelAlphaMode::Opaque;
   }
 }
 

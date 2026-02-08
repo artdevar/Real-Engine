@@ -10,6 +10,7 @@ add_executable(Real_Engine)
 target_sources(Real_Engine PRIVATE
   src/Main.cpp
   src/tiny_gltf.cc
+  src/engine/Config.cpp
   src/engine/Engine.cpp
   src/engine/Display.cpp
   src/engine/InputManager.cpp
@@ -20,10 +21,11 @@ target_sources(Real_Engine PRIVATE
   src/graphics/Shader.cpp
   src/graphics/Model.cpp
   src/graphics/TinyGLTFParseStrategy.cpp
-  src/ecs/systems/ModelRenderSystem.cpp
+  src/ecs/systems/WorldRenderSystem.cpp
   src/ecs/systems/SkyboxRenderSystem.cpp
   src/ecs/systems/PhysicsSystem.cpp
   src/ecs/systems/LightingSystem.cpp
+  src/ecs/systems/ShadowRenderSystem.cpp
   src/ecs/EntityManager.cpp
   src/ecs/ComponentsFactory.cpp
   src/editor/EditorUI.cpp
@@ -53,7 +55,12 @@ target_link_libraries(Real_Engine glfw)
 target_link_libraries(Real_Engine assimp)
 target_link_libraries(Real_Engine tbb)
 
-target_compile_definitions(Real_Engine PRIVATE ENABLE_EDITOR=1)
+target_compile_definitions(Real_Engine PRIVATE EDITOR_ENABLED=1)
+target_compile_definitions(Real_Engine PRIVATE SHADERS_HOT_RELOAD=1)
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(Real_Engine PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-literal-operator>)
+endif ()
 
 target_include_directories(Real_Engine
   PUBLIC ${PROJECT_SOURCE_DIR}/lib

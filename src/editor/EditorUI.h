@@ -1,12 +1,11 @@
 #pragma once
 
-#if ENABLE_EDITOR
+#if EDITOR_ENABLED
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
 #include "interfaces/Renderable.h"
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
-#include "Shared.h"
 #include <glm/mat4x4.hpp>
 #include <optional>
 #include <memory>
@@ -33,8 +32,10 @@ public:
 
   void Init(CEngine *_Engine);
 
-  void Update(float _TimeDelta) override;
-  void Render(CRenderer &_Renderer) override;
+private:
+  void UpdateInternal(float _TimeDelta) override;
+  void RenderInternal(CRenderer &_Renderer) override;
+  bool ShouldBeRendered() const override;
 
 private:
   void RenderBegin();
@@ -42,6 +43,8 @@ private:
   void RenderEnd();
 
   void RenderEntities();
+  void RenderGlobalParams();
+  void RenderLightDebugLines();
 
   void SpawnEntity(TEntityType _Type);
 

@@ -9,8 +9,9 @@ namespace ecs
     class CPhysicsSystem : public IUpdateable,
                            public CSystem
     {
-    public:
-        void Update(float _TimeDelta) override;
+    private:
+        bool ShouldBeUpdated() const override;
+        void UpdateInternal(float _TimeDelta) override;
     };
 
 }

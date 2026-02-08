@@ -26,15 +26,17 @@ public:
   void Init();
   void Shutdown() override;
 
-  void Update(float _TimeDelta) override;
-  void Render(CRenderer &_Renderer) override;
+private:
+  void UpdateInternal(float _TimeDelta) override;
+  void RenderInternal(CRenderer &_Renderer) override;
+  bool ShouldBeRendered() const override;
 
 public:
   void RemoveEntity(ecs::TEntity _Entity);
 
   const std::vector<ecs::TEntity> &GetAllEntities() const;
 
-  CEntityBuilder GetEntityBuilder() const;
+  CEntityBuilder CreateEntity();
 
 protected:
   virtual void InitECS();

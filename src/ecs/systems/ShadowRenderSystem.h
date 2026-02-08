@@ -1,20 +1,20 @@
 #pragma once
 
 #include "ecs/SystemManager.h"
-#include "ecs/CommonECS.h"
 #include "interfaces/Renderable.h"
 #include "graphics/Buffer.h"
 
+class CTextureBase;
 class CShader;
 
 namespace ecs
 {
 
-    class CSkyboxRenderSystem : public IRenderable,
+    class CShadowRenderSystem : public IRenderable,
                                 public CSystem
     {
     public:
-        CSkyboxRenderSystem();
+        CShadowRenderSystem();
 
         void Init(CCoordinator *_Coordinator) override;
 
@@ -22,10 +22,12 @@ namespace ecs
         void RenderInternal(CRenderer &_Renderer) override;
         bool ShouldBeRendered() const override;
 
-    protected:
-        std::weak_ptr<CShader> m_SkyboxShader;
-        CVertexArray m_VAO;
-        CVertexBuffer m_VBO;
+    public:
+        static constexpr inline int SHADOW_MAP_SIZE = 2048;
+
+        CFrameBuffer m_DepthMapFBO;
+        std::shared_ptr<CTextureBase> m_DepthMap;
+        std::shared_ptr<CShader> m_DepthShader;
     };
 
 }
