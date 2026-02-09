@@ -1,15 +1,20 @@
 cmake_minimum_required(VERSION 3.25.0)
-project(Real_Engine VERSION 0.0.1)
 
+set(TARGET Real_Engine)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/")
 
-add_compile_definitions(GLM_ENABLE_EXPERIMENTAL)
-add_executable(Real_Engine)
+project(${TARGET} VERSION 0.0.1)
+add_executable(${TARGET})
 
-target_sources(Real_Engine PRIVATE
+target_compile_definitions(${TARGET} PUBLIC GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions(${TARGET} PRIVATE EDITOR_ENABLED=1)
+target_compile_definitions(${TARGET} PRIVATE SHADERS_HOT_RELOAD=1)
+target_compile_definitions(${TARGET} PRIVATE ASSETS_DIR="${ASSETS_DIR}")
+
+target_sources(${TARGET} PRIVATE
   src/Main.cpp
-  src/tiny_gltf.cc
   src/engine/Config.cpp
   src/engine/Engine.cpp
   src/engine/Display.cpp
@@ -31,46 +36,34 @@ target_sources(Real_Engine PRIVATE
   src/editor/EditorUI.cpp
   src/utils/Logger.cpp
   src/utils/Resource.cpp
-  src/glad/glad.c
-  src/imgui/imgui.cpp
-  src/imgui/imgui_draw.cpp
-  src/imgui/imgui_widgets.cpp
-  src/imgui/imgui_tables.cpp
-  src/imgui/misc/cpp/imgui_stdlib.cpp
-  src/imgui/backends/imgui_impl_glfw.cpp
-  src/imgui/backends/imgui_impl_opengl3.cpp
 )
 
 if (WIN32)
-  target_sources(Real_Engine PRIVATE src/editor/platform/SysUtils_Window.cpp)
+  target_sources(${TARGET} PRIVATE src/editor/platform/SysUtils_Window.cpp)
 elseif (UNIX AND NOT APPLE)
-  target_sources(Real_Engine PRIVATE src/editor/platform/SysUtils_Unix.cpp)
+  target_sources(${TARGET} PRIVATE src/editor/platform/SysUtils_Unix.cpp)
 endif ()
 
-find_package(OpenGL REQUIRED)
+#find_package(OpenGL REQUIRED)
+#find_package(glfw3 REQUIRED)
 
-link_directories(${PROJECT_SOURCE_DIR}/lib)
+link_directories(lib)
+include_directories(lib)
+include_directories(lib/ctti)
+include_directories(lib/glm-1.0.1)
+include_directories(lib/tinygltf)
+include_directories(lib/imgui)
+include_directories(src)
 
-target_link_libraries(Real_Engine glfw)
-target_link_libraries(Real_Engine assimp)
-target_link_libraries(Real_Engine tbb)
+add_subdirectory(lib/imgui)
+add_subdirectory(lib/tinygltf)
+add_subdirectory(lib/glad)
 
-target_compile_definitions(Real_Engine PRIVATE EDITOR_ENABLED=1)
-target_compile_definitions(Real_Engine PRIVATE SHADERS_HOT_RELOAD=1)
+target_link_libraries(${TARGET} PRIVATE glad)
+target_link_libraries(${TARGET} PRIVATE glfw)
+target_link_libraries(${TARGET} PRIVATE tinygltf)
+target_link_libraries(${TARGET} PRIVATE imgui)
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(Real_Engine PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-literal-operator>)
-endif ()
-
-target_include_directories(Real_Engine
-  PUBLIC ${PROJECT_SOURCE_DIR}/lib
-  PUBLIC ${PROJECT_SOURCE_DIR}/lib/ctti
-  PUBLIC ${PROJECT_SOURCE_DIR}/lib/assimp/include
-  PUBLIC ${PROJECT_SOURCE_DIR}/lib/glm-1.0.1
-  PUBLIC ${PROJECT_SOURCE_DIR}/src
-  PUBLIC ${PROJECT_SOURCE_DIR}/src/imgui
-)
-
-target_precompile_headers(Real_Engine PRIVATE
+target_precompile_headers(${TARGET} PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_SOURCE_DIR}/src/pch.h>
 )

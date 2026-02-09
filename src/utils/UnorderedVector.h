@@ -4,14 +4,12 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include <execution>
 
 template <typename T>
 class CUnorderedVector
 {
 public:
-
-  using IteratorType      = std::vector<T>::iterator;
+  using IteratorType = std::vector<T>::iterator;
   using ConstIteratorType = std::vector<T>::const_iterator;
 
   constexpr IteratorType begin()
@@ -34,12 +32,12 @@ public:
     return m_Data.end();
   }
 
-  constexpr T & operator[](size_t _Index)
+  constexpr T &operator[](size_t _Index)
   {
     return m_Data[_Index];
   }
 
-  constexpr const T & operator[](size_t _Index) const
+  constexpr const T &operator[](size_t _Index) const
   {
     return m_Data[_Index];
   }
@@ -65,17 +63,17 @@ public:
     m_Data.pop_back();
   }
 
-  constexpr void Erase(const T & _Value)
+  constexpr void Erase(const T &_Value)
   {
     const IteratorType Iterator = Find(_Value);
     assert(Iterator != end());
     Erase(Iterator);
   }
 
-  constexpr bool SafeErase(const T & _Value)
+  constexpr bool SafeErase(const T &_Value)
   {
     const IteratorType Iterator = Find(_Value);
-    const bool         IsFound  = Iterator != end();
+    const bool IsFound = Iterator != end();
 
     if (IsFound)
       Erase(Iterator);
@@ -83,29 +81,29 @@ public:
     return IsFound;
   }
 
-  constexpr IteratorType Find(const T & _Value)
+  constexpr IteratorType Find(const T &_Value)
   {
-    return std::find(std::execution::par, begin(), end(), _Value);
+    return std::find(begin(), end(), _Value);
   }
 
-  constexpr ConstIteratorType Find(const T & _Value) const
+  constexpr ConstIteratorType Find(const T &_Value) const
   {
-    return std::find(std::execution::par, begin(), end(), _Value);
+    return std::find(begin(), end(), _Value);
   }
 
-  constexpr bool Contains(const T & _Value) const
+  constexpr bool Contains(const T &_Value) const
   {
     return Find(_Value) != end();
   }
 
   template <std::convertible_to<T> U>
-  constexpr void Push(U && _Value)
+  constexpr void Push(U &&_Value)
   {
     m_Data.push_back(std::forward<U>(_Value));
   }
 
   template <std::convertible_to<T> U>
-  constexpr bool PushUnique(U && _Value)
+  constexpr bool PushUnique(U &&_Value)
   {
     const bool NeedPush = !Contains(std::forward<U>(_Value));
 
@@ -115,10 +113,10 @@ public:
     return NeedPush;
   }
 
-  friend std::ostream & operator<<(std::ostream & _Stream, const CUnorderedVector & _Vector)
+  friend std::ostream &operator<<(std::ostream &_Stream, const CUnorderedVector &_Vector)
   {
     _Stream << "{ ";
-    for (const T & Val : _Vector.m_Data)
+    for (const T &Val : _Vector.m_Data)
       _Stream << Val << ' ';
     _Stream << "}\n";
 
@@ -126,6 +124,5 @@ public:
   }
 
 private:
-
   std::vector<T> m_Data;
 };
