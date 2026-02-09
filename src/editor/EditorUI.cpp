@@ -64,6 +64,11 @@ void CEditorUI::UpdateInternal(float _TimeDelta)
 {
 }
 
+bool CEditorUI::ShouldBeUpdated() const
+{
+  return m_Engine != nullptr;
+}
+
 bool CEditorUI::ShouldBeRendered() const
 {
   return m_Engine != nullptr;

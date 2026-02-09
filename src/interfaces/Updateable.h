@@ -12,10 +12,7 @@ public:
   }
 
 protected:
-  virtual bool ShouldBeUpdated() const
-  {
-    return true;
-  }
+  virtual bool ShouldBeUpdated() const = 0;
 
 private:
   virtual void UpdateInternal(float _TimeDelta) = 0;

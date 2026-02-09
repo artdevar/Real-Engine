@@ -32,6 +32,7 @@ public: // Input
 
 private:
   void UpdateInternal(float _TimeDelta) override;
+  bool ShouldBeUpdated() const override;
 
 private:
   glm::vec3 m_Position;

@@ -34,6 +34,11 @@ void CWorld::UpdateInternal(float _TimeDelta)
   m_EntitiesCoordinator->GetSystem<ecs::CPhysicsSystem>()->Update(_TimeDelta);
 }
 
+bool CWorld::ShouldBeUpdated() const
+{
+  return m_EntitiesCoordinator != nullptr;
+}
+
 void CWorld::RenderInternal(CRenderer &_Renderer)
 {
   TShaderLighting ShaderLight = m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->ComposeLightingData();

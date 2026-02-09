@@ -9,7 +9,7 @@ namespace ecs
 
     bool CPhysicsSystem::ShouldBeUpdated() const
     {
-        return IUpdateable::ShouldBeUpdated() && !m_Entities.Empty();
+        return !m_Entities.Empty();
     }
 
 }

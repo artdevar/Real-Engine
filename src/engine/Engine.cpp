@@ -142,6 +142,11 @@ void CEngine::UpdateInternal(float _TimeDelta)
 #endif
 }
 
+bool CEngine::ShouldBeUpdated() const
+{
+  return true;
+}
+
 void CEngine::RenderInternal(CRenderer &_Renderer)
 {
   m_World->Render(_Renderer);

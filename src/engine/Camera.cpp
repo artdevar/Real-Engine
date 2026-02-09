@@ -158,3 +158,8 @@ void CCamera::ResetInputState()
   m_SpeedMultiplier = 1.0f;
   m_MouseDelta = glm::vec2(0.0f, 0.0f);
 }
+
+bool CCamera::ShouldBeUpdated() const
+{
+  return true;
+}

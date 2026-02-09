@@ -52,6 +52,7 @@ public:
 
 private:
   void UpdateInternal(float _TimeDelta) override;
+  bool ShouldBeUpdated() const override;
   void RenderInternal(CRenderer &_Renderer) override;
   bool ShouldBeRendered() const override;
 
