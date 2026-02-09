@@ -65,15 +65,12 @@ namespace ecs
     {
         CSystem::Init(_Coordinator);
 
-        m_SkyboxShader = CEngine::Instance().GetResourceManager()->LoadShader("../shaders/skybox");
+        m_SkyboxShader = CEngine::Instance().GetResourceManager()->LoadShader("skybox");
 
         m_VAO.Bind();
-
         m_VBO.Bind();
         m_VBO.Assign(SKYBOX_VERTICES, sizeof(SKYBOX_VERTICES));
-
         m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, 3 * sizeof(float), (GLvoid *)0);
-
         m_VAO.Unbind();
     }
 
@@ -89,18 +86,16 @@ namespace ecs
         assert(m_Entities.Size() == 1); // it isn't supposed to be more than 1 skybox
 
         m_VAO.Bind();
-        for (ecs::TEntity Entity : m_Entities)
-        {
-            auto &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
-            const int TextureIndex = 0;
-            SkyboxComponent.SkyboxTexture->Bind(GL_TEXTURE0 + TextureIndex);
+        ecs::TEntity Entity = m_Entities[0];
+        auto &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
-            _Renderer.SetUniform("u_Cubemap", TextureIndex);
-            _Renderer.DrawArrays(GL_TRIANGLES, ARRAY_SIZE(SKYBOX_VERTICES) / 3);
+        const int TextureIndex = 0;
+        SkyboxComponent.SkyboxTexture->Bind(GL_TEXTURE0 + TextureIndex);
+        _Renderer.SetUniform("u_Cubemap", TextureIndex);
+        _Renderer.DrawArrays(GL_TRIANGLES, ARRAY_SIZE(SKYBOX_VERTICES) / 3);
 
-            SkyboxComponent.SkyboxTexture->Unbind();
-        }
+        SkyboxComponent.SkyboxTexture->Unbind();
         m_VAO.Unbind();
 
         glDepthFunc(GL_LESS);

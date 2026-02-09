@@ -25,7 +25,7 @@ namespace ecs
     {
         CSystem::Init(_Coordinator);
 
-        m_ModelShader = resource::LoadShader("../shaders/pbr");
+        m_ModelShader = resource::LoadShader("pbr");
     }
 
     void CWorldRenderSystem::RenderInternal(CRenderer &_Renderer)
@@ -38,14 +38,14 @@ namespace ecs
         _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
 
         std::shared_ptr<CTextureBase> ShadowMapTexture;
+        if (auto ShadowSystem = m_Coordinator->GetSystem<ecs::CShadowRenderSystem>()) // TODO
+            ShadowMapTexture = ShadowSystem->m_DepthMap;
+
         if (ShadowMapTexture)
         {
             ShadowMapTexture->Bind(GL_TEXTURE20);
             _Renderer.SetUniform("u_ShadowMap", 20);
         }
-
-        if (auto ShadowSystem = m_Coordinator->GetSystem<ecs::CShadowRenderSystem>()) // TODO
-            ShadowMapTexture = ShadowSystem->m_DepthMap;
 
         for (ecs::TEntity Entity : m_Entities)
         {
@@ -135,5 +135,4 @@ namespace ecs
 
         m_HiddenEntities.SafeErase(_Entity);
     }
-
 }

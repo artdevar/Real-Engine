@@ -18,6 +18,7 @@
 #include "imgui/misc/cpp/imgui_stdlib.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
+#include <cmath>
 
 namespace
 {
@@ -100,11 +101,11 @@ void CEditorUI::RenderEnd()
 void CEditorUI::RenderGlobalParams()
 {
   float CameraZNear = CConfig::Instance().GetCameraZNear();
-  if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 0.5f, -50.0f, 100.0f))
+  if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 1.0f, -50.0f, 100.0f))
     CConfig::Instance().SetCameraZNear(CameraZNear, CPasskey(this));
 
   float CameraZFar = CConfig::Instance().GetCameraZFar();
-  if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 10.0f, 1.0f, 10000.0f))
+  if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 1.0f, 1.0f, 10000.0f))
     CConfig::Instance().SetCameraZFar(CameraZFar, CPasskey(this));
 
   float CameraFOV = CConfig::Instance().GetCameraFOV();
@@ -112,12 +113,20 @@ void CEditorUI::RenderGlobalParams()
     CConfig::Instance().SetCameraFOV(CameraFOV, CPasskey(this));
 
   float LightZNear = CConfig::Instance().GetLightSpaceMatrixZNear();
-  if (ImGui::DragFloat("Light ZNear", &LightZNear, 0.5f, -50.0f, 100.0f))
+  if (ImGui::DragFloat("Light ZNear", &LightZNear, 1.0f, -50.0f, 100.0f))
     CConfig::Instance().SetLightSpaceMatrixZNear(LightZNear, CPasskey(this));
 
   float LightZFar = CConfig::Instance().GetLightSpaceMatrixZFar();
-  if (ImGui::DragFloat("Light ZFar", &LightZFar, 10.0f, 1.0f, 1000.0f))
+  if (ImGui::DragFloat("Light ZFar", &LightZFar, 1.0f, 1.0f, 1000.0f))
     CConfig::Instance().SetLightSpaceMatrixZFar(LightZFar, CPasskey(this));
+
+  float LightOrthLeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
+  if (ImGui::DragFloat("Light Orth Left/Bottom", &LightOrthLeftBot, 1.0f, -100.0f, 0.0f))
+    CConfig::Instance().SetLightSpaceMatrixOrthLeftBot(LightOrthLeftBot, CPasskey(this));
+
+  float LightOrthRightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
+  if (ImGui::DragFloat("Light Orth Right/Top", &LightOrthRightTop, 1.0f, 0.0f, 100.0f))
+    CConfig::Instance().SetLightSpaceMatrixOrthRightTop(LightOrthRightTop, CPasskey(this));
 }
 
 void CEditorUI::RenderEntities()
@@ -319,10 +328,22 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
   ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z);
 
   ImGui::SeparatorText("Scale##ObjScale");
-
   ValueChanged |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, 0.01f, std::numeric_limits<float>::max());
   ValueChanged |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, 0.01f, std::numeric_limits<float>::max());
   ValueChanged |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, 0.01f, std::numeric_limits<float>::max());
+
+  // Prevent exact-zero scale which makes transforms degenerate and can crash
+  // downstream math (inverse/decompose). Replace tiny zeros with a small epsilon
+  // while preserving sign so users can still set negative scales.
+  constexpr float kMinScale = 1e-6f;
+  auto sanitize = [](float &v)
+  {
+    if (std::abs(v) < kMinScale)
+      v = (v >= 0.0f) ? kMinScale : -kMinScale;
+  };
+  sanitize(Scale.x);
+  sanitize(Scale.y);
+  sanitize(Scale.z);
 
   ImGui::SeparatorText("Rotation##ObjRot");
 

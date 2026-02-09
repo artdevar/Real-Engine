@@ -1,14 +1,14 @@
 #include "pch.h"
 
 #include "ResourceManager.h"
+#include "engine/Config.h"
 #include "Passkey.h"
 #include "graphics/Shader.h"
 #include "graphics/Model.h"
 #include "graphics/Texture.h"
+#include "graphics/TextureParams.h"
 #include "graphics/TinyGLTFParseStrategy.h"
 #include "utils/Logger.h"
-
-const std::filesystem::path CResourceManager::DEFAULT_TEXTURE_PATH = "../assets/textures/default.jpg";
 
 static inline bool operator<(const std::string &_L, const std::filesystem::path &_R)
 {
@@ -26,7 +26,7 @@ static bool IsFormatSupported(const std::filesystem::path &_Path)
 
 void CResourceManager::Init()
 {
-  LoadTexture(DEFAULT_TEXTURE_PATH);
+  LoadTexture(GetDefaultTexturePath());
 }
 
 void CResourceManager::Shutdown()
@@ -55,14 +55,16 @@ std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path 
   return std::static_pointer_cast<CModel>(Iter->second);
 }
 
-std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::path &_Path)
+std::shared_ptr<CShader> CResourceManager::LoadShader(const std::string &_Name)
 {
-  auto Iter = m_Assets.find(_Path);
+  const std::filesystem::path ShaderPath = CConfig::Instance().GetShadersDir() / _Name;
+
+  auto Iter = m_Assets.find(ShaderPath);
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Shader = std::make_shared<CShader>();
-    if (Shader->Load(_Path, CPasskey(this)))
-      Iter = m_Assets.emplace(_Path.string(), std::move(Shader)).first;
+    if (Shader->Load(ShaderPath, CPasskey(this)))
+      Iter = m_Assets.emplace(ShaderPath.string(), std::move(Shader)).first;
     else
       return nullptr;
   }
@@ -70,11 +72,9 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::filesystem::pat
   return std::static_pointer_cast<CShader>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::GetFallbackTexture() const
+std::shared_ptr<CTextureBase> CResourceManager::GetFallbackTexture()
 {
-  auto Iter = m_Assets.find(DEFAULT_TEXTURE_PATH);
-  assert(Iter != m_Assets.end() && "Fallback texture isn't loaded");
-  return std::static_pointer_cast<CTextureBase>(Iter->second);
+  return LoadTexture(GetDefaultTexturePath());
 }
 
 std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
@@ -86,7 +86,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
-      Iter = m_Assets.find(DEFAULT_TEXTURE_PATH);
+      Iter = m_Assets.find(GetDefaultTexturePath());
   }
 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
@@ -101,7 +101,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesyste
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
-      Iter = m_Assets.find(DEFAULT_TEXTURE_PATH);
+      Iter = m_Assets.find(GetDefaultTexturePath());
   }
 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
@@ -127,4 +127,14 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string 
   }
 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
+}
+
+std::filesystem::path CResourceManager::GetDefaultTexturePath()
+{
+  return CConfig::Instance().GetAssetsDir() / "textures/default.jpg";
+}
+
+std::filesystem::path CResourceManager::GetFallbackTexturePath()
+{
+  return CConfig::Instance().GetAssetsDir() / "textures/fallback.jpg";
 }

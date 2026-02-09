@@ -101,9 +101,11 @@ glm::mat4 CRenderer::GetLightSpaceMatrix() const
   {
     const float NearPlane = CConfig::Instance().GetLightSpaceMatrixZNear();
     const float FarPlane = CConfig::Instance().GetLightSpaceMatrixZFar();
+    const float LeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
+    const float RightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
 
     const glm::vec3 LightDir = m_Lighting.LightDirectional.Direction * -1.0f;
-    const glm::mat4 LightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, NearPlane, FarPlane);
+    const glm::mat4 LightProjection = glm::ortho(LeftBot, RightTop, LeftBot, RightTop, NearPlane, FarPlane);
     const glm::mat4 LightView = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 
     m_LightSpaceMatrix = LightProjection * LightView;
@@ -138,9 +140,6 @@ void CRenderer::InitShaderValues()
 {
   m_CurrentShader->Use();
   m_CurrentShader->Validate();
-  m_CurrentShader->SetUniform("u_Projection", m_Camera->GetProjection());
-  m_CurrentShader->SetUniform("u_ViewPos", m_Camera->GetPosition());
-  m_CurrentShader->SetUniform("u_View", m_Camera->GetView());
 
   GLuint LightingDataLoc = glGetUniformBlockIndex(m_CurrentShader->GetID(), "u_Lighting");
 

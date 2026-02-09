@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+#include "utils/StaticArray.h"
 
 enum class ETextureWrap : std::uint8_t
 {
@@ -21,8 +23,11 @@ enum class ETextureFilter : std::uint8_t
 
 struct TTextureParams
 {
+    static constexpr inline int BordersCount = 4;
+
     int Width = 0;
     int Height = 0;
+    std::optional<CStaticArray<float, BordersCount>> BorderColors;
     ETextureWrap WrapS = ETextureWrap::Repeat;
     ETextureWrap WrapT = ETextureWrap::Repeat;
     ETextureFilter MinFilter = ETextureFilter::LinearMipmapLinear;

@@ -2,13 +2,12 @@
 
 #include "interfaces/Shutdownable.h"
 #include "utils/Common.h"
-#include "graphics/TextureParams.h"
-#include <string>
 
 class CModel;
 class CShader;
 class CTextureBase;
 class IAsset;
+struct TTextureParams;
 
 class CResourceManager final : public IShutdownable
 {
@@ -21,18 +20,19 @@ public:
 
   void Shutdown() override;
 
+  std::shared_ptr<CShader> LoadShader(const std::string &_Name);
   std::shared_ptr<CModel> LoadModel(const std::filesystem::path &_Path);
 
-  std::shared_ptr<CShader> LoadShader(const std::filesystem::path &_Path);
-
-  std::shared_ptr<CTextureBase> GetFallbackTexture() const;
+  std::shared_ptr<CTextureBase> GetFallbackTexture();
   std::shared_ptr<CTextureBase> LoadTexture(const std::filesystem::path &_Path);
   std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path);
   std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name,
-                                              const TTextureParams &_Params = {});
+                                              const TTextureParams &_Params);
 
 private:
-  static const std::filesystem::path DEFAULT_TEXTURE_PATH;
+  static std::filesystem::path GetDefaultTexturePath();
+  static std::filesystem::path GetFallbackTexturePath();
 
+private:
   std::map<std::string, std::shared_ptr<IAsset>, std::less<>> m_Assets;
 };

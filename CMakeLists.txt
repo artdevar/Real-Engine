@@ -4,6 +4,7 @@ set(TARGET Real_Engine)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/")
+set(SHADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/")
 
 project(${TARGET} VERSION 0.0.1)
 add_executable(${TARGET})
@@ -12,10 +13,9 @@ target_compile_definitions(${TARGET} PUBLIC GLM_ENABLE_EXPERIMENTAL)
 target_compile_definitions(${TARGET} PRIVATE EDITOR_ENABLED=1)
 target_compile_definitions(${TARGET} PRIVATE SHADERS_HOT_RELOAD=1)
 target_compile_definitions(${TARGET} PRIVATE ASSETS_DIR="${ASSETS_DIR}")
-
+target_compile_definitions(${TARGET} PRIVATE SHADERS_DIR="${SHADERS_DIR}")
 target_sources(${TARGET} PRIVATE
   src/Main.cpp
-  src/engine/Config.cpp
   src/engine/Engine.cpp
   src/engine/Display.cpp
   src/engine/InputManager.cpp

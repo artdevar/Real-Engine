@@ -3,6 +3,8 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <initializer_list>
+#include <ranges>
 #include <algorithm>
 #include "Common.h"
 
@@ -14,20 +16,35 @@ class CStaticArray final
 public:
   class CIterator;
 
-  constexpr CStaticArray() = default;
-
-  template <std::convertible_to<T> U>
-  constexpr CStaticArray(U && _Value)
+  constexpr CStaticArray()
   {
-    FillArray(std::forward<U>(_Value));
+    if constexpr (std::is_trivially_default_constructible_v<T>)
+      std::memset(m_Data, 0x00, sizeof(m_Data));
   }
 
-  constexpr T & operator[](std::size_t _Index)
+  constexpr CStaticArray(std::initializer_list<T> _InitList)
+  {
+    Assign(_InitList);
+  }
+
+  template <std::convertible_to<T> U>
+  constexpr CStaticArray(U &&_Value)
+  {
+    Fill(std::forward<U>(_Value));
+  }
+
+  constexpr CStaticArray &operator=(std::initializer_list<T> _InitList)
+  {
+    Assign(_InitList);
+    return *this;
+  }
+
+  constexpr T &operator[](std::size_t _Index)
   {
     return m_Data[_Index];
   }
 
-  constexpr const T & operator[](std::size_t _Index) const
+  constexpr const T &operator[](std::size_t _Index) const
   {
     return m_Data[_Index];
   }
@@ -45,6 +62,16 @@ public:
   constexpr bool IsEmpty() const
   {
     return m_ActualSize == 0;
+  }
+
+  T *Data()
+  {
+    return m_Data;
+  }
+
+  const T *Data() const
+  {
+    return m_Data;
   }
 
   constexpr CIterator begin()
@@ -67,11 +94,22 @@ public:
     return CIterator(m_Data + GetActualSize());
   }
 
+  template <std::ranges::input_range R>
+    requires std::convertible_to<std::ranges::range_value_t<R>, T>
+  constexpr void Assign(R &&_Range)
+  {
+    assert(_Range.size() <= GetCapacity() && "Initializer list too large");
+
+    const size_t AmountToCopy = std::min(static_cast<std::size_t>(_Range.size()), GetCapacity());
+    std::copy(std::ranges::begin(_Range), std::ranges::begin(_Range) + AmountToCopy, m_Data);
+    m_ActualSize = AmountToCopy;
+  }
+
   template <std::convertible_to<T> U>
-  constexpr void FillArray(U && _Value)
+  constexpr void Fill(U &&_Value)
   {
     m_ActualSize = GetCapacity();
-    std::fill(begin(), end(), std::forward<U>(_Value));
+    std::fill(begin(), end(), static_cast<T>(std::forward<U>(_Value)));
   }
 
   constexpr void Clear()
@@ -80,11 +118,11 @@ public:
   }
 
   template <std::convertible_to<T> U>
-  constexpr void PushBack(U && _Value)
+  constexpr void PushBack(U &&_Value)
   {
     assert(GetActualSize() < GetCapacity() && "Array is filled up");
 
-    m_Data[m_ActualSize] = std::forward<U>(_Value);
+    m_Data[m_ActualSize] = static_cast<T>(std::forward<U>(_Value));
     m_ActualSize++;
   }
 
@@ -96,8 +134,7 @@ public:
   }
 
 private:
-
-  T           m_Data[Capacity];
+  T m_Data[Capacity];
   std::size_t m_ActualSize = 0;
 };
 
@@ -105,15 +142,14 @@ template <typename T, std::size_t N>
 class CStaticArray<T, N>::CIterator final
 {
 public:
+  explicit constexpr CIterator(T *_Item) : m_Item(_Item) {}
 
-  explicit constexpr CIterator(T * _Item) : m_Item(_Item) {}
-
-  constexpr T & operator*()
+  constexpr T &operator*()
   {
     return *m_Item;
   }
 
-  constexpr T * operator->()
+  constexpr T *operator->()
   {
     return m_Item;
   }
@@ -131,17 +167,16 @@ public:
     return Temp;
   }
 
-  constexpr bool operator==(const CIterator & _Other) const
+  constexpr bool operator==(const CIterator &_Other) const
   {
     return m_Item == _Other.m_Item;
   }
 
-  constexpr bool operator!=(const CIterator & _Other) const
+  constexpr bool operator!=(const CIterator &_Other) const
   {
     return m_Item != _Other.m_Item;
   }
 
 private:
-
-  T * m_Item;
+  T *m_Item;
 };

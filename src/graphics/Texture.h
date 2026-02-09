@@ -163,6 +163,9 @@ public:
     glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
     glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
+    if (_Params.BorderColors.has_value())
+      glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
+
     CLogger::Log(ELogType::Debug, "[CTexture] Texture generated successfully ({}x{})", _Params.Width, _Params.Height);
     return true;
   }

@@ -111,28 +111,30 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
     return ggx1 * ggx2;
 }
 
-float CalculateShadow(vec4 fragLightPos)
+float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
 {
-    // Perform perspective divide
-    vec3 projCoords = fragLightPos.xyz / fragLightPos.w;
+    vec3 lightCoords = fragLightPos.xyz / fragLightPos.w;
+    if (lightCoords.z > 1.0)
+        return 0.0;
 
-    // Transform to [0,1] range
-    projCoords = projCoords * 0.5 + 0.5;
+    lightCoords = lightCoords * 0.5 + 0.5;
 
-    // Sample depth from shadow map
-    float closestDepth = texture(u_ShadowMap, projCoords.xy).r; // Assuming shadow map is in BaseColorTexture
-    float currentDepth = projCoords.z;
+    // get closest depth value from light's perspective
+    float closestDepth = texture(u_ShadowMap, lightCoords.xy).r;
+    // get depth of current fragment from light's perspective
+    float currentDepth = lightCoords.z;
 
-    // Simple shadow test with bias
-    float bias = 0.005;
-    return (currentDepth - bias) > closestDepth ? 1.0 : 0.0;
+    float bias = max(0.05 * (1.0 - dot(io_Normal, lightDir)), 0.005);
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
 }
 
 void main()
 {
     vec4 baseColorSample = texture(u_Material.BaseColorTexture, io_TexCoords) * u_Material.BaseColorFactor;
-  if (u_Material.AlphaMode == 2 && baseColorSample.a < u_Material.AlphaCutoff)
-      discard;
+    if (u_Material.AlphaMode == 2 && baseColorSample.a < u_Material.AlphaCutoff)
+        discard;
 
     vec3 albedo = pow(baseColorSample.rgb, vec3(2.2)); // sRGB to linear
     vec3 ambientColor = LightDirectional.Ambient * albedo;
@@ -166,8 +168,8 @@ void main()
     vec3 kD = vec3(1.0) - kS;
     kD *= 1.0 - metallic;
 
-    //float shadow = CalculateShadow(io_FragLightPos);
-    vec3 color = (kD * albedo / PI + specular) * LightDirectional.Diffuse * NdotL + ambientColor;
+    float shadow = CalculateShadow(io_FragLightPos, normalize(-LightDirectional.Direction));
+    vec3 color = (kD * albedo / PI + specular) * LightDirectional.Diffuse * NdotL * (1.0 - shadow) + ambientColor;
     //float outAlpha = (u_AlphaMode == 2) ? baseColorSample.a : 1.0;
     o_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }
