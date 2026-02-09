@@ -25,7 +25,7 @@ namespace ecs
         void RenderDebugQuad(CRenderer &_Renderer);
 
     public:
-        static constexpr inline int SHADOW_MAP_SIZE = 1024;
+        static constexpr inline int SHADOW_MAP_SIZE = 2048;
 
         CFrameBuffer m_DepthMapFBO;
         std::shared_ptr<CTextureBase> m_DepthMap;

@@ -126,6 +126,8 @@ public:
       {
       case ETextureWrap::ClampToEdge:
         return GL_CLAMP_TO_EDGE;
+      case ETextureWrap::ClampToBorder:
+        return GL_CLAMP_TO_BORDER;
       case ETextureWrap::MirroredRepeat:
         return GL_MIRRORED_REPEAT;
       case ETextureWrap::Repeat:

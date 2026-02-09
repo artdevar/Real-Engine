@@ -23,10 +23,10 @@ namespace ecs
         DepthMapParams.Width = SHADOW_MAP_SIZE;
         DepthMapParams.Height = SHADOW_MAP_SIZE;
         DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});
-        DepthMapParams.WrapS = ETextureWrap::ClampToEdge;
-        DepthMapParams.WrapT = ETextureWrap::ClampToEdge;
-        DepthMapParams.MinFilter = ETextureFilter::Nearest; // THIS SHIT IS IMPORTANT
-        DepthMapParams.MagFilter = ETextureFilter::Nearest; // THIS SHIT IS IMPORTANT
+        DepthMapParams.WrapS = ETextureWrap::ClampToBorder;
+        DepthMapParams.WrapT = ETextureWrap::ClampToBorder;
+        DepthMapParams.MinFilter = ETextureFilter::Nearest;
+        DepthMapParams.MagFilter = ETextureFilter::Nearest;
         m_DepthMap = resource::CreateTexture("ShadowDepthMap", DepthMapParams);
         m_DepthShader = resource::LoadShader("depth");
 
@@ -44,7 +44,7 @@ namespace ecs
         _Renderer.SetViewport(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
         _Renderer.Clear(GL_DEPTH_BUFFER_BIT);
         _Renderer.SetShader(m_DepthShader);
-        // glCullFace(GL_FRONT);
+        _Renderer.SetCullFace(GL_FRONT);
         _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
 
         for (ecs::TEntity Entity : m_Entities)
@@ -61,7 +61,6 @@ namespace ecs
                     TModelComponent::TMaterialData &Material = ModelComponent.Materials[Primitive.MaterialIndex];
 
                     int TextureUnit = 0;
-
                     if (Material.BaseColorTexture)
                     {
                         Material.BaseColorTexture->Bind(GL_TEXTURE0 + TextureUnit);
@@ -82,7 +81,7 @@ namespace ecs
         m_DepthMapFBO.Unbind();
 
         _Renderer.SetViewport(OldViewport.x, OldViewport.y);
-        // glCullFace(GL_BACK);
+        _Renderer.SetCullFace(GL_BACK);
         _Renderer.Clear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         // RenderDebugQuad(_Renderer);

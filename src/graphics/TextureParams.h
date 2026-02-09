@@ -8,6 +8,7 @@ enum class ETextureWrap : std::uint8_t
 {
     Repeat,
     ClampToEdge,
+    ClampToBorder,
     MirroredRepeat
 };
 

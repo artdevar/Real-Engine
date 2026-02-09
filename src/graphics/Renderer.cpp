@@ -128,6 +128,12 @@ void CRenderer::SetAlphaBlending(bool _Enabled)
   }
 }
 
+void CRenderer::SetCullFace(GLenum _Mode)
+{
+  glEnable(GL_CULL_FACE);
+  glCullFace(_Mode);
+}
+
 void CRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)
 {
   if (!m_CurrentShader)

@@ -46,6 +46,7 @@ public:
   glm::mat4 GetLightSpaceMatrix() const;
 
   void SetAlphaBlending(bool _Enabled);
+  void SetCullFace(GLenum _Mode);
 
 private:
   void InitShaderValues();
