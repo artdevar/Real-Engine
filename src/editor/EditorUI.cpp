@@ -1,6 +1,6 @@
-#include "EditorUI.h"
-
 #if EDITOR_ENABLED
+#include "pch.h"
+#include "EditorUI.h"
 #include "engine/Config.h"
 #include "engine/Engine.h"
 #include "engine/Display.h"
@@ -18,10 +18,6 @@
 #include "imgui/misc/cpp/imgui_stdlib.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 namespace
 {
@@ -79,12 +75,6 @@ void CEditorUI::RenderInternal(CRenderer &_Renderer)
   RenderBegin();
 
   ImGui::Begin("Main window##MainWindow");
-
-  if (ImGui::Button("Load config"))
-    m_Engine->LoadConfig();
-  ImGui::SameLine();
-  if (ImGui::Button("Save config"))
-    m_Engine->SaveConfig();
 
   RenderEntities();
   RenderLightDebugLines();

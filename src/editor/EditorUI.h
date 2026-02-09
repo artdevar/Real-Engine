@@ -6,9 +6,6 @@
 #include "interfaces/Renderable.h"
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
-#include <glm/mat4x4.hpp>
-#include <optional>
-#include <memory>
 
 class CEngine;
 class CObject;
