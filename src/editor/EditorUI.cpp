@@ -128,6 +128,14 @@ void CEditorUI::RenderGlobalParams()
   float LightZFar = CConfig::Instance().GetLightSpaceMatrixZFar();
   if (ImGui::DragFloat("Light ZFar", &LightZFar, 10.0f, 1.0f, 1000.0f))
     CConfig::Instance().SetLightSpaceMatrixZFar(LightZFar, CPasskey(this));
+
+  float LightOrthLeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
+  if (ImGui::DragFloat("Light Orth Left/Bottom", &LightOrthLeftBot, 1.0f, -100.0f, 0.0f))
+    CConfig::Instance().SetLightSpaceMatrixOrthLeftBot(LightOrthLeftBot, CPasskey(this));
+
+  float LightOrthRightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
+  if (ImGui::DragFloat("Light Orth Right/Top", &LightOrthRightTop, 1.0f, 0.0f, 100.0f))
+    CConfig::Instance().SetLightSpaceMatrixOrthRightTop(LightOrthRightTop, CPasskey(this));
 }
 
 void CEditorUI::RenderEntities()
