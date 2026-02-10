@@ -17,10 +17,11 @@ static inline bool operator<(const std::string &_L, const std::filesystem::path 
 
 static bool IsFormatSupported(const std::filesystem::path &_Path)
 {
-  if (_Path.extension() == ".gltf")
+  const std::string Format = _Path.extension().string();
+  if (Format == ".gltf")
     return true;
 
-  CLogger::Log(ELogType::Error, "Unsupported model format '{}'", _Path.string());
+  CLogger::Log(ELogType::Error, "Unsupported model format '{}'", Format);
   return false;
 }
 

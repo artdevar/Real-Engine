@@ -126,9 +126,26 @@ public:
     m_ActualSize++;
   }
 
+  constexpr T &Back()
+  {
+    assert(!IsEmpty());
+
+    return m_Data[m_ActualSize - 1];
+  }
+
+  constexpr const T &Back() const
+  {
+    assert(!IsEmpty());
+
+    return m_Data[m_ActualSize - 1];
+  }
+
   constexpr void PopBack()
   {
     assert(!IsEmpty());
+
+    if constexpr (std::is_trivially_default_constructible_v<T>)
+      std::memset(&m_Data[m_ActualSize - 1], 0x00, sizeof(T));
 
     m_ActualSize--;
   }

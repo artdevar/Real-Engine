@@ -22,6 +22,9 @@ namespace ecs
         TTextureParams DepthMapParams;
         DepthMapParams.Width = SHADOW_MAP_SIZE;
         DepthMapParams.Height = SHADOW_MAP_SIZE;
+        DepthMapParams.InternalFormat = GL_DEPTH_COMPONENT16;
+        DepthMapParams.Format = GL_DEPTH_COMPONENT;
+        DepthMapParams.Type = GL_FLOAT;
         DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});
         DepthMapParams.WrapS = ETextureWrap::ClampToBorder;
         DepthMapParams.WrapT = ETextureWrap::ClampToBorder;
@@ -31,7 +34,7 @@ namespace ecs
         m_DepthShader = resource::LoadShader("depth");
 
         m_DepthMapFBO.Bind();
-        m_DepthMapFBO.AttachTexture(m_DepthMap->Get());
+        m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, m_DepthMap->Get());
         m_DepthMapFBO.DisableColorBuffer();
         m_DepthMapFBO.Unbind();
     }

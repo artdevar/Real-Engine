@@ -158,7 +158,7 @@ public:
 
     glGenTextures(1, &m_ID);
     glBindTexture(m_Target, m_ID);
-    glTexImage2D(m_Target, 0, GL_DEPTH_COMPONENT, _Params.Width, _Params.Height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexImage2D(m_Target, 0, _Params.InternalFormat, _Params.Width, _Params.Height, 0, _Params.Format, _Params.Type, NULL);
 
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));

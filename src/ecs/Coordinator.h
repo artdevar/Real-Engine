@@ -8,12 +8,11 @@
 class CCoordinator final
 {
 public:
-
   void Init()
   {
     m_ComponentManager = std::make_unique<CComponentManager>();
-    m_EntityManager    = std::make_unique<CEntityManager>();
-    m_SystemManager    = std::make_unique<CSystemManager>();
+    m_EntityManager = std::make_unique<CEntityManager>();
+    m_SystemManager = std::make_unique<CSystemManager>();
   }
 
   ecs::TEntity CreateEntity()
@@ -28,7 +27,7 @@ public:
     m_SystemManager->EntityDestroyed(entity);
   }
 
-  const std::vector<ecs::TEntity> & GetExistingEntities() const
+  const CUnorderedVector<ecs::TEntity> &GetExistingEntities() const
   {
     return m_EntityManager->GetExistingEntities();
   }
@@ -40,7 +39,7 @@ public:
   }
 
   template <typename T>
-  void AddComponent(ecs::TEntity _Entity, T && _Component)
+  void AddComponent(ecs::TEntity _Entity, T &&_Component)
   {
     m_ComponentManager->AddComponent(_Entity, std::forward<T>(_Component));
 
@@ -64,13 +63,13 @@ public:
   }
 
   template <typename T>
-  T & GetComponent(ecs::TEntity _Entity)
+  T &GetComponent(ecs::TEntity _Entity)
   {
     return m_ComponentManager->GetComponent<T>(_Entity);
   }
 
   template <typename T>
-  T * GetComponentSafe(ecs::TEntity _Entity)
+  T *GetComponentSafe(ecs::TEntity _Entity)
   {
     return m_ComponentManager->GetComponentSafe<T>(_Entity);
   }
@@ -100,14 +99,13 @@ public:
   }
 
   template <typename T>
-  void SetSystemSignature(const ecs::TSignature & _Signature)
+  void SetSystemSignature(const ecs::TSignature &_Signature)
   {
     m_SystemManager->SetSignature<T>(_Signature);
   }
 
 private:
-
   std::unique_ptr<CComponentManager> m_ComponentManager;
-  std::unique_ptr<CEntityManager>    m_EntityManager;
-  std::unique_ptr<CSystemManager>    m_SystemManager;
+  std::unique_ptr<CEntityManager> m_EntityManager;
+  std::unique_ptr<CSystemManager> m_SystemManager;
 };

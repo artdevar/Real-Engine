@@ -38,6 +38,7 @@ namespace ecs
     {
       TLightComponent LightComponent;
       LightComponent.Type = _Type;
+      LightComponent.Direction = glm::vec3(0.0f, -1.0f, 0.0001f);
       LightComponent.Ambient = glm::vec3(0.1f, 0.1f, 0.1f);
       LightComponent.Diffuse = glm::vec3(1.0f, 1.0f, 1.0f);
       LightComponent.Specular = glm::vec3(1.0f, 1.0f, 1.0f);

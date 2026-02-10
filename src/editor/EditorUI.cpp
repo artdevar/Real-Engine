@@ -1,6 +1,6 @@
-#if EDITOR_ENABLED
-#include "pch.h"
 #include "EditorUI.h"
+
+#if EDITOR_ENABLED
 #include "engine/Config.h"
 #include "engine/Engine.h"
 #include "engine/Display.h"
@@ -18,7 +18,10 @@
 #include "imgui/misc/cpp/imgui_stdlib.h"
 #include "imgui/backends/imgui_impl_glfw.h"
 #include "imgui/backends/imgui_impl_opengl3.h"
-#include <cmath>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/mat4x4.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace
 {
@@ -77,6 +80,12 @@ void CEditorUI::RenderInternal(CRenderer &_Renderer)
 
   ImGui::Begin("Main window##MainWindow");
 
+  if (ImGui::Button("Load config"))
+    m_Engine->LoadConfig();
+  ImGui::SameLine();
+  if (ImGui::Button("Save config"))
+    m_Engine->SaveConfig();
+
   RenderEntities();
   RenderLightDebugLines();
 
@@ -101,11 +110,11 @@ void CEditorUI::RenderEnd()
 void CEditorUI::RenderGlobalParams()
 {
   float CameraZNear = CConfig::Instance().GetCameraZNear();
-  if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 1.0f, -50.0f, 100.0f))
+  if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 0.5f, -50.0f, 100.0f))
     CConfig::Instance().SetCameraZNear(CameraZNear, CPasskey(this));
 
   float CameraZFar = CConfig::Instance().GetCameraZFar();
-  if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 1.0f, 1.0f, 10000.0f))
+  if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 10.0f, 1.0f, 10000.0f))
     CConfig::Instance().SetCameraZFar(CameraZFar, CPasskey(this));
 
   float CameraFOV = CConfig::Instance().GetCameraFOV();
@@ -113,20 +122,12 @@ void CEditorUI::RenderGlobalParams()
     CConfig::Instance().SetCameraFOV(CameraFOV, CPasskey(this));
 
   float LightZNear = CConfig::Instance().GetLightSpaceMatrixZNear();
-  if (ImGui::DragFloat("Light ZNear", &LightZNear, 1.0f, -50.0f, 100.0f))
+  if (ImGui::DragFloat("Light ZNear", &LightZNear, 0.5f, -50.0f, 100.0f))
     CConfig::Instance().SetLightSpaceMatrixZNear(LightZNear, CPasskey(this));
 
   float LightZFar = CConfig::Instance().GetLightSpaceMatrixZFar();
-  if (ImGui::DragFloat("Light ZFar", &LightZFar, 1.0f, 1.0f, 1000.0f))
+  if (ImGui::DragFloat("Light ZFar", &LightZFar, 10.0f, 1.0f, 1000.0f))
     CConfig::Instance().SetLightSpaceMatrixZFar(LightZFar, CPasskey(this));
-
-  float LightOrthLeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
-  if (ImGui::DragFloat("Light Orth Left/Bottom", &LightOrthLeftBot, 1.0f, -100.0f, 0.0f))
-    CConfig::Instance().SetLightSpaceMatrixOrthLeftBot(LightOrthLeftBot, CPasskey(this));
-
-  float LightOrthRightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
-  if (ImGui::DragFloat("Light Orth Right/Top", &LightOrthRightTop, 1.0f, 0.0f, 100.0f))
-    CConfig::Instance().SetLightSpaceMatrixOrthRightTop(LightOrthRightTop, CPasskey(this));
 }
 
 void CEditorUI::RenderEntities()
@@ -191,7 +192,7 @@ void CEditorUI::RenderEntities()
       }
     }
 
-    const std::vector<ecs::TEntity> &Entities = World.GetAllEntities();
+    const CUnorderedVector<ecs::TEntity> &Entities = World.GetAllEntities();
 
     std::vector<std::string> EntitiesNames;
     for (auto Entity : Entities)
@@ -292,19 +293,14 @@ void CEditorUI::RenderEntityData(ecs::TEntity _Entity)
 
 void CEditorUI::RenderEntityData(ecs::TModelComponent &_Mesh)
 {
-  // std::string ModelPath = _Mesh.Model->m_Path.string();
-  // std::string ModelPath;
-  // ImGui::InputText("Path##MeshPathInput", &ModelPath, ImGuiInputTextFlags_ReadOnly);
-  // ImGui::SameLine();
-
   if (ImGui::Button("Select file"))
   {
-    if (auto Filename = utils::OpenFileDialog(); !Filename.empty())
-    {
-      auto Model = m_Engine->GetResourceManager()->LoadModel(Filename);
-      // if (Model)
-      //   _Mesh.Model = std::move(Model);
-    }
+    SpawnEntity(TEntityType::StaticMesh);
+  }
+
+  if (ImGui::Button("Dublicate"))
+  {
+    SpawnEntity(TEntityType::StaticMesh);
   }
 }
 
@@ -328,22 +324,10 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
   ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z);
 
   ImGui::SeparatorText("Scale##ObjScale");
+
   ValueChanged |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, 0.01f, std::numeric_limits<float>::max());
   ValueChanged |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, 0.01f, std::numeric_limits<float>::max());
   ValueChanged |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, 0.01f, std::numeric_limits<float>::max());
-
-  // Prevent exact-zero scale which makes transforms degenerate and can crash
-  // downstream math (inverse/decompose). Replace tiny zeros with a small epsilon
-  // while preserving sign so users can still set negative scales.
-  constexpr float kMinScale = 1e-6f;
-  auto sanitize = [](float &v)
-  {
-    if (std::abs(v) < kMinScale)
-      v = (v >= 0.0f) ? kMinScale : -kMinScale;
-  };
-  sanitize(Scale.x);
-  sanitize(Scale.y);
-  sanitize(Scale.z);
 
   ImGui::SeparatorText("Rotation##ObjRot");
 
@@ -435,12 +419,15 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
   }
 }
 
-int CEditorUI::GetSelectedEntityIndex(const std::vector<ecs::TEntity> &_Entities) const
+int CEditorUI::GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const
 {
   if (m_SelectedEntity.has_value())
   {
-    const auto Iterator = std::find(_Entities.cbegin(), _Entities.cend(), m_SelectedEntity.value());
-    return std::distance(_Entities.cbegin(), Iterator);
+    const auto Iterator = _Entities.Find(m_SelectedEntity.value());
+    if (Iterator == _Entities.end())
+      return -1;
+
+    return static_cast<int>(std::distance(_Entities.begin(), Iterator));
   }
 
   return -1;

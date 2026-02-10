@@ -140,17 +140,20 @@ class CFrameBuffer final : public CBuffer<CFrameBuffer>
   friend CBuffer;
 
 public:
-  void AttachTexture(GLuint _TextureID)
+  void AttachTexture(GLenum _Attachment, GLuint _TextureID)
   {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _TextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, GL_TEXTURE_2D, _TextureID, 0);
+  }
+
+  void AttachRenderbuffer(GLenum _Attachment, GLuint _RenderbufferID)
+  {
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, _Attachment, GL_RENDERBUFFER, _RenderbufferID);
   }
 
   void DisableColorBuffer()
   {
-    // glNamedFramebufferDrawBuffer(m_ID, GL_NONE);
-    // glNamedFramebufferReadBuffer(m_ID, GL_NONE);
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
+    glNamedFramebufferDrawBuffer(m_ID, GL_NONE);
+    glNamedFramebufferReadBuffer(m_ID, GL_NONE);
   }
 
 protected:

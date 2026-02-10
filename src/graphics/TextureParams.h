@@ -28,6 +28,11 @@ struct TTextureParams
 
     int Width = 0;
     int Height = 0;
+
+    int InternalFormat = 0;
+    int Format = 0;
+    int Type = 0;
+
     std::optional<CStaticArray<float, BordersCount>> BorderColors;
     ETextureWrap WrapS = ETextureWrap::Repeat;
     ETextureWrap WrapT = ETextureWrap::Repeat;

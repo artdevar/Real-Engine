@@ -4,33 +4,32 @@
 
 CEntityManager::CEntityManager()
 {
-  for (ecs::TEntity Entity = 0; Entity < ecs::MAX_ENTITIES; ++Entity)
-    m_AvailableEntities.push(Entity);
+  for (int Entity = ecs::MAX_ENTITIES - 1; Entity >= 0; --Entity)
+    m_AvailableEntities.PushBack(static_cast<ecs::TEntity>(Entity));
 }
 
 ecs::TEntity CEntityManager::CreateEntity()
 {
-  assert(m_ExistingEntities.size() < ecs::MAX_ENTITIES && "Too many entities in existence.");
+  assert(m_ExistingEntities.Size() < ecs::MAX_ENTITIES && "Too many entities in existence");
 
-  ecs::TEntity ID = m_AvailableEntities.front();
-  m_AvailableEntities.pop();
+  ecs::TEntity ID = m_AvailableEntities.Back();
+  m_AvailableEntities.PopBack();
 
-  m_ExistingEntities.push_back(ID);
+  m_ExistingEntities.Push(ID);
 
   return ID;
 }
 
 void CEntityManager::DestroyEntity(ecs::TEntity _Entity)
 {
-  assert(_Entity < ecs::MAX_ENTITIES && "Entity out of range.");
-  assert(std::find(m_ExistingEntities.begin(), m_ExistingEntities.end(), _Entity) != m_ExistingEntities.end());
+  assert(_Entity < ecs::MAX_ENTITIES && "Entity out of range");
 
   m_Signatures[_Entity].reset();
-  m_AvailableEntities.push(_Entity);
-  m_ExistingEntities.erase(std::find(m_ExistingEntities.begin(), m_ExistingEntities.end(), _Entity));
+  m_AvailableEntities.PushBack(_Entity);
+  m_ExistingEntities.Erase(_Entity);
 }
 
-const std::vector<ecs::TEntity> & CEntityManager::GetExistingEntities() const
+const CUnorderedVector<ecs::TEntity> &CEntityManager::GetExistingEntities() const
 {
   return m_ExistingEntities;
 }
@@ -38,13 +37,11 @@ const std::vector<ecs::TEntity> & CEntityManager::GetExistingEntities() const
 void CEntityManager::SetSignature(ecs::TEntity _Entity, ecs::TSignature _Signature)
 {
   assert(_Entity < ecs::MAX_ENTITIES && "Entity out of range.");
-
   m_Signatures[_Entity] = _Signature;
 }
 
 ecs::TSignature CEntityManager::GetSignature(ecs::TEntity _Entity) const
 {
   assert(_Entity < ecs::MAX_ENTITIES && "Entity out of range.");
-
   return m_Signatures[_Entity];
 }

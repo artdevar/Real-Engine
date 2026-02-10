@@ -59,7 +59,7 @@ void CWorld::RemoveEntity(ecs::TEntity _Entity)
   m_EntitiesCoordinator->DestroyEntity(_Entity);
 }
 
-const std::vector<ecs::TEntity> &CWorld::GetAllEntities() const
+const CUnorderedVector<ecs::TEntity> &CWorld::GetAllEntities() const
 {
   return m_EntitiesCoordinator->GetExistingEntities();
 }

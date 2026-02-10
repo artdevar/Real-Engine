@@ -6,6 +6,7 @@
 #include "interfaces/Renderable.h"
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
+#include "utils/UnorderedVector.h"
 
 class CEngine;
 class CObject;
@@ -52,7 +53,7 @@ private:
   void RenderEntityData(ecs::TLightComponent &_Light);
 
 private:
-  int GetSelectedEntityIndex(const std::vector<ecs::TEntity> &_Entities) const;
+  int GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const;
 
 private:
   CEngine *m_Engine;

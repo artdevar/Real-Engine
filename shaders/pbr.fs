@@ -180,7 +180,11 @@ void main()
     kD *= 1.0 - metallic;
 
     float shadow = CalculateShadow(io_FragLightPos, normalize(-LightDirectional.Direction));
-    vec3 color = (kD * albedo / PI + specular) * LightDirectional.Diffuse * NdotL * (1.0 - shadow) + ambientColor;
+
+    vec3 radiance = LightDirectional.Diffuse;
+    vec3 lightSpec = LightDirectional.Specular;
+    vec3 Lo = (kD * albedo / PI) * radiance * NdotL + specular * lightSpec * NdotL;
+    vec3 color = Lo * (1.0 - shadow) + ambientColor;
     //float outAlpha = (u_AlphaMode == 2) ? baseColorSample.a : 1.0;
     o_FragColor = vec4(pow(color, vec3(1.0 / 2.2)), 1.0);
 }

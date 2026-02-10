@@ -6,6 +6,7 @@
 #include "interfaces/Renderable.h"
 #include "interfaces/Shutdownable.h"
 #include "ecs/CommonECS.h"
+#include "utils/UnorderedVector.h"
 
 class CEngine;
 class CCoordinator;
@@ -35,7 +36,7 @@ private:
 public:
   void RemoveEntity(ecs::TEntity _Entity);
 
-  const std::vector<ecs::TEntity> &GetAllEntities() const;
+  const CUnorderedVector<ecs::TEntity> &GetAllEntities() const;
 
   CEntityBuilder CreateEntity();
 
