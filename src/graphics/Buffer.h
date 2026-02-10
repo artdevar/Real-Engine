@@ -76,7 +76,7 @@ protected:
 
 // ------------------------------------------------
 
-class CVertexArray final : public CBuffer<CVertexArray>
+class CVertexArray final : public CBuffer<CVertexArray> // VAO
 {
   friend CBuffer;
 
@@ -98,6 +98,7 @@ public:
 
     case GL_DOUBLE:
       glVertexAttribLPointer(_Index, _Size, _Type, _Stride, _Offset);
+      break;
 
     default:
       glVertexAttribPointer(_Index, _Size, _Type, GL_FALSE, _Stride, _Offset);
@@ -393,7 +394,7 @@ protected:
 
 // ------------------------------------------------
 
-class CVertexBuffer final : public CBufferObject
+class CVertexBuffer final : public CBufferObject // VBO
 {
 public:
   CVertexBuffer(GLenum _Usage) : CBufferObject(GL_ARRAY_BUFFER, _Usage)
@@ -403,7 +404,7 @@ public:
 
 // ------------------------------------------------
 
-class CElementBuffer final : public CBufferObject
+class CElementBuffer final : public CBufferObject // EBO
 {
 public:
   CElementBuffer(GLenum _Usage) : CBufferObject(GL_ELEMENT_ARRAY_BUFFER, _Usage)
@@ -418,5 +419,10 @@ class CUniformBuffer final : public CBufferObject
 public:
   CUniformBuffer(GLenum _Usage) : CBufferObject(GL_UNIFORM_BUFFER, _Usage)
   {
+  }
+
+  void BindToUniformBlock(GLuint _Program, GLuint _UniformBlockIndex, GLuint _UniformBlockBinding)
+  {
+    glUniformBlockBinding(_Program, _UniformBlockIndex, _UniformBlockBinding);
   }
 };

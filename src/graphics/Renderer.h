@@ -51,6 +51,8 @@ public:
 private:
   void InitShaderValues();
 
+  static std::string GetGLErrorDescription(GLenum _Error);
+
 public:
   std::shared_ptr<CCamera> m_Camera;
   std::shared_ptr<CShader> m_CurrentShader;

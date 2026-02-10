@@ -29,9 +29,14 @@ void CRenderer::EndFrame()
 
 void CRenderer::CheckErrors()
 {
-  GLenum Error = glGetError();
-  if (Error != GL_NO_ERROR)
-    CLogger::Log(ELogType::Error, "[OpenGL Error: {}", Error);
+  while (true)
+  {
+    GLenum Error = glGetError();
+    if (Error != GL_NO_ERROR)
+      CLogger::Log(ELogType::Error, "[OpenGL] Error: {}", GetGLErrorDescription(Error));
+    else
+      break;
+  }
 }
 
 void CRenderer::Clear(GLbitfield _Mask)
@@ -148,12 +153,41 @@ void CRenderer::InitShaderValues()
   m_CurrentShader->Validate();
 
   GLuint LightingDataLoc = glGetUniformBlockIndex(m_CurrentShader->GetID(), "u_Lighting");
-
   if (LightingDataLoc != GL_INVALID_INDEX)
   {
     m_LightingUBO.Bind();
-    glUniformBlockBinding(m_CurrentShader->GetID(), LightingDataLoc, BINDING_LIGHTING_BUFFER);
+    m_LightingUBO.BindToUniformBlock(m_CurrentShader->GetID(), LightingDataLoc, BINDING_LIGHTING_BUFFER);
     m_LightingUBO.Assign(&m_Lighting, sizeof(m_Lighting));
     m_LightingUBO.Unbind();
+  }
+}
+
+std::string CRenderer::GetGLErrorDescription(GLenum _Error)
+{
+  switch (_Error)
+  {
+  case GL_INVALID_ENUM:
+    return "GL_INVALID_ENUM";
+
+  case GL_INVALID_VALUE:
+    return "GL_INVALID_VALUE";
+
+  case GL_INVALID_OPERATION:
+    return "GL_INVALID_OPERATION";
+
+  case GL_STACK_OVERFLOW:
+    return "GL_STACK_OVERFLOW";
+
+  case GL_STACK_UNDERFLOW:
+    return "GL_STACK_UNDERFLOW";
+
+  case GL_OUT_OF_MEMORY:
+    return "GL_OUT_OF_MEMORY";
+
+  case GL_INVALID_FRAMEBUFFER_OPERATION:
+    return "GL_INVALID_FRAMEBUFFER_OPERATION";
+
+  default:
+    return "UNDEFINED";
   }
 }

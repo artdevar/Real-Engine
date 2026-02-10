@@ -22,19 +22,19 @@ int CDisplay::Init(const std::string &_Title)
 {
     ApplyInitHints();
 
-    CLogger::Log(ELogType::Info, "Init GLFW. Version: {}", glfwGetVersionString());
+    CLogger::Log(ELogType::Info, "[CDisplay] Init GLFW. Version: {}", glfwGetVersionString());
     if (glfwInit() != GLFW_TRUE)
     {
         const char *ErrorDescription;
         const int ErrorCode = glfwGetError(&ErrorDescription);
-        CLogger::Log(ELogType::Fatal, "Init GLFW error: {}", ErrorDescription);
+        CLogger::Log(ELogType::Fatal, "[CDisplay] Init GLFW error: {}", ErrorDescription);
         return ErrorCode;
     }
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_SAMPLES, 8);
+    glfwWindowHint(GLFW_SAMPLES, 4);
     // glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
 
     m_Window = glfwCreateWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, _Title.c_str(), nullptr, nullptr);
@@ -42,7 +42,7 @@ int CDisplay::Init(const std::string &_Title)
     {
         const char *ErrorDescription;
         const int ErrorCode = glfwGetError(&ErrorDescription);
-        CLogger::Log(ELogType::Fatal, "GLFW window creation error: {}", ErrorDescription);
+        CLogger::Log(ELogType::Fatal, "[CDisplay] GLFW window creation error: {}", ErrorDescription);
         return ErrorCode;
     }
 
@@ -51,13 +51,21 @@ int CDisplay::Init(const std::string &_Title)
     if (!gladLoadGL())
     {
         const int ErrorCode = glad_glGetError();
-        CLogger::Log(ELogType::Fatal, "glad load gl failed: {}", ErrorCode);
+        CLogger::Log(ELogType::Fatal, "[CDisplay] glad load gl failed: {}", ErrorCode);
         return ErrorCode;
     }
 
     if (!GLAD_GL_ARB_bindless_texture)
     {
-        CLogger::Log(ELogType::Warning, "ARB_bindless_texture isn't supported by the GPU");
+        CLogger::Log(ELogType::Warning, "[CDisplay] ARB_bindless_texture isn't supported by the GPU");
+    }
+
+    CLogger::Log(ELogType::Info, "[CDisplay] OpenGL Version: {}. Vendor: {}. Renderer: {}", GLVersion.major, GLVersion.minor, reinterpret_cast<const char *>(glGetString(GL_VERSION)), reinterpret_cast<const char *>(glGetString(GL_VENDOR)), reinterpret_cast<const char *>(glGetString(GL_RENDERER)));
+    CLogger::Log(ELogType::Info, "[CDisplay] GLSL version: {}", reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+    {
+        int MaxTextureUnits = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &MaxTextureUnits);
+        CLogger::Log(ELogType::Info, "[CDisplay] Maximum supported texture image units : {}", MaxTextureUnits);
     }
 
     glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);

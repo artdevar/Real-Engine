@@ -18,6 +18,9 @@ constexpr inline GLuint BINDING_DIFF_TEXTURE_BUFFER = 0;
 constexpr inline GLuint BINDING_SPEC_TEXTURE_BUFFER = 1;
 constexpr inline GLuint BINDING_LIGHTING_BUFFER = 5;
 
+constexpr inline GLenum TEXTURE_SHADOW_MAP_UNIT = GL_TEXTURE20;
+constexpr inline GLint TEXTURE_SHADOW_MAP_INDEX = 20;
+
 constexpr inline int MAX_POINT_LIGHTS = 5;
 
 enum EAlphaMode : GLuint

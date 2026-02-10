@@ -325,25 +325,35 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
 
   ImGui::SeparatorText("Scale##ObjScale");
 
-  ValueChanged |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, 0.01f, std::numeric_limits<float>::max());
-  ValueChanged |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, 0.01f, std::numeric_limits<float>::max());
-  ValueChanged |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, 0.01f, std::numeric_limits<float>::max());
+  const float kMinScale = 0.01f;
+  const float kMaxScale = 10000.0f; // reasonable upper bound to avoid extreme values
+  ValueChanged |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, kMinScale, kMaxScale);
+  ValueChanged |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, kMinScale, kMaxScale);
+  ValueChanged |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, kMinScale, kMaxScale);
 
   ImGui::SeparatorText("Rotation##ObjRot");
 
   EulerAngles RotationAngles = utils::ToEulerAngles(Rotation);
 
   bool AngleChanged = false;
-  AngleChanged |= ImGui::DragInt("Roll##EntRoll", &RotationAngles.Roll);
-  AngleChanged |= ImGui::DragInt("Pitch##EntPitch", &RotationAngles.Pitch);
-  AngleChanged |= ImGui::DragInt("Yaw##EntYaw", &RotationAngles.Yaw);
+  AngleChanged |= ImGui::DragFloat("Roll##EntRoll", &RotationAngles.Roll, 1.0f);
+  AngleChanged |= ImGui::DragFloat("Pitch##EntPitch", &RotationAngles.Pitch, 1.0f);
+  AngleChanged |= ImGui::DragFloat("Yaw##EntYaw", &RotationAngles.Yaw, 1.0f);
   ValueChanged |= AngleChanged;
 
   if (AngleChanged)
-    Rotation = glm::quat({glm::radians(float(RotationAngles.Roll)), glm::radians(float(RotationAngles.Pitch)), glm::radians(float(RotationAngles.Yaw))});
+  {
+    const float kPitchLimit = 89.9f;
+    RotationAngles.Pitch = glm::clamp(RotationAngles.Pitch, -kPitchLimit, kPitchLimit);
+
+    Rotation = glm::quat(glm::radians(glm::vec3(RotationAngles.Roll, RotationAngles.Pitch, RotationAngles.Yaw)));
+  }
 
   if (ValueChanged)
+  {
+    Scale = glm::max(Scale, glm::vec3(kMinScale));
     _TransformComponent.Transform = glm::recompose(Scale, Rotation, Translation, Skew, Perspective);
+  }
 
   ImGui::Separator();
 }

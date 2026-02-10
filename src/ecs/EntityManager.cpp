@@ -1,7 +1,7 @@
 #include "EntityManager.h"
 #include <cassert>
 
-CEntityManager::CEntityManager()
+CEntityManager::CEntityManager() : m_Signatures(ecs::TSignature{})
 {
   for (int Entity = ecs::MAX_ENTITIES - 1; Entity >= 0; --Entity)
     m_AvailableEntities.PushBack(static_cast<ecs::TEntity>(Entity));

@@ -11,15 +11,13 @@
 #include "engine/Camera.h"
 #include "utils/Common.h"
 #include "utils/Resource.h"
-#include "ecs/systems/ShadowRenderSystem.h"
 #include "tiny_gltf.h"
 
+#include "ecs/systems/ShadowRenderSystem.h"
 namespace ecs
 {
 
-    CWorldRenderSystem::CWorldRenderSystem()
-    {
-    }
+    CWorldRenderSystem::CWorldRenderSystem() = default;
 
     void CWorldRenderSystem::Init(CCoordinator *_Coordinator)
     {
@@ -43,8 +41,8 @@ namespace ecs
 
         if (ShadowMapTexture)
         {
-            ShadowMapTexture->Bind(GL_TEXTURE20);
-            _Renderer.SetUniform("u_ShadowMap", 20);
+            ShadowMapTexture->Bind(TEXTURE_SHADOW_MAP_UNIT);
+            _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
         }
 
         for (ecs::TEntity Entity : m_Entities)
