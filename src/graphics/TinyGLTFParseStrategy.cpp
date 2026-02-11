@@ -1,7 +1,10 @@
+#include "pch.h"
+
 #include "TinyGLTFParseStrategy.h"
 #include "utils/Logger.h"
 #include "utils/Stopwatch.h"
-#include <glm/gtc/type_ptr.hpp>
+#include <tiny_gltf.h>
+#include <mikktspace.h>
 
 bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelData &_Model)
 {
@@ -103,12 +106,16 @@ void CTinyGLTFParseStrategy::ParseMeshes(const tinygltf::Model &_Source, TModelD
 
       ParseAttributes(_Source, SourcePrimitive, Primitive);
       ParseIndices(_Source, SourcePrimitive, Primitive);
+
+      GenerateTangentsIfMissing(Primitive);
     }
   }
 }
 
 void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, const tinygltf::Primitive &_SourcePrimitive, TPrimitive &_TargetPrimitive)
 {
+  assert(_SourcePrimitive.attributes.contains("POSITION") && "POSITION attribute is missing");
+
   for (const auto &[Name, AccessorIndex] : _SourcePrimitive.attributes)
   {
     const EAttributeType Type = Name == "POSITION" ? EAttributeType::Position : Name == "NORMAL"   ? EAttributeType::Normal
@@ -157,11 +164,12 @@ void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const 
   const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
   const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
 
+  assert(Accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT && "Only unsigned int indices are expected");
+
   _TargetPrimitive.IndicesCount = Accessor.count;
 
   const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
-  const size_t ComponentSize = tinygltf::GetComponentSizeInBytes(Accessor.componentType);
-  const size_t Size = static_cast<size_t>(Accessor.count) * ComponentSize;
+  const size_t Size = static_cast<size_t>(Accessor.count);
 
   if (Offset + Size > Buffer.data.size())
   {
@@ -169,8 +177,9 @@ void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const 
     return;
   }
 
-  _TargetPrimitive.Indices.reserve(Size);
-  _TargetPrimitive.Indices.insert(_TargetPrimitive.Indices.end(), Buffer.data.begin() + Offset, Buffer.data.begin() + Offset + Size);
+  const uint32_t *Src = reinterpret_cast<const uint32_t *>(Buffer.data.data() + Offset);
+  _TargetPrimitive.Indices.reserve(Accessor.count);
+  _TargetPrimitive.Indices.insert(_TargetPrimitive.Indices.end(), Src, Src + Size);
 }
 
 void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TModelData &_Target)
@@ -215,4 +224,143 @@ void CTinyGLTFParseStrategy::ParseImages(const tinygltf::Model &_Source, TModelD
     TImage &Image = _Target.Images.emplace_back();
     Image.URI = (_ModelDirectory / SourceImage.uri).string();
   }
+}
+
+void CTinyGLTFParseStrategy::GenerateTangentsIfMissing(TPrimitive &Primitive)
+{
+  const bool HasTangent = Primitive.Attributes.find(EAttributeType::Tangent) != Primitive.Attributes.end();
+  const bool HasPosition = Primitive.Attributes.find(EAttributeType::Position) != Primitive.Attributes.end();
+  const bool HasNormal = Primitive.Attributes.find(EAttributeType::Normal) != Primitive.Attributes.end();
+  const bool HasTex = Primitive.Attributes.find(EAttributeType::TexCoords) != Primitive.Attributes.end();
+
+  if (HasTangent && !HasPosition || !HasNormal || !HasTex || Primitive.Indices.empty())
+    return;
+
+  const TAttribute &PosAttr = Primitive.Attributes.at(EAttributeType::Position);
+  const TAttribute &NorAttr = Primitive.Attributes.at(EAttributeType::Normal);
+  const TAttribute &UvAttr = Primitive.Attributes.at(EAttributeType::TexCoords);
+
+  const size_t vertCount = PosAttr.Data.size() / PosAttr.ByteStride;
+
+  std::vector<glm::vec3> positions(vertCount), normals(vertCount);
+  std::vector<glm::vec2> uvs(vertCount);
+
+  auto readVec = [](const TAttribute &A, size_t idx, int compCount) -> std::vector<float>
+  {
+    std::vector<float> out(compCount, 0.0f);
+    const size_t stride = static_cast<size_t>(A.ByteStride);
+    const uint8_t *base = A.Data.data() + idx * stride;
+    for (int c = 0; c < compCount; ++c)
+      std::memcpy(&out[c], base + c * sizeof(float), sizeof(float));
+    return out;
+  };
+
+  for (size_t i = 0; i < vertCount; ++i)
+  {
+    auto p = readVec(PosAttr, i, 3);
+    positions[i] = glm::vec3(p[0], p[1], p[2]);
+    auto n = readVec(NorAttr, i, 3);
+    normals[i] = glm::vec3(n[0], n[1], n[2]);
+    auto t = readVec(UvAttr, i, 2);
+    uvs[i] = glm::vec2(t[0], t[1]);
+  }
+
+  const std::vector<uint32_t> &indices = Primitive.Indices;
+
+  struct MikkUserData
+  {
+    const std::vector<glm::vec3> *pos;
+    const std::vector<glm::vec3> *nor;
+    const std::vector<glm::vec2> *uv;
+    const std::vector<uint32_t> *idx;
+    std::vector<glm::vec3> tan1;
+    std::vector<glm::vec3> tan2;
+    std::vector<glm::vec4> out;
+  } data;
+
+  data.pos = &positions;
+  data.nor = &normals;
+  data.uv = &uvs;
+  data.idx = &indices;
+  data.tan1.assign(vertCount, glm::vec3(0.0f));
+  data.tan2.assign(vertCount, glm::vec3(0.0f));
+  data.out.assign(vertCount, glm::vec4(0.0f));
+
+  SMikkTSpaceInterface iface{};
+  iface.m_getNumFaces = [](const SMikkTSpaceContext *ctx) -> int
+  {
+    auto *d = (MikkUserData *)ctx->m_pUserData;
+    return static_cast<int>(d->idx->size() / 3);
+  };
+
+  iface.m_getNumVerticesOfFace = [](const SMikkTSpaceContext *, const int) -> int
+  {
+    return 3;
+  };
+
+  iface.m_getPosition = [](const SMikkTSpaceContext *ctx, float fvPosOut[], const int iFace, const int iVert)
+  {
+    auto *d = (MikkUserData *)ctx->m_pUserData;
+    uint32_t vi = (*d->idx)[iFace * 3 + iVert];
+    const glm::vec3 &p = (*d->pos)[vi];
+    fvPosOut[0] = p.x;
+    fvPosOut[1] = p.y;
+    fvPosOut[2] = p.z;
+  };
+
+  iface.m_getNormal = [](const SMikkTSpaceContext *ctx, float fvNormOut[], const int iFace, const int iVert)
+  {
+    auto *d = (MikkUserData *)ctx->m_pUserData;
+    uint32_t vi = (*d->idx)[iFace * 3 + iVert];
+    const glm::vec3 &n = (*d->nor)[vi];
+    fvNormOut[0] = n.x;
+    fvNormOut[1] = n.y;
+    fvNormOut[2] = n.z;
+  };
+
+  iface.m_getTexCoord = [](const SMikkTSpaceContext *ctx, float fvTexcOut[], const int iFace, const int iVert)
+  {
+    auto *d = (MikkUserData *)ctx->m_pUserData;
+    uint32_t vi = (*d->idx)[iFace * 3 + iVert];
+    const glm::vec2 &t = (*d->uv)[vi];
+    fvTexcOut[0] = t.x;
+    fvTexcOut[1] = t.y;
+  };
+
+  iface.m_setTSpace = [](const SMikkTSpaceContext *ctx, const float fvTangent[], const float fvBiTangent[], const float, const float, const tbool, const int iFace, const int iVert)
+  {
+    auto *d = (MikkUserData *)ctx->m_pUserData;
+    uint32_t vi = (*d->idx)[iFace * 3 + iVert];
+    d->tan1[vi] += glm::vec3(fvTangent[0], fvTangent[1], fvTangent[2]);
+    d->tan2[vi] += glm::vec3(fvBiTangent[0], fvBiTangent[1], fvBiTangent[2]);
+  };
+
+  SMikkTSpaceContext ctx{};
+  ctx.m_pInterface = &iface;
+  ctx.m_pUserData = &data;
+
+  genTangSpaceDefault(&ctx);
+
+  for (size_t v = 0; v < vertCount; ++v)
+  {
+    const glm::vec3 &N = normals[v];
+    glm::vec3 T = data.tan1[v];
+    T = glm::normalize(T - N * glm::dot(N, T));
+    if (!(std::isfinite(T.x) && std::isfinite(T.y) && std::isfinite(T.z)))
+    {
+      glm::vec3 up = (std::fabs(N.y) < 0.999f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+      T = glm::normalize(glm::cross(up, N));
+    }
+    float w = (glm::dot(glm::cross(N, T), data.tan2[v]) < 0.0f) ? -1.0f : 1.0f;
+    data.out[v] = glm::vec4(T, w);
+  }
+
+  TAttribute TangentAttr;
+  TangentAttr.ComponentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+  TangentAttr.Type = 4;
+  TangentAttr.ByteStride = static_cast<int>(4 * sizeof(float));
+  TangentAttr.Data.resize(vertCount * 4 * sizeof(float));
+  std::memcpy(TangentAttr.Data.data(), data.out.data(), TangentAttr.Data.size());
+
+  Primitive.Attributes.emplace(EAttributeType::Tangent, std::move(TangentAttr));
 }

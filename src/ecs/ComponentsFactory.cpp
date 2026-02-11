@@ -21,10 +21,23 @@ namespace ecs
     }
   }
 
-  static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, int _ImageIndex)
+  static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, int _ImageIndex, ETextureType _TextureType)
   {
     if (_ImageIndex < 0 || _ImageIndex >= _ModelData.Images.size())
-      return resource::GetFallbackTexture();
+    {
+      switch (_TextureType)
+      {
+      case ETextureType::BasicColor:
+        return resource::GetDefaultBasicTexture();
+      case ETextureType::Normal:
+        return resource::GetDefaultNormalTexture();
+      case ETextureType::Roughness:
+        return resource::GetDefaultRoughnessTexture();
+      default:
+        assert(false);
+        return nullptr;
+      }
+    }
 
     return resource::LoadTexture(_ModelData.Images[_ImageIndex].URI);
   }
@@ -89,6 +102,8 @@ namespace ecs
 
     const TModelData &ModelData = _Model->GetModelData();
 
+    assert(!ModelData.Materials.empty());
+
     _Component.Materials.reserve(ModelData.Materials.size());
     for (const TMaterial &SrcMaterial : ModelData.Materials)
     {
@@ -99,9 +114,9 @@ namespace ecs
       Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
       Material.AlphaMode = GetAlphaMode(SrcMaterial.AlphaMode);
 
-      Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTextureIndex);
-      Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTextureIndex);
-      Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTextureIndex);
+      Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTextureIndex, ETextureType::BasicColor);
+      Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTextureIndex, ETextureType::Roughness);
+      Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTextureIndex, ETextureType::Normal);
     }
 
     for (int NodeIndex : ModelData.RootNodes)
@@ -115,5 +130,4 @@ namespace ecs
   {
     _Component.SkyboxTexture = _Skybox;
   }
-
 }

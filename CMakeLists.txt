@@ -52,16 +52,19 @@ include_directories(lib)
 include_directories(lib/ctti)
 include_directories(lib/glm-1.0.1)
 include_directories(lib/tinygltf)
+include_directories(lib/MikkTSpace)
 include_directories(lib/imgui)
 include_directories(src)
 
-add_subdirectory(lib/imgui)
-add_subdirectory(lib/tinygltf)
 add_subdirectory(lib/glad)
+add_subdirectory(lib/tinygltf)
+add_subdirectory(lib/MikkTSpace)
+add_subdirectory(lib/imgui)
 
 target_link_libraries(${TARGET} PRIVATE glad)
 target_link_libraries(${TARGET} PRIVATE glfw)
 target_link_libraries(${TARGET} PRIVATE tinygltf)
+target_link_libraries(${TARGET} PRIVATE mikktspace)
 target_link_libraries(${TARGET} PRIVATE imgui)
 
 target_precompile_headers(${TARGET} PRIVATE

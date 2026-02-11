@@ -4,6 +4,13 @@
 #include <optional>
 #include "utils/StaticArray.h"
 
+enum class ETextureType
+{
+    BasicColor,
+    Normal,
+    Roughness
+};
+
 enum class ETextureWrap : std::uint8_t
 {
     Repeat,

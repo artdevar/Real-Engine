@@ -65,7 +65,7 @@ int CDisplay::Init(const std::string &_Title)
     {
         int MaxTextureUnits = 0;
         glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &MaxTextureUnits);
-        CLogger::Log(ELogType::Info, "[CDisplay] Maximum supported texture image units : {}", MaxTextureUnits);
+        CLogger::Log(ELogType::Info, "[CDisplay] Maximum supported texture image units: {}", MaxTextureUnits);
     }
 
     glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);

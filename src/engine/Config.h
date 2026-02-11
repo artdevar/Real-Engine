@@ -36,6 +36,7 @@ public:
     float GetLightSpaceMatrixOrthRightTop() const { return LightSpaceMatrix_OrthRightTop; }
 
     std::filesystem::path GetAssetsDir() const { return ASSETS_DIR; }
+    std::filesystem::path GetTexturesDir() const { return GetAssetsDir() / "textures"; }
     std::filesystem::path GetShadersDir() const { return SHADERS_DIR; }
 
 private:

@@ -1,9 +1,15 @@
 #pragma once
 
 #include "interfaces/ModelParseStrategy.h"
-#include "tiny_gltf.h"
+#include "ModelData.h"
 
-class CTinyGLTFParseStrategy : public IModelParseStrategy
+namespace tinygltf
+{
+  class Model;
+  struct Primitive;
+}
+
+class CTinyGLTFParseStrategy final : public IModelParseStrategy
 {
 public:
   bool Parse(const std::filesystem::path &_Path, TModelData &_Model) override;
@@ -17,4 +23,5 @@ private:
   void ParseIndices(const tinygltf::Model &_Source, const tinygltf::Primitive &_SourcePrimitive, TPrimitive &_TargetPrimitive);
   void ParseMaterials(const tinygltf::Model &_Source, TModelData &_Target);
   void ParseImages(const tinygltf::Model &_Source, TModelData &_Target, const std::filesystem::path &_ModelDirectory);
+  void GenerateTangentsIfMissing(TPrimitive &Primitive);
 };

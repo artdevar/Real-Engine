@@ -27,7 +27,9 @@ static bool IsFormatSupported(const std::filesystem::path &_Path)
 
 void CResourceManager::Init()
 {
-  LoadTexture(GetDefaultTexturePath());
+  LoadTexture(GetDefaultBasicTexturePath());
+  LoadTexture(GetDefaultNormalTexturePath());
+  LoadTexture(GetDefaultRoughnessTexturePath());
 }
 
 void CResourceManager::Shutdown()
@@ -73,9 +75,19 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::string &_Name)
   return std::static_pointer_cast<CShader>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::GetFallbackTexture()
+std::shared_ptr<CTextureBase> CResourceManager::GetDefaultBasicTexture()
 {
-  return LoadTexture(GetDefaultTexturePath());
+  return LoadTexture(GetDefaultBasicTexturePath());
+}
+
+std::shared_ptr<CTextureBase> CResourceManager::GetDefaultNormalTexture()
+{
+  return LoadTexture(GetDefaultNormalTexturePath());
+}
+
+std::shared_ptr<CTextureBase> CResourceManager::GetDefaultRoughnessTexture()
+{
+  return LoadTexture(GetDefaultRoughnessTexturePath());
 }
 
 std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
@@ -87,7 +99,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
-      Iter = m_Assets.find(GetDefaultTexturePath());
+      return nullptr;
   }
 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
@@ -102,7 +114,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesyste
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
-      Iter = m_Assets.find(GetDefaultTexturePath());
+      return nullptr;
   }
 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
@@ -114,7 +126,7 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string 
   if (_Name.empty())
   {
     CLogger::Log(ELogType::Error, "[CResourceManager] Texture name is empty");
-    return GetFallbackTexture();
+    return nullptr;
   }
 
   auto Iter = m_Assets.find(_Name);
@@ -124,18 +136,23 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string 
     if (Texture->Generate(_Params, CPasskey(this)))
       Iter = m_Assets.emplace(_Name, std::move(Texture)).first;
     else
-      return GetFallbackTexture();
+      return nullptr;
   }
 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
 }
 
-std::filesystem::path CResourceManager::GetDefaultTexturePath()
+std::filesystem::path CResourceManager::GetDefaultBasicTexturePath()
 {
-  return CConfig::Instance().GetAssetsDir() / "textures/default.jpg";
+  return CConfig::Instance().GetTexturesDir() / "basic.jpg";
 }
 
-std::filesystem::path CResourceManager::GetFallbackTexturePath()
+std::filesystem::path CResourceManager::GetDefaultNormalTexturePath()
 {
-  return CConfig::Instance().GetAssetsDir() / "textures/fallback.jpg";
+  return CConfig::Instance().GetTexturesDir() / "normal.png";
+}
+
+std::filesystem::path CResourceManager::GetDefaultRoughnessTexturePath()
+{
+  return CConfig::Instance().GetTexturesDir() / "roughness.jpg";
 }

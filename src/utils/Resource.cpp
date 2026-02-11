@@ -32,15 +32,24 @@ namespace resource
         return Get()->LoadCubemap(_Path);
     }
 
-    std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name,
-                                                const TTextureParams &_Params)
+    std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params)
     {
         return Get()->CreateTexture(_Name, _Params);
     }
 
-    std::shared_ptr<CTextureBase> GetFallbackTexture()
+    std::shared_ptr<CTextureBase> GetDefaultBasicTexture()
     {
-        return Get()->GetFallbackTexture();
+        return Get()->GetDefaultBasicTexture();
+    }
+
+    std::shared_ptr<CTextureBase> GetDefaultNormalTexture()
+    {
+        return Get()->GetDefaultNormalTexture();
+    }
+
+    std::shared_ptr<CTextureBase> GetDefaultRoughnessTexture()
+    {
+        return Get()->GetDefaultRoughnessTexture();
     }
 
 }

@@ -105,8 +105,6 @@ public:
 
     stbi_image_free(Image.Data);
 
-    CLogger::Log(ELogType::Debug, "[CTexture] Texture '{}' loaded successfully", _Path.c_str());
-
     return true;
   }
 

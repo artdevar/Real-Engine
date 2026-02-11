@@ -327,9 +327,9 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
 
   ImGui::SeparatorText("Position##ObjPos");
 
-  ValueChanged |= ImGui::DragFloat("X##ObjXPos", &Translation.x);
-  ValueChanged |= ImGui::DragFloat("Y##ObjYPos", &Translation.y);
-  ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z);
+  ValueChanged |= ImGui::DragFloat("X##ObjXPos", &Translation.x, 0.5f);
+  ValueChanged |= ImGui::DragFloat("Y##ObjYPos", &Translation.y, 0.5f);
+  ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z, 0.5f);
 
   ImGui::SeparatorText("Scale##ObjScale");
 
@@ -381,7 +381,7 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
   {
   case ELightType::Directional:
   {
-    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.5f);
+    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.25f);
     ImGui::Separator();
 
     ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
@@ -396,7 +396,7 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
 
   case ELightType::Point:
   {
-    ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position));
+    ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position), 0.25f);
     ImGui::Separator();
 
     ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
@@ -415,10 +415,10 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
 
   case ELightType::Spotlight:
   {
-    ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position));
+    ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position), 0.25f);
     ImGui::Separator();
 
-    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction));
+    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.25f);
     ImGui::Separator();
 
     ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);

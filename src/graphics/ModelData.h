@@ -53,7 +53,7 @@ struct TAttribute
 struct TPrimitive
 {
   std::map<EAttributeType, TAttribute> Attributes;
-  std::vector<uint8_t> Indices;
+  std::vector<uint32_t> Indices;
   int IndicesCount = 0;
   int MaterialIndex = -1;
 };

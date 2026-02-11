@@ -23,7 +23,8 @@ namespace ecs
     {
         CSystem::Init(_Coordinator);
 
-        m_ModelShader = resource::LoadShader("pbr");
+        // m_ModelShader = resource::LoadShader("pbr");
+        m_ModelShader = resource::LoadShader("basic");
     }
 
     void CWorldRenderSystem::RenderInternal(CRenderer &_Renderer)
