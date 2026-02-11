@@ -32,6 +32,7 @@ struct TImage
 struct TMaterial
 {
   glm::vec4 BaseColorFactor = glm::vec4(1.0f);
+  glm::vec3 EmissiveFactor = glm::vec3(0.0f);
   float MetallicFactor = 1.0f;
   float RoughnessFactor = 1.0f;
   float AlphaCutoff = 0.5f;
@@ -40,6 +41,7 @@ struct TMaterial
   int BaseColorTextureIndex = -1;
   int MetallicRoughnessTextureIndex = -1;
   int NormalTextureIndex = -1;
+  int EmissiveTextureIndex = -1;
 };
 
 struct TAttribute

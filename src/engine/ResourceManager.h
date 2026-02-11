@@ -1,13 +1,13 @@
 #pragma once
 
 #include "interfaces/Shutdownable.h"
+#include "graphics/TextureParams.h"
 #include "utils/Common.h"
 
 class CModel;
 class CShader;
 class CTextureBase;
 class IAsset;
-struct TTextureParams;
 
 class CResourceManager final : public IShutdownable
 {
@@ -23,18 +23,14 @@ public:
   std::shared_ptr<CShader> LoadShader(const std::string &_Name);
   std::shared_ptr<CModel> LoadModel(const std::filesystem::path &_Path);
 
-  std::shared_ptr<CTextureBase> GetDefaultBasicTexture();
-  std::shared_ptr<CTextureBase> GetDefaultNormalTexture();
-  std::shared_ptr<CTextureBase> GetDefaultRoughnessTexture();
+  std::shared_ptr<CTextureBase> GetDefaultTexture(ETextureType _TextureType);
   std::shared_ptr<CTextureBase> LoadTexture(const std::filesystem::path &_Path);
   std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path);
   std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name,
                                               const TTextureParams &_Params);
 
 private:
-  static std::filesystem::path GetDefaultBasicTexturePath();
-  static std::filesystem::path GetDefaultNormalTexturePath();
-  static std::filesystem::path GetDefaultRoughnessTexturePath();
+  static std::filesystem::path GetDefaultTexturePath(ETextureType _TextureType);
 
 private:
   std::map<std::string, std::shared_ptr<IAsset>, std::less<>> m_Assets;

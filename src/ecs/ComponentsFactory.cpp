@@ -24,20 +24,7 @@ namespace ecs
   static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, int _ImageIndex, ETextureType _TextureType)
   {
     if (_ImageIndex < 0 || _ImageIndex >= _ModelData.Images.size())
-    {
-      switch (_TextureType)
-      {
-      case ETextureType::BasicColor:
-        return resource::GetDefaultBasicTexture();
-      case ETextureType::Normal:
-        return resource::GetDefaultNormalTexture();
-      case ETextureType::Roughness:
-        return resource::GetDefaultRoughnessTexture();
-      default:
-        assert(false);
-        return nullptr;
-      }
-    }
+      return resource::GetDefaultTexture(_TextureType);
 
     return resource::LoadTexture(_ModelData.Images[_ImageIndex].URI);
   }
@@ -109,6 +96,7 @@ namespace ecs
     {
       TModelComponent::TMaterialData &Material = _Component.Materials.emplace_back();
       Material.BaseColorFactor = SrcMaterial.BaseColorFactor;
+      Material.EmissiveFactor = SrcMaterial.EmissiveFactor;
       Material.MetallicFactor = SrcMaterial.MetallicFactor;
       Material.RoughnessFactor = SrcMaterial.RoughnessFactor;
       Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
@@ -117,6 +105,7 @@ namespace ecs
       Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTextureIndex, ETextureType::BasicColor);
       Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTextureIndex, ETextureType::Roughness);
       Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTextureIndex, ETextureType::Normal);
+      Material.EmissiveTexture = LoadTexture(ModelData, SrcMaterial.EmissiveTextureIndex, ETextureType::Emissive);
     }
 
     for (int NodeIndex : ModelData.RootNodes)

@@ -83,7 +83,15 @@ namespace ecs
                         ++TextureUnit;
                     }
 
+                    if (Material.EmissiveTexture)
+                    {
+                        Material.EmissiveTexture->Bind(GL_TEXTURE0 + TextureUnit);
+                        _Renderer.SetUniform("u_Material.EmissiveTexture", TextureUnit);
+                        ++TextureUnit;
+                    }
+
                     _Renderer.SetUniform("u_Material.BaseColorFactor", Material.BaseColorFactor);
+                    _Renderer.SetUniform("u_Material.EmissiveFactor", Material.EmissiveFactor);
                     _Renderer.SetUniform("u_Material.MetallicFactor", Material.MetallicFactor);
                     _Renderer.SetUniform("u_Material.RoughnessFactor", Material.RoughnessFactor);
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));

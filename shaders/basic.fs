@@ -50,8 +50,10 @@ struct TMaterial
   sampler2D BaseColorTexture;
   sampler2D RoughnessTexture;
   sampler2D NormalTexture;
+  sampler2D EmissiveTexture;
 
   vec4  BaseColorFactor;
+  vec3  EmissiveFactor;
   float MetallicFactor;
   float RoughnessFactor;
   float AlphaCutoff;
@@ -126,7 +128,12 @@ void main()
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * LightDirectional.Specular;
 
+    // emmissive
+    vec4 emissiveSample = texture(u_Material.EmissiveTexture, io_TexCoords) * vec4(u_Material.EmissiveFactor, 1.0);
+
+    //  shadow
     float shadow = CalculateShadow(io_FragLightPos, lightDir);
-    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * baseColorSample.rgb;
+
+    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * baseColorSample.rgb + emissiveSample.rgb;
     o_FragColor = vec4(result, baseColorSample.a);
 }

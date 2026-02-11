@@ -27,9 +27,6 @@ static bool IsFormatSupported(const std::filesystem::path &_Path)
 
 void CResourceManager::Init()
 {
-  LoadTexture(GetDefaultBasicTexturePath());
-  LoadTexture(GetDefaultNormalTexturePath());
-  LoadTexture(GetDefaultRoughnessTexturePath());
 }
 
 void CResourceManager::Shutdown()
@@ -75,19 +72,9 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::string &_Name)
   return std::static_pointer_cast<CShader>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::GetDefaultBasicTexture()
+std::shared_ptr<CTextureBase> CResourceManager::GetDefaultTexture(ETextureType _TextureType)
 {
-  return LoadTexture(GetDefaultBasicTexturePath());
-}
-
-std::shared_ptr<CTextureBase> CResourceManager::GetDefaultNormalTexture()
-{
-  return LoadTexture(GetDefaultNormalTexturePath());
-}
-
-std::shared_ptr<CTextureBase> CResourceManager::GetDefaultRoughnessTexture()
-{
-  return LoadTexture(GetDefaultRoughnessTexturePath());
+  return LoadTexture(GetDefaultTexturePath(_TextureType));
 }
 
 std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
@@ -142,17 +129,19 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string 
   return std::static_pointer_cast<CTextureBase>(Iter->second);
 }
 
-std::filesystem::path CResourceManager::GetDefaultBasicTexturePath()
+std::filesystem::path CResourceManager::GetDefaultTexturePath(ETextureType _TextureType)
 {
-  return CConfig::Instance().GetTexturesDir() / "basic.jpg";
-}
-
-std::filesystem::path CResourceManager::GetDefaultNormalTexturePath()
-{
-  return CConfig::Instance().GetTexturesDir() / "normal.png";
-}
-
-std::filesystem::path CResourceManager::GetDefaultRoughnessTexturePath()
-{
-  return CConfig::Instance().GetTexturesDir() / "roughness.jpg";
+  switch (_TextureType)
+  {
+  case ETextureType::BasicColor:
+    return CConfig::Instance().GetTexturesDir() / "basic.jpg";
+  case ETextureType::Normal:
+    return CConfig::Instance().GetTexturesDir() / "normal.png";
+  case ETextureType::Roughness:
+    return CConfig::Instance().GetTexturesDir() / "roughness.jpg";
+  case ETextureType::Emissive:
+    return CConfig::Instance().GetTexturesDir() / "emissive.jpg";
+  default:
+    return CConfig::Instance().GetTexturesDir() / "missing.jpg";
+  }
 }

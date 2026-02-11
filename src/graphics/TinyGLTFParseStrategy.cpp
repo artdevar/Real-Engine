@@ -200,8 +200,13 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
     if (SourceMaterial.normalTexture.index >= 0)
       Material.NormalTextureIndex = SourceMaterial.normalTexture.index;
 
+    if (SourceMaterial.emissiveTexture.index >= 0)
+      Material.EmissiveTextureIndex = SourceMaterial.emissiveTexture.index;
+
     const std::vector<double> &Factor = PBR.baseColorFactor;
+    const std::vector<double> &EmissiveFactor = SourceMaterial.emissiveFactor;
     Material.BaseColorFactor = glm::vec4(Factor[0], Factor[1], Factor[2], Factor[3]);
+    Material.EmissiveFactor = glm::vec3(EmissiveFactor[0], EmissiveFactor[1], EmissiveFactor[2]);
     Material.MetallicFactor = static_cast<float>(PBR.metallicFactor);
     Material.RoughnessFactor = static_cast<float>(PBR.roughnessFactor);
     Material.AlphaCutoff = static_cast<float>(SourceMaterial.alphaCutoff);

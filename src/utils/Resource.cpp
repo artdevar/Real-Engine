@@ -37,19 +37,9 @@ namespace resource
         return Get()->CreateTexture(_Name, _Params);
     }
 
-    std::shared_ptr<CTextureBase> GetDefaultBasicTexture()
+    std::shared_ptr<CTextureBase> GetDefaultTexture(ETextureType _TextureType)
     {
-        return Get()->GetDefaultBasicTexture();
-    }
-
-    std::shared_ptr<CTextureBase> GetDefaultNormalTexture()
-    {
-        return Get()->GetDefaultNormalTexture();
-    }
-
-    std::shared_ptr<CTextureBase> GetDefaultRoughnessTexture()
-    {
-        return Get()->GetDefaultRoughnessTexture();
+        return Get()->GetDefaultTexture(_TextureType);
     }
 
 }

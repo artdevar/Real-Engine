@@ -1,9 +1,10 @@
 #pragma once
 
+#include "graphics/TextureParams.h"
+
 class CModel;
 class CShader;
 class CTextureBase;
-struct TTextureParams;
 
 namespace resource
 {
@@ -13,8 +14,6 @@ namespace resource
     std::shared_ptr<CTextureBase> LoadTexture(const std::filesystem::path &_Path);
     std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path);
     std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params);
-    std::shared_ptr<CTextureBase> GetDefaultBasicTexture();
-    std::shared_ptr<CTextureBase> GetDefaultNormalTexture();
-    std::shared_ptr<CTextureBase> GetDefaultRoughnessTexture();
+    std::shared_ptr<CTextureBase> GetDefaultTexture(ETextureType _TextureType);
 
 }

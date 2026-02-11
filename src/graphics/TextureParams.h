@@ -8,7 +8,8 @@ enum class ETextureType
 {
     BasicColor,
     Normal,
-    Roughness
+    Roughness,
+    Emissive
 };
 
 enum class ETextureWrap : std::uint8_t
