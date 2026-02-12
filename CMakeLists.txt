@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/")
 set(SHADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/")
 
-option(DEV_STAGE "Enable development-stage features (editor, shader hot-reload)" OFF)
+option(DEV_STAGE "Enable development-stage features (editor, shader hot-reload)" ON)
 
 if (DEV_STAGE)
   set(DEV_STAGE_VAL 1)
