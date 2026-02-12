@@ -5,6 +5,7 @@
   Class &operator=(const Class &) = delete;
 
 #define ENABLE_CLASS_MOVE(Class) \
+public:                          \
   Class(Class &&) = default;     \
   Class &operator=(Class &&) = default;
 

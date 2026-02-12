@@ -60,43 +60,27 @@ namespace ecs
                 {
                     TModelComponent::TMaterialData &Material = ModelComponent.Materials[Primitive.MaterialIndex];
 
-                    int TextureUnit = 0;
+                    Material.BaseColorTexture->Bind(TEXTURE_BASIC_COLOR_UNIT);
+                    _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
 
-                    if (Material.BaseColorTexture)
-                    {
-                        Material.BaseColorTexture->Bind(GL_TEXTURE0 + TextureUnit);
-                        _Renderer.SetUniform("u_Material.BaseColorTexture", TextureUnit);
-                        ++TextureUnit;
-                    }
+                    Material.NormalTexture->Bind(TEXTURE_NORMAL_UNIT);
+                    _Renderer.SetUniform("u_Material.NormalTexture", TEXTURE_NORMAL_INDEX);
 
-                    if (Material.MetallicRoughnessTexture)
-                    {
-                        Material.MetallicRoughnessTexture->Bind(GL_TEXTURE0 + TextureUnit);
-                        _Renderer.SetUniform("u_Material.RoughnessTexture", TextureUnit);
-                        ++TextureUnit;
-                    }
+                    Material.EmissiveTexture->Bind(TEXTURE_EMISSIVE_UNIT);
+                    _Renderer.SetUniform("u_Material.EmissiveTexture", TEXTURE_EMISSIVE_INDEX);
 
-                    if (Material.NormalTexture)
-                    {
-                        Material.NormalTexture->Bind(GL_TEXTURE0 + TextureUnit);
-                        _Renderer.SetUniform("u_Material.NormalTexture", TextureUnit);
-                        ++TextureUnit;
-                    }
-
-                    if (Material.EmissiveTexture)
-                    {
-                        Material.EmissiveTexture->Bind(GL_TEXTURE0 + TextureUnit);
-                        _Renderer.SetUniform("u_Material.EmissiveTexture", TextureUnit);
-                        ++TextureUnit;
-                    }
+                    Material.MetallicRoughnessTexture->Bind(TEXTURE_METALLIC_ROUGHNESS_UNIT);
+                    _Renderer.SetUniform("u_Material.RoughnessTexture", TEXTURE_ETALLIC_ROUGHNESS_INDEX);
 
                     _Renderer.SetUniform("u_Material.BaseColorFactor", Material.BaseColorFactor);
                     _Renderer.SetUniform("u_Material.EmissiveFactor", Material.EmissiveFactor);
                     _Renderer.SetUniform("u_Material.MetallicFactor", Material.MetallicFactor);
                     _Renderer.SetUniform("u_Material.RoughnessFactor", Material.RoughnessFactor);
+                    _Renderer.SetUniform("u_Material.IsDoubleSided", Material.IsDoubleSided);
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
-                    _Renderer.SetAlphaBlending(Material.AlphaMode == EAlphaMode::Blend);
+                    _Renderer.SetBlending(Material.AlphaMode == EAlphaMode::Blend);
+                    _Renderer.SetCullFace(Material.IsDoubleSided ? GL_NONE : GL_BACK);
                 }
 
                 Primitive.VAO.Bind();

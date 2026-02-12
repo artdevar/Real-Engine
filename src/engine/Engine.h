@@ -65,7 +65,7 @@ private:
 private:
   static CEngine *Singleton;
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
   bool m_CameraDragActive{false};
 #endif
 
@@ -76,7 +76,7 @@ private:
   std::shared_ptr<CWorld> m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
   CEditorUI *m_EditorUI;
 #endif
 };

@@ -13,6 +13,8 @@ void CModel::Shutdown()
 
 bool CModel::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
+  CLogger::Log(ELogType::Info, "[CModel] Loading model from '{}'", _Path.c_str());
+
   m_Model = std::make_unique<TModelData>();
 
   const bool IsParsed = m_ParseStrategy->Parse(_Path, *m_Model);

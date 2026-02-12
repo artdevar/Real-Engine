@@ -7,7 +7,6 @@
 #include "graphics/Texture.h"
 #include "graphics/Renderer.h"
 #include "graphics/Shader.h"
-
 #include "graphics/ShaderTypes.h"
 #include "engine/Config.h"
 
@@ -73,7 +72,7 @@ namespace ecs
 
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
-                    _Renderer.SetAlphaBlending(Material.AlphaMode == EAlphaMode::Blend);
+                    _Renderer.SetBlending(Material.AlphaMode == EAlphaMode::Blend);
                 }
                 Primitive.VAO.Bind();
                 _Renderer.DrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
@@ -92,7 +91,7 @@ namespace ecs
 
     bool CShadowRenderSystem::ShouldBeRendered() const
     {
-        return !m_Entities.Empty();
+        return CConfig::Instance().GetShadowsEnabled() && !m_Entities.Empty();
     }
 
     void CShadowRenderSystem::RenderDebugQuad(CRenderer &_Renderer)

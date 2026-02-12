@@ -1,6 +1,6 @@
 #pragma once
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
 #include "interfaces/Renderable.h"

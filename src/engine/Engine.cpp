@@ -17,7 +17,7 @@ CEngine::CEngine() : m_Display(std::make_unique<CDisplay>()),
                      m_World(std::make_shared<CWorld>()),
                      m_Camera(std::make_shared<CCamera>())
 {
-#if EDITOR_ENABLED
+#if DEV_STAGE
   m_EditorUI = new CEditorUI;
 #endif
 }
@@ -34,7 +34,7 @@ CEngine &CEngine::Instance()
 
 void CEngine::Shutdown()
 {
-#if EDITOR_ENABLED
+#if DEV_STAGE
   m_EditorUI->Shutdown();
   delete m_EditorUI;
 #endif
@@ -81,7 +81,7 @@ int CEngine::Init(const std::string &_ConfigPath, const std::string &_GameTitle)
                               m_InputManager->OnKeyEvent(k, a, m);
                               DispatchKeyInput(k, a, m); });
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
   m_Display->SetCursorMode(GLFW_CURSOR_NORMAL);
 #else
   m_Display->SetCursorMode(GLFW_CURSOR_DISABLED);
@@ -89,7 +89,7 @@ int CEngine::Init(const std::string &_ConfigPath, const std::string &_GameTitle)
 
   m_ResourceManager->Init();
   m_World->Init();
-#if EDITOR_ENABLED
+#if DEV_STAGE
   m_EditorUI->Init(this);
 #endif
 
@@ -100,6 +100,7 @@ int CEngine::Run()
 {
   CRenderer Renderer;
   Renderer.SetCamera(m_Camera);
+  Renderer.SetCullFace(GL_BACK);
 
   m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
 
@@ -137,7 +138,7 @@ void CEngine::UpdateInternal(float _TimeDelta)
 
   m_Camera->Update(_TimeDelta);
   m_World->Update(_TimeDelta);
-#if EDITOR_ENABLED
+#if DEV_STAGE
   m_EditorUI->Update(_TimeDelta);
 #endif
 }
@@ -150,7 +151,7 @@ bool CEngine::ShouldBeUpdated() const
 void CEngine::RenderInternal(CRenderer &_Renderer)
 {
   m_World->Render(_Renderer);
-#if EDITOR_ENABLED
+#if DEV_STAGE
   m_EditorUI->Render(_Renderer);
 #endif
 }
@@ -219,7 +220,7 @@ void CEngine::OnWindowResized(int _Width, int _Height)
 
 void CEngine::ProcessInput(float _TimeDelta)
 {
-#if !EDITOR_ENABLED
+#if !DEV_STAGE
   if (m_InputManager->IsKeyJustPressed(GLFW_KEY_ESCAPE))
     m_Display->SetShouldClose(true);
 #endif
@@ -233,7 +234,7 @@ void CEngine::DispatchKeyInput(int _Key, int _Action, int _Mods)
 
 void CEngine::DispatchMouseButton(int _Button, int _Action, int _Mods)
 {
-#if EDITOR_ENABLED
+#if DEV_STAGE
   if (_Button == GLFW_MOUSE_BUTTON_RIGHT)
   {
     if (_Action == GLFW_PRESS)
@@ -258,7 +259,7 @@ void CEngine::DispatchMouseMove(float _X, float _Y)
   static float lastX = 0.0f;
   static float lastY = 0.0f;
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
   if (!m_CameraDragActive)
   {
     firstMouse = true;

@@ -1,6 +1,6 @@
 #pragma once
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
 #include "editor/EditorUI.h"
 #endif
 
@@ -16,7 +16,9 @@ public:
         return Instance;
     }
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
+    void SetShadowsEnabled(bool _Enabled, CPasskey<CEditorUI>) { AreShadowsEnabled = _Enabled; }
+
     void SetCameraZNear(float _ZNear, CPasskey<CEditorUI>) { Camera_ZNear = _ZNear; }
     void SetCameraZFar(float _ZFar, CPasskey<CEditorUI>) { Camera_ZFar = _ZFar; }
     void SetCameraFOV(float _FOV, CPasskey<CEditorUI>) { Camera_FOV = _FOV; }
@@ -26,6 +28,8 @@ public:
     void SetLightSpaceMatrixOrthLeftBot(float _LeftBot, CPasskey<CEditorUI>) { LightSpaceMatrix_OrthLeftBot = _LeftBot; }
     void SetLightSpaceMatrixOrthRightTop(float _RightTop, CPasskey<CEditorUI>) { LightSpaceMatrix_OrthRightTop = _RightTop; }
 #endif
+    bool GetShadowsEnabled() const { return AreShadowsEnabled; }
+
     float GetCameraZNear() const { return Camera_ZNear; }
     float GetCameraZFar() const { return Camera_ZFar; }
     float GetCameraFOV() const { return Camera_FOV; }
@@ -40,6 +44,9 @@ public:
     std::filesystem::path GetShadersDir() const { return SHADERS_DIR; }
 
 private:
+    // Render
+    bool AreShadowsEnabled = true;
+
     // Camera parameters
     float Camera_ZNear = 0.1f;
     float Camera_ZFar = 1000.0f;

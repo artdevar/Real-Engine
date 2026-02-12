@@ -49,6 +49,7 @@ namespace ecs
       float RoughnessFactor = 1.0f;
       float AlphaCutoff = 0.5f;
       EAlphaMode AlphaMode = EAlphaMode::Opaque;
+      bool IsDoubleSided = false;
     };
 
     std::vector<TPrimitiveData> Primitives;

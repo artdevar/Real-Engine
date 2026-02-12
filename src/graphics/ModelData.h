@@ -24,9 +24,41 @@ enum class EModelAlphaMode
   Blend
 };
 
+enum class ETextureWrapMode
+{
+  Repeat,
+  ClampToEdge,
+  ClampToBorder,
+  MirroredRepeat
+};
+
+enum class ETextureFilterMode
+{
+  Nearest,
+  Linear,
+  LinearMipmapLinear,
+  LinearMipmapNearest,
+  NearestMipmapNearest,
+  NearestMipmapLinear
+};
+
 struct TImage
 {
   std::string URI;
+};
+
+struct TSampler
+{
+  ETextureWrapMode WrapS;
+  ETextureWrapMode WrapT;
+  ETextureFilterMode MinFilter;
+  ETextureFilterMode MagFilter;
+};
+
+struct TTexture
+{
+  int ImageIndex = -1;
+  int SamplerIndex = -1;
 };
 
 struct TMaterial
@@ -37,11 +69,12 @@ struct TMaterial
   float RoughnessFactor = 1.0f;
   float AlphaCutoff = 0.5f;
   EModelAlphaMode AlphaMode = EModelAlphaMode::Opaque;
+  bool IsDoubleSided = false;
 
-  int BaseColorTextureIndex = -1;
-  int MetallicRoughnessTextureIndex = -1;
-  int NormalTextureIndex = -1;
-  int EmissiveTextureIndex = -1;
+  TTexture BaseColorTexture;
+  TTexture MetallicRoughnessTexture;
+  TTexture NormalTexture;
+  TTexture EmissiveTexture;
 };
 
 struct TAttribute
@@ -82,4 +115,5 @@ struct TModelData
   std::vector<TMesh> Meshes;
   std::vector<TMaterial> Materials;
   std::vector<TImage> Images;
+  std::vector<TSampler> Samplers;
 };

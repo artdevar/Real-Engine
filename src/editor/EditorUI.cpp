@@ -1,6 +1,6 @@
 #include "EditorUI.h"
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
 #include "engine/Config.h"
 #include "engine/Engine.h"
 #include "engine/Display.h"
@@ -109,6 +109,10 @@ void CEditorUI::RenderEnd()
 
 void CEditorUI::RenderGlobalParams()
 {
+  // bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
+  // if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
+  //   CConfig::Instance().SetShadowsEnabled(ShadowsEnabled, CPasskey(this));
+
   float CameraZNear = CConfig::Instance().GetCameraZNear();
   if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 0.5f, -50.0f, 100.0f))
     CConfig::Instance().SetCameraZNear(CameraZNear, CPasskey(this));

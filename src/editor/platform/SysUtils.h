@@ -1,6 +1,6 @@
 #pragma once
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
 
 #include <filesystem>
 

@@ -11,9 +11,13 @@
 template <typename T, std::size_t Capacity>
 class CStaticArray final
 {
-  DISABLE_CLASS_COPY(CStaticArray);
-
 public:
+  constexpr CStaticArray(const CStaticArray &) = default;
+  constexpr CStaticArray &operator=(const CStaticArray &) = default;
+
+  constexpr CStaticArray(CStaticArray &&) = default;
+  constexpr CStaticArray &operator=(CStaticArray &&) = default;
+
   class CIterator;
 
   constexpr CStaticArray()

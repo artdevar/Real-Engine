@@ -18,12 +18,20 @@ constexpr inline GLuint BINDING_DIFF_TEXTURE_BUFFER = 0;
 constexpr inline GLuint BINDING_SPEC_TEXTURE_BUFFER = 1;
 constexpr inline GLuint BINDING_LIGHTING_BUFFER = 5;
 
+constexpr inline GLenum TEXTURE_BASIC_COLOR_UNIT = GL_TEXTURE0;
+constexpr inline GLint TEXTURE_BASIC_COLOR_INDEX = 0;
+constexpr inline GLenum TEXTURE_NORMAL_UNIT = GL_TEXTURE1;
+constexpr inline GLint TEXTURE_NORMAL_INDEX = 1;
+constexpr inline GLenum TEXTURE_EMISSIVE_UNIT = GL_TEXTURE2;
+constexpr inline GLint TEXTURE_EMISSIVE_INDEX = 2;
+constexpr inline GLenum TEXTURE_METALLIC_ROUGHNESS_UNIT = GL_TEXTURE3;
+constexpr inline GLint TEXTURE_ETALLIC_ROUGHNESS_INDEX = 3;
 constexpr inline GLenum TEXTURE_SHADOW_MAP_UNIT = GL_TEXTURE20;
 constexpr inline GLint TEXTURE_SHADOW_MAP_INDEX = 20;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 
-enum EAlphaMode : GLuint
+enum EAlphaMode : GLint
 {
   Opaque,
   Mask,
@@ -68,9 +76,9 @@ struct TLightSpot
 struct TShaderLighting
 {
   TLightDirectional LightDirectional;
-  TLightSpot LightSpot;
-  TLightPoint LightPoints[MAX_POINT_LIGHTS];
-  alignas(4) int PointLightsCount;
+  // TLightSpot LightSpot;
+  // TLightPoint LightPoints[MAX_POINT_LIGHTS];
+  // alignas(4) int PointLightsCount;
 };
 
 //

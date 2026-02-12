@@ -6,6 +6,57 @@
 #include <tiny_gltf.h>
 #include <mikktspace.h>
 
+namespace
+{
+
+  EModelAlphaMode ToModelAlphaMode(const std::string &_Mode)
+  {
+    if (_Mode == "MASK")
+      return EModelAlphaMode::Mask;
+    else if (_Mode == "BLEND")
+      return EModelAlphaMode::Blend;
+    else
+      return EModelAlphaMode::Opaque;
+  }
+
+  ETextureWrapMode ToTextureWrapMode(int _Wrap)
+  {
+    switch (_Wrap)
+    {
+    case TINYGLTF_TEXTURE_WRAP_REPEAT:
+      return ETextureWrapMode::Repeat;
+    case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:
+      return ETextureWrapMode::ClampToEdge;
+    case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT:
+      return ETextureWrapMode::MirroredRepeat;
+    default:
+      return ETextureWrapMode::Repeat;
+    }
+  }
+
+  ETextureFilterMode ToTextureFilterMode(int _Filter)
+  {
+    switch (_Filter)
+    {
+    case TINYGLTF_TEXTURE_FILTER_NEAREST:
+      return ETextureFilterMode::Nearest;
+    case TINYGLTF_TEXTURE_FILTER_LINEAR:
+      return ETextureFilterMode::Linear;
+    case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
+      return ETextureFilterMode::NearestMipmapNearest;
+    case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:
+      return ETextureFilterMode::LinearMipmapNearest;
+    case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:
+      return ETextureFilterMode::NearestMipmapLinear;
+    case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:
+      return ETextureFilterMode::LinearMipmapLinear;
+    default:
+      return ETextureFilterMode::Nearest;
+    }
+  }
+
+}
+
 bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelData &_Model)
 {
   tinygltf::Model NativeModel;
@@ -124,7 +175,10 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
                                                                                                    : static_cast<EAttributeType>(-1);
 
     if (Type == static_cast<EAttributeType>(-1))
+    {
+      CLogger::Log(ELogType::Debug, "Unsupported attribute type: {}", Name);
       continue;
+    }
 
     const tinygltf::Accessor &Accessor = _Source.accessors[AccessorIndex];
     const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
@@ -192,16 +246,28 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
     const tinygltf::PbrMetallicRoughness &PBR = SourceMaterial.pbrMetallicRoughness;
 
     if (PBR.baseColorTexture.index >= 0)
-      Material.BaseColorTextureIndex = PBR.baseColorTexture.index;
+    {
+      Material.BaseColorTexture.ImageIndex = PBR.baseColorTexture.index;
+      Material.BaseColorTexture.SamplerIndex = _Source.textures[PBR.baseColorTexture.index].sampler;
+    }
 
     if (PBR.metallicRoughnessTexture.index >= 0)
-      Material.MetallicRoughnessTextureIndex = PBR.metallicRoughnessTexture.index;
+    {
+      Material.MetallicRoughnessTexture.ImageIndex = PBR.metallicRoughnessTexture.index;
+      Material.MetallicRoughnessTexture.SamplerIndex = _Source.textures[PBR.metallicRoughnessTexture.index].sampler;
+    }
 
     if (SourceMaterial.normalTexture.index >= 0)
-      Material.NormalTextureIndex = SourceMaterial.normalTexture.index;
+    {
+      Material.NormalTexture.ImageIndex = SourceMaterial.normalTexture.index;
+      Material.NormalTexture.SamplerIndex = _Source.textures[SourceMaterial.normalTexture.index].sampler;
+    }
 
     if (SourceMaterial.emissiveTexture.index >= 0)
-      Material.EmissiveTextureIndex = SourceMaterial.emissiveTexture.index;
+    {
+      Material.EmissiveTexture.ImageIndex = SourceMaterial.emissiveTexture.index;
+      Material.EmissiveTexture.SamplerIndex = _Source.textures[SourceMaterial.emissiveTexture.index].sampler;
+    }
 
     const std::vector<double> &Factor = PBR.baseColorFactor;
     const std::vector<double> &EmissiveFactor = SourceMaterial.emissiveFactor;
@@ -210,13 +276,8 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
     Material.MetallicFactor = static_cast<float>(PBR.metallicFactor);
     Material.RoughnessFactor = static_cast<float>(PBR.roughnessFactor);
     Material.AlphaCutoff = static_cast<float>(SourceMaterial.alphaCutoff);
-
-    if (SourceMaterial.alphaMode == "MASK")
-      Material.AlphaMode = EModelAlphaMode::Mask;
-    else if (SourceMaterial.alphaMode == "BLEND")
-      Material.AlphaMode = EModelAlphaMode::Blend;
-    else
-      Material.AlphaMode = EModelAlphaMode::Opaque;
+    Material.AlphaMode = ToModelAlphaMode(SourceMaterial.alphaMode);
+    Material.IsDoubleSided = SourceMaterial.doubleSided;
   }
 }
 
@@ -228,6 +289,15 @@ void CTinyGLTFParseStrategy::ParseImages(const tinygltf::Model &_Source, TModelD
   {
     TImage &Image = _Target.Images.emplace_back();
     Image.URI = (_ModelDirectory / SourceImage.uri).string();
+  }
+
+  for (const tinygltf::Sampler &SourceSampler : _Source.samplers)
+  {
+    TSampler &Sampler = _Target.Samplers.emplace_back();
+    Sampler.WrapS = ToTextureWrapMode(SourceSampler.wrapS);
+    Sampler.WrapT = ToTextureWrapMode(SourceSampler.wrapT);
+    Sampler.MinFilter = ToTextureFilterMode(SourceSampler.minFilter);
+    Sampler.MagFilter = ToTextureFilterMode(SourceSampler.magFilter);
   }
 }
 

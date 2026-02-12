@@ -6,12 +6,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(ASSETS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/assets/")
 set(SHADERS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/shaders/")
 
+option(DEV_STAGE "Enable development-stage features (editor, shader hot-reload)" OFF)
+
+if (DEV_STAGE)
+  set(DEV_STAGE_VAL 1)
+  set(SHADERS_HOT_RELOAD_VAL 1)
+else()
+  set(DEV_STAGE_VAL 0)
+  set(SHADERS_HOT_RELOAD_VAL 0)
+endif()
+
 project(${TARGET} VERSION 0.0.1)
 add_executable(${TARGET})
 
 target_compile_definitions(${TARGET} PUBLIC GLM_ENABLE_EXPERIMENTAL)
-target_compile_definitions(${TARGET} PRIVATE EDITOR_ENABLED=1)
-target_compile_definitions(${TARGET} PRIVATE SHADERS_HOT_RELOAD=1)
+target_compile_definitions(${TARGET} PRIVATE DEV_STAGE=${DEV_STAGE_VAL})
+target_compile_definitions(${TARGET} PRIVATE SHADERS_HOT_RELOAD=${SHADERS_HOT_RELOAD_VAL})
 target_compile_definitions(${TARGET} PRIVATE ASSETS_DIR="${ASSETS_DIR}")
 target_compile_definitions(${TARGET} PRIVATE SHADERS_DIR="${SHADERS_DIR}")
 target_sources(${TARGET} PRIVATE
@@ -23,6 +33,7 @@ target_sources(${TARGET} PRIVATE
   src/engine/ResourceManager.cpp
   src/scenes/World.cpp
   src/graphics/Renderer.cpp
+  src/graphics/Texture.cpp
   src/graphics/Shader.cpp
   src/graphics/Model.cpp
   src/graphics/TinyGLTFParseStrategy.cpp

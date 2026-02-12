@@ -82,8 +82,23 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<IAsset> Texture = std::make_shared<CTexture>();
+    std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
     if (Texture->Load(_Path, CPasskey(this)))
+      Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
+    else
+      return nullptr;
+  }
+
+  return std::static_pointer_cast<CTextureBase>(Iter->second);
+}
+
+std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path, const TTextureParams &_Params)
+{
+  auto Iter = m_Assets.find(_Path);
+  if (Iter == m_Assets.end())
+  {
+    std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
+    if (Texture->Load(_Path, _Params, CPasskey(this)))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else
       return nullptr;
@@ -97,7 +112,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesyste
   auto Iter = m_Assets.find(_Path);
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<IAsset> Texture = std::make_shared<CCubemap>();
+    std::shared_ptr<CCubemap> Texture = std::make_shared<CCubemap>();
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
     else

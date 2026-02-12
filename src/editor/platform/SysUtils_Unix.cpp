@@ -1,6 +1,6 @@
 #include "SysUtils.h"
 
-#if EDITOR_ENABLED
+#if DEV_STAGE
 #include "utils/Common.h"
 #include <cstring>
 

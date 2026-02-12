@@ -1,7 +1,5 @@
 #version 460 core
 
-const int MAX_POINT_LIGHTS = 5;
-
 struct TLightDirectional
 {
   vec3 Direction;
@@ -10,39 +8,9 @@ struct TLightDirectional
   vec3 Specular;
 };
 
-struct TLightPoint
-{
-  vec3 Position;
-  vec3 Ambient;
-  vec3 Diffuse;
-  vec3 Specular;
-
-  float Constant;
-  float Linear;
-  float Quadratic;
-};
-
-struct TLightSpot
-{
-  vec3 Position;
-  vec3 Direction;
-  vec3 Ambient;
-  vec3 Diffuse;
-  vec3 Specular;
-
-  float CutOff;
-  float OuterCutOff;
-  float Constant;
-  float Linear;
-  float Quadratic;
-};
-
 layout (std140) uniform u_Lighting
 {
   TLightDirectional LightDirectional;
-  TLightSpot        LightSpot;
-  TLightPoint       LightPoints[MAX_POINT_LIGHTS];
-  int               PointLightsCount;
 };
 
 struct TMaterial
@@ -58,6 +26,7 @@ struct TMaterial
   float RoughnessFactor;
   float AlphaCutoff;
   int   AlphaMode;
+  bool  IsDoubleSided;
 };
 
 uniform TMaterial u_Material;
@@ -113,18 +82,22 @@ void main()
     vec3 ambient = LightDirectional.Ambient;
 
     // diffuse
-    vec3 norm = texture(u_Material.NormalTexture, io_TexCoords).rgb;
-    norm = norm * 2.0 - 1.0;
-    norm = normalize(io_TBN * norm);
+    vec3 normal = texture(u_Material.NormalTexture, io_TexCoords).rgb;
+    normal = normal * 2.0 - 1.0;
+    normal = normalize(io_TBN * normal);
 
+    if (u_Material.IsDoubleSided && !gl_FrontFacing)
+      normal = -normal;
+
+    //vec3 normal = normalize(io_Normal);
     vec3 lightDir = normalize(-LightDirectional.Direction);
-    float diff = max(dot(norm, lightDir), 0.0);
+    float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = diff * LightDirectional.Diffuse;
 
     // specular
     float specularStrength = 0.5;
     vec3 viewDir = normalize(u_ViewPos - io_FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
+    vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
     vec3 specular = specularStrength * spec * LightDirectional.Specular;
 
@@ -134,6 +107,9 @@ void main()
     //  shadow
     float shadow = CalculateShadow(io_FragLightPos, lightDir);
 
-    vec3 result = (ambient + (1.0 - shadow) * (diffuse + specular)) * baseColorSample.rgb + emissiveSample.rgb;
-    o_FragColor = vec4(result, baseColorSample.a);
+    // final color
+    float alpha = u_Material.AlphaMode == 0 ? 1.0 : baseColorSample.a;
+    vec3 color = (ambient + (1.0 - shadow) * (diffuse + specular)) * baseColorSample.rgb + emissiveSample.rgb;
+
+    o_FragColor = vec4(color, alpha);
 }

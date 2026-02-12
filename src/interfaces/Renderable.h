@@ -14,7 +14,6 @@ public:
   }
 
 protected:
-  virtual bool ShouldBeRendered() const = 0;
-
   virtual void RenderInternal(CRenderer &_Renderer) = 0;
+  virtual bool ShouldBeRendered() const = 0;
 };

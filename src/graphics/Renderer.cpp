@@ -120,7 +120,7 @@ glm::mat4 CRenderer::GetLightSpaceMatrix() const
   return m_LightSpaceMatrix;
 }
 
-void CRenderer::SetAlphaBlending(bool _Enabled)
+void CRenderer::SetBlending(bool _Enabled)
 {
   if (_Enabled)
   {
@@ -135,8 +135,29 @@ void CRenderer::SetAlphaBlending(bool _Enabled)
 
 void CRenderer::SetCullFace(GLenum _Mode)
 {
-  glEnable(GL_CULL_FACE);
-  glCullFace(_Mode);
+  if (m_CullingMode == _Mode)
+    return;
+
+  m_CullingMode = _Mode;
+
+  switch (_Mode)
+  {
+  case GL_FRONT:
+  case GL_BACK:
+  case GL_FRONT_AND_BACK:
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
+    glCullFace(_Mode);
+    break;
+
+  case GL_NONE:
+    glDisable(GL_CULL_FACE);
+    break;
+
+  default:
+    assert(false && "Invalid culling mode");
+    break;
+  }
 }
 
 void CRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)

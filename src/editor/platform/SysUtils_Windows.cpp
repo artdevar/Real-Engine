@@ -1,5 +1,5 @@
 #include "SysUtils.h"
-#if EDITOR_ENABLED
+#if DEV_STAGE
 #include <Windows.h>
 #include <string.h>
 

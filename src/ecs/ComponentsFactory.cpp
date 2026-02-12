@@ -21,12 +21,66 @@ namespace ecs
     }
   }
 
-  static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, int _ImageIndex, ETextureType _TextureType)
+  static ETextureWrap ToTextureWrap(ETextureWrapMode _Wrap)
   {
-    if (_ImageIndex < 0 || _ImageIndex >= _ModelData.Images.size())
+    switch (_Wrap)
+    {
+    case ETextureWrapMode::Repeat:
+      return ETextureWrap::Repeat;
+    case ETextureWrapMode::ClampToEdge:
+      return ETextureWrap::ClampToEdge;
+    case ETextureWrapMode::ClampToBorder:
+      return ETextureWrap::ClampToBorder;
+    case ETextureWrapMode::MirroredRepeat:
+      return ETextureWrap::MirroredRepeat;
+    default:
+      assert(false && "Unknown wrap mode");
+      return ETextureWrap::Repeat;
+    }
+  }
+
+  static ETextureFilter ToTextureFilter(ETextureFilterMode _Filter)
+  {
+    switch (_Filter)
+    {
+    case ETextureFilterMode::Nearest:
+      return ETextureFilter::Nearest;
+    case ETextureFilterMode::Linear:
+      return ETextureFilter::Linear;
+    case ETextureFilterMode::LinearMipmapLinear:
+      return ETextureFilter::LinearMipmapLinear;
+    case ETextureFilterMode::LinearMipmapNearest:
+      return ETextureFilter::LinearMipmapNearest;
+    case ETextureFilterMode::NearestMipmapNearest:
+      return ETextureFilter::NearestMipmapNearest;
+    case ETextureFilterMode::NearestMipmapLinear:
+      return ETextureFilter::NearestMipmapLinear;
+    default:
+      assert(false && "Unknown filter mode");
+      return ETextureFilter::LinearMipmapLinear;
+    }
+  }
+
+  static TTextureParams ParseSampler(const TSampler &_Sampler)
+  {
+    TTextureParams Params;
+    Params.WrapS = ToTextureWrap(_Sampler.WrapS);
+    Params.WrapT = ToTextureWrap(_Sampler.WrapT);
+    Params.MinFilter = ToTextureFilter(_Sampler.MinFilter);
+    Params.MagFilter = ToTextureFilter(_Sampler.MagFilter);
+
+    return Params;
+  }
+
+  static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, const TTexture &_Texture, ETextureType _TextureType)
+  {
+    if (_Texture.ImageIndex < 0 || _Texture.ImageIndex >= _ModelData.Images.size())
       return resource::GetDefaultTexture(_TextureType);
 
-    return resource::LoadTexture(_ModelData.Images[_ImageIndex].URI);
+    if (_Texture.SamplerIndex < 0 || _Texture.SamplerIndex >= _ModelData.Samplers.size())
+      return resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI);
+    else
+      return resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, ParseSampler(_ModelData.Samplers[_Texture.SamplerIndex]));
   }
 
   static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelComponent &_Component)
@@ -101,11 +155,12 @@ namespace ecs
       Material.RoughnessFactor = SrcMaterial.RoughnessFactor;
       Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
       Material.AlphaMode = GetAlphaMode(SrcMaterial.AlphaMode);
+      Material.IsDoubleSided = SrcMaterial.IsDoubleSided;
 
-      Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTextureIndex, ETextureType::BasicColor);
-      Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTextureIndex, ETextureType::Roughness);
-      Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTextureIndex, ETextureType::Normal);
-      Material.EmissiveTexture = LoadTexture(ModelData, SrcMaterial.EmissiveTextureIndex, ETextureType::Emissive);
+      Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTexture, ETextureType::BasicColor);
+      Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTexture, ETextureType::Roughness);
+      Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTexture, ETextureType::Normal);
+      Material.EmissiveTexture = LoadTexture(ModelData, SrcMaterial.EmissiveTexture, ETextureType::Emissive);
     }
 
     for (int NodeIndex : ModelData.RootNodes)

@@ -82,6 +82,10 @@ bool CShader::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager
     m_FragmentTimestamp = std::filesystem::file_time_type{};
 #endif
 
+#if DEV_STAGE
+  m_Path = _Path;
+#endif
+
   return true;
 }
 

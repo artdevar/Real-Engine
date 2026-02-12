@@ -17,6 +17,7 @@ enum ClearFlags : GLbitfield
   Clear_Stencil = GL_STENCIL_BUFFER_BIT
 };
 
+// OpenGL Renderer
 class CRenderer final
 {
 public:
@@ -45,7 +46,7 @@ public:
   void SetLightingData(TShaderLighting &&_Data);
   glm::mat4 GetLightSpaceMatrix() const;
 
-  void SetAlphaBlending(bool _Enabled);
+  void SetBlending(bool _Enabled);
   void SetCullFace(GLenum _Mode);
 
 private:
@@ -59,6 +60,7 @@ public:
 
   TShaderLighting m_Lighting;
   CUniformBuffer m_LightingUBO;
+  GLenum m_CullingMode = -1;
 
   mutable glm::mat4 m_LightSpaceMatrix;
   mutable bool m_LightSpaceMatrixDirty = true;
