@@ -5,7 +5,9 @@
 #include "ecs/Coordinator.h"
 #include "utils/Resource.h"
 #include "graphics/Texture.h"
-#include "graphics/Renderer.h"
+#include "interfaces/Renderer.h"
+#include "graphics/RenderTypes.h"
+#include "graphics/RenderTypes.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderTypes.h"
 #include "engine/Config.h"
@@ -38,15 +40,15 @@ namespace ecs
         m_DepthMapFBO.Unbind();
     }
 
-    void CShadowRenderSystem::RenderInternal(CRenderer &_Renderer)
+    void CShadowRenderSystem::RenderInternal(IRenderer &_Renderer)
     {
         const auto OldViewport = _Renderer.GetViewport();
 
         m_DepthMapFBO.Bind();
-        _Renderer.SetViewport(SHADOW_MAP_SIZE, SHADOW_MAP_SIZE);
-        _Renderer.Clear(GL_DEPTH_BUFFER_BIT);
+        _Renderer.SetViewport({SHADOW_MAP_SIZE, SHADOW_MAP_SIZE});
+        _Renderer.Clear(EClearFlags::Depth);
         _Renderer.SetShader(m_DepthShader);
-        _Renderer.SetCullFace(GL_FRONT);
+        _Renderer.SetCullFace(ECullMode::Front);
         _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
 
         for (ecs::TEntity Entity : m_Entities)
@@ -72,16 +74,16 @@ namespace ecs
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
                 }
                 Primitive.VAO.Bind();
-                _Renderer.DrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
+                _Renderer.DrawElements(EPrimitiveMode::Triangles, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
                 Primitive.VAO.Unbind();
             }
         }
 
         m_DepthMapFBO.Unbind();
 
-        _Renderer.SetViewport(OldViewport.x, OldViewport.y);
-        _Renderer.SetCullFace(GL_BACK);
-        _Renderer.Clear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+        _Renderer.SetViewport(OldViewport);
+        _Renderer.SetCullFace(ECullMode::Back);
+        _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Depth | EClearFlags::Color));
 
         // RenderDebugQuad(_Renderer);
     }
@@ -91,7 +93,7 @@ namespace ecs
         return CConfig::Instance().GetShadowsEnabled() && !m_Entities.Empty();
     }
 
-    void CShadowRenderSystem::RenderDebugQuad(CRenderer &_Renderer)
+    void CShadowRenderSystem::RenderDebugQuad(IRenderer &_Renderer)
     {
         static CVertexArray VAO = [this]()
         {
@@ -139,7 +141,7 @@ namespace ecs
         _Renderer.SetUniform("u_FarPlane", CConfig::Instance().GetLightSpaceMatrixZFar());
 
         VAO.Bind();
-        _Renderer.DrawArrays(GL_TRIANGLE_STRIP, 4);
+        _Renderer.DrawArrays(EPrimitiveMode::Triangles, 4);
         VAO.Unbind();
     }
 }

@@ -12,7 +12,6 @@
 #include "ecs/systems/PhysicsSystem.h"
 #include "ecs/systems/ShadowRenderSystem.h"
 #include "graphics/Shader.h"
-#include "graphics/Renderer.h"
 #include <nlohmann/json.hpp>
 
 CWorld::CWorld() = default;
@@ -39,7 +38,7 @@ bool CWorld::ShouldBeUpdated() const
   return m_EntitiesCoordinator != nullptr;
 }
 
-void CWorld::RenderInternal(CRenderer &_Renderer)
+void CWorld::RenderInternal(IRenderer &_Renderer)
 {
   TShaderLighting ShaderLight = m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->ComposeLightingData();
   _Renderer.SetLightingData(std::move(ShaderLight));

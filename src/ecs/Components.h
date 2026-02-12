@@ -7,6 +7,7 @@
 #include <map>
 #include "graphics/Buffer.h"
 #include "graphics/ShaderTypes.h"
+#include "graphics/RenderTypes.h"
 #include "utils/Common.h"
 
 class CModel;

@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <glm/vec2.hpp>
+#include "engine/MathCore.h"
 #include <functional>
 #include <string>
 
@@ -28,7 +28,7 @@ public:
     void SetShouldClose(bool _ShouldClose);
 
     void SetTitle(const std::string &_Title);
-    glm::ivec2 GetSize() const;
+    TVector2i GetSize() const;
     GLFWwindow *GetWindow() const;
 
     void SetCursorMode(int _Mode);

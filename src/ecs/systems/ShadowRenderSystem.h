@@ -19,10 +19,10 @@ namespace ecs
         void Init(CCoordinator *_Coordinator) override;
 
     private:
-        void RenderInternal(CRenderer &_Renderer) override;
+        void RenderInternal(IRenderer &_Renderer) override;
         bool ShouldBeRendered() const override;
 
-        void RenderDebugQuad(CRenderer &_Renderer);
+        void RenderDebugQuad(IRenderer &_Renderer);
 
     public:
         static constexpr inline int SHADOW_MAP_SIZE = 2048;

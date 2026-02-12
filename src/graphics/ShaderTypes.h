@@ -31,13 +31,6 @@ constexpr inline GLint TEXTURE_SHADOW_MAP_INDEX = 20;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 
-enum EAlphaMode : GLint
-{
-  Opaque,
-  Mask,
-  Blend
-};
-
 struct TLightDirectional
 {
   alignas(16) glm::vec3 Direction;

@@ -4,10 +4,11 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "scenes/World.h"
-#include "graphics/Renderer.h"
+#include "graphics/GLRenderer.h"
 #include "editor/EditorUI.h"
 #include <glm/glm.hpp>
 #include <string>
+#include "graphics/RenderTypes.h"
 
 CEngine *CEngine::Singleton = nullptr;
 
@@ -98,20 +99,20 @@ int CEngine::Init(const std::string &_ConfigPath, const std::string &_GameTitle)
 
 int CEngine::Run()
 {
-  CRenderer Renderer;
-  Renderer.SetCamera(m_Camera);
-  Renderer.SetCullFace(GL_BACK);
-  Renderer.SetBlending(EAlphaMode::Opaque);
-
   m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
+
+  std::unique_ptr<IRenderer> Renderer = std::make_unique<COpenGLRenderer>();
+  Renderer->SetCamera(m_Camera);
+  Renderer->SetCullFace(ECullMode::Back);
+  Renderer->SetBlending(EAlphaMode::Opaque);
 
   double LastFrameTime = 0.0;
   while (!m_Display->ShouldClose())
   {
-    const glm::ivec2 WindowSize = GetWindowSize();
+    const TVector2i WindowSize = GetWindowSize();
 
-    Renderer.SetViewport(WindowSize.x, WindowSize.y);
-    Renderer.BeginFrame(0.86f, 0.86f, 0.86f, 1.0f);
+    Renderer->SetViewport(WindowSize);
+    Renderer->BeginFrame(TColor{0.86f, 0.86f, 0.86f, 1.0f}, static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
 
     const double CurrentFrameTime = glfwGetTime();
     const float FrameDelta = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
@@ -122,9 +123,9 @@ int CEngine::Run()
     // m_Display->SetTitle(Title);
 
     Update(FrameDelta);
-    Render(Renderer);
+    Render(*Renderer);
 
-    Renderer.EndFrame();
+    Renderer->EndFrame();
     m_Display->SwapBuffers();
     m_Display->PollEvents();
   }
@@ -149,7 +150,7 @@ bool CEngine::ShouldBeUpdated() const
   return true;
 }
 
-void CEngine::RenderInternal(CRenderer &_Renderer)
+void CEngine::RenderInternal(IRenderer &_Renderer)
 {
   m_World->Render(_Renderer);
 #if DEV_STAGE
@@ -183,7 +184,7 @@ void CEngine::SaveConfig()
   // utils::SaveJson(ConfigPath, Data);
 }
 
-glm::ivec2 CEngine::GetWindowSize() const
+TVector2i CEngine::GetWindowSize() const
 {
   return m_Display->GetSize();
 }

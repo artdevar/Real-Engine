@@ -19,7 +19,7 @@ namespace ecs
         void Init(CCoordinator *_Coordinator) override;
 
     private:
-        void RenderInternal(CRenderer &_Renderer) override;
+        void RenderInternal(IRenderer &_Renderer) override;
         bool ShouldBeRendered() const override;
 
     protected:

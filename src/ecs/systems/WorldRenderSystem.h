@@ -22,7 +22,7 @@ namespace ecs
 
     private:
         bool ShouldBeRendered() const override;
-        void RenderInternal(CRenderer &_Renderer) override;
+        void RenderInternal(IRenderer &_Renderer) override;
 
         void OnEntityAdded(ecs::TEntity _Entity) override;
 

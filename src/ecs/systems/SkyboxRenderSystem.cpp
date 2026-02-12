@@ -4,9 +4,9 @@
 #include "ecs/Components.h"
 #include "ecs/Coordinator.h"
 #include "graphics/Shader.h"
-#include "graphics/Renderer.h"
 #include "graphics/Texture.h"
 #include "graphics/Buffer.h"
+#include "graphics/RenderTypes.h"
 #include "engine/Engine.h"
 #include "engine/ResourceManager.h"
 #include "engine/Camera.h"
@@ -74,7 +74,7 @@ namespace ecs
         m_VAO.Unbind();
     }
 
-    void CSkyboxRenderSystem::RenderInternal(CRenderer &_Renderer)
+    void CSkyboxRenderSystem::RenderInternal(IRenderer &_Renderer)
     {
         std::shared_ptr<CShader> Shader = m_SkyboxShader.lock();
 
@@ -93,7 +93,7 @@ namespace ecs
         const int TextureIndex = 0;
         SkyboxComponent.SkyboxTexture->Bind(GL_TEXTURE0 + TextureIndex);
         _Renderer.SetUniform("u_Cubemap", TextureIndex);
-        _Renderer.DrawArrays(GL_TRIANGLES, ARRAY_SIZE(SKYBOX_VERTICES) / 3);
+        _Renderer.DrawArrays(EPrimitiveMode::Triangles, ARRAY_SIZE(SKYBOX_VERTICES) / 3);
 
         SkyboxComponent.SkyboxTexture->Unbind();
         m_VAO.Unbind();

@@ -1,13 +1,14 @@
 #pragma once
 
-#include <glm/vec2.hpp>
 #include <memory>
 #include <vector>
 #include <string>
 #include "Defines.h"
+#include "MathCore.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
 #include "interfaces/Renderable.h"
+#include "interfaces/Renderer.h"
 #include "utils/Common.h"
 
 class CWorld;
@@ -42,7 +43,7 @@ public:
   void SaveConfig();
 
 public:
-  glm::ivec2 GetWindowSize() const;
+  TVector2i GetWindowSize() const;
 
   CDisplay *GetDisplay() const;
   std::shared_ptr<CWorld> GetWorld() const;
@@ -53,7 +54,7 @@ public:
 private:
   void UpdateInternal(float _TimeDelta) override;
   bool ShouldBeUpdated() const override;
-  void RenderInternal(CRenderer &_Renderer) override;
+  void RenderInternal(IRenderer &_Renderer) override;
   bool ShouldBeRendered() const override;
 
   void OnWindowResized(int _Width, int _Height);

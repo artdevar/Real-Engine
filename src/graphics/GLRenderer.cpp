@@ -1,12 +1,12 @@
-#include "Renderer.h"
+#include "GLRenderer.h"
 #include "Shader.h"
 #include "engine/Camera.h"
 #include "engine/Config.h"
 #include "utils/Logger.h"
 #include <cstring>
-#include <glm/gtc/type_ptr.hpp>
+// #include <glm/gtc/type_ptr.hpp>
 
-CRenderer::CRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
+COpenGLRenderer::COpenGLRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
 {
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
@@ -16,18 +16,18 @@ CRenderer::CRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
   std::memset(&m_Lighting, 0, sizeof(m_Lighting));
 }
 
-void CRenderer::BeginFrame(float _R, float _G, float _B, float _A, ClearFlags _ClearFlags)
+void COpenGLRenderer::BeginFrame(const TColor &_ClearColor, EClearFlags _ClearFlags)
 {
-  glClearColor(_R, _G, _B, _A);
-  glClear(static_cast<GLbitfield>(_ClearFlags));
+  ClearColor(_ClearColor);
+  Clear(_ClearFlags);
 }
 
-void CRenderer::EndFrame()
+void COpenGLRenderer::EndFrame()
 {
   CheckErrors();
 }
 
-void CRenderer::CheckErrors()
+void COpenGLRenderer::CheckErrors()
 {
   while (true)
   {
@@ -39,68 +39,101 @@ void CRenderer::CheckErrors()
   }
 }
 
-void CRenderer::Clear(GLbitfield _Mask)
+void COpenGLRenderer::Clear(EClearFlags _ClearFlags)
 {
-  glClear(_Mask);
+  GLbitfield Mask = 0;
+  if (_ClearFlags & EClearFlags::Color)
+    Mask |= GL_COLOR_BUFFER_BIT;
+  if (_ClearFlags & EClearFlags::Depth)
+    Mask |= GL_DEPTH_BUFFER_BIT;
+  if (_ClearFlags & EClearFlags::Stencil)
+    Mask |= GL_STENCIL_BUFFER_BIT;
+  glClear(Mask);
 }
 
-void CRenderer::ClearColor(GLfloat _R, GLfloat _G, GLfloat _B, GLfloat _A)
+void COpenGLRenderer::ClearColor(const TColor &_Color)
 {
-  glClearColor(_R, _G, _B, _A);
+  glClearColor(_Color.R, _Color.G, _Color.B, _Color.A);
 }
 
-void CRenderer::SetViewport(GLsizei _Width, GLsizei _Height)
+void COpenGLRenderer::SetViewport(TVector2i _Viewport)
 {
-  glViewport(0, 0, _Width, _Height);
+  glViewport(0, 0, _Viewport.X, _Viewport.Y);
 }
 
-glm::ivec2 CRenderer::GetViewport() const
+TVector2i COpenGLRenderer::GetViewport() const
 {
   GLint Viewport[4] = {0, 0, 0, 0};
   glGetIntegerv(GL_VIEWPORT, Viewport);
-  return glm::ivec2(Viewport[2], Viewport[3]);
+  return TVector2i(Viewport[2], Viewport[3]);
 }
 
-void CRenderer::DrawArrays(GLenum _Mode, GLsizei _Count)
+void COpenGLRenderer::DrawArrays(EPrimitiveMode mode, int count)
 {
-  glDrawArrays(_Mode, 0, _Count);
+  GLenum glMode = GL_TRIANGLES;
+  switch (mode)
+  {
+  case EPrimitiveMode::Triangles:
+    glMode = GL_TRIANGLES;
+    break;
+  case EPrimitiveMode::Lines:
+    glMode = GL_LINES;
+    break;
+  case EPrimitiveMode::Points:
+    glMode = GL_POINTS;
+    break;
+  }
+  glDrawArrays(glMode, 0, count);
 }
 
-void CRenderer::DrawElements(GLenum _Mode, GLsizei _Count, GLenum _Type, const void *_Offset)
+void COpenGLRenderer::DrawElements(EPrimitiveMode mode, int count, int indexType, const void *offset)
 {
-  glDrawElements(_Mode, _Count, _Type, _Offset);
+  GLenum glMode = GL_TRIANGLES;
+  switch (mode)
+  {
+  case EPrimitiveMode::Triangles:
+    glMode = GL_TRIANGLES;
+    break;
+  case EPrimitiveMode::Lines:
+    glMode = GL_LINES;
+    break;
+  case EPrimitiveMode::Points:
+    glMode = GL_POINTS;
+    break;
+  }
+  glDrawElements(glMode, count, indexType, offset);
 }
 
-void CRenderer::SetCamera(const std::shared_ptr<CCamera> &_Camera)
+void COpenGLRenderer::SetCamera(const std::shared_ptr<CCamera> &_Camera)
 {
   m_Camera = _Camera;
 }
 
-const std::shared_ptr<CCamera> &CRenderer::GetCamera() const
+const std::shared_ptr<CCamera> &COpenGLRenderer::GetCamera() const
 {
   return m_Camera;
 }
 
-void CRenderer::SetShader(const std::shared_ptr<CShader> &_Shader)
+void COpenGLRenderer::SetShader(const std::shared_ptr<CShader> &_Shader)
 {
   m_CurrentShader = _Shader;
 
   InitShaderValues();
 }
 
-const std::shared_ptr<CShader> &CRenderer::GetShader() const
+const std::shared_ptr<CShader> &COpenGLRenderer::GetShader() const
 {
   return m_CurrentShader;
 }
 
-void CRenderer::SetLightingData(TShaderLighting &&_Data)
+void COpenGLRenderer::SetLightingData(TShaderLighting &&_Data)
 {
   IS_SAME_TYPE(m_Lighting, _Data);
   std::memcpy(&m_Lighting, &_Data, sizeof(m_Lighting));
   m_LightSpaceMatrixDirty = true;
 }
 
-glm::mat4 CRenderer::GetLightSpaceMatrix() const
+glm::mat4 COpenGLRenderer::GetLightSpaceMatrix() const
 {
   if (m_LightSpaceMatrixDirty)
   {
@@ -120,7 +153,7 @@ glm::mat4 CRenderer::GetLightSpaceMatrix() const
   return m_LightSpaceMatrix;
 }
 
-void CRenderer::SetBlending(EAlphaMode _Mode)
+void COpenGLRenderer::SetBlending(EAlphaMode _Mode)
 {
   if (m_AlphaMode == _Mode)
     return;
@@ -150,24 +183,29 @@ void CRenderer::SetBlending(EAlphaMode _Mode)
   }
 }
 
-void CRenderer::SetCullFace(GLenum _Mode)
+void COpenGLRenderer::SetCullFace(ECullMode _Mode)
 {
   if (m_CullingMode == _Mode)
     return;
 
   m_CullingMode = _Mode;
 
+  const GLenum glMode = _Mode == ECullMode::Front ? GL_FRONT : _Mode == ECullMode::Back ? GL_BACK
+                                                                                        : GL_FRONT_AND_BACK;
+
   switch (_Mode)
   {
-  case GL_FRONT:
-  case GL_BACK:
-  case GL_FRONT_AND_BACK:
+  case ECullMode::Front:
+    [[fallthrough]];
+  case ECullMode::Back:
+    [[fallthrough]];
+  case ECullMode::FrontAndBack:
     glEnable(GL_CULL_FACE);
     glFrontFace(GL_CCW);
-    glCullFace(_Mode);
+    glCullFace(glMode);
     break;
 
-  case GL_NONE:
+  case ECullMode::None:
     glDisable(GL_CULL_FACE);
     break;
 
@@ -177,7 +215,7 @@ void CRenderer::SetCullFace(GLenum _Mode)
   }
 }
 
-void CRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)
+void COpenGLRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)
 {
   if (!m_CurrentShader)
     return;
@@ -185,7 +223,7 @@ void CRenderer::SetUniform(std::string_view _Name, const UniformType &_Value)
   m_CurrentShader->SetUniform(_Name, _Value);
 }
 
-void CRenderer::InitShaderValues()
+void COpenGLRenderer::InitShaderValues()
 {
   m_CurrentShader->Use();
   m_CurrentShader->Validate();
@@ -200,7 +238,7 @@ void CRenderer::InitShaderValues()
   }
 }
 
-std::string CRenderer::GetGLErrorDescription(GLenum _Error)
+std::string COpenGLRenderer::GetGLErrorDescription(GLenum _Error)
 {
   switch (_Error)
   {

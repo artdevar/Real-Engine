@@ -32,7 +32,7 @@ target_sources(${TARGET} PRIVATE
   src/engine/Camera.cpp
   src/engine/ResourceManager.cpp
   src/scenes/World.cpp
-  src/graphics/Renderer.cpp
+  src/graphics/GLRenderer.cpp
   src/graphics/Texture.cpp
   src/graphics/Shader.cpp
   src/graphics/Model.cpp

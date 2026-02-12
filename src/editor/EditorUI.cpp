@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "EditorUI.h"
 
 #if DEV_STAGE
@@ -12,16 +13,16 @@
 #include "ecs/Coordinator.h"
 #include "ecs/EntityBuilder.h"
 #include "ecs/ComponentsFactory.h"
-#include "utils/Math.h"
+#include "utils/MathUtils.h"
 #include "platform/SysUtils.h"
-#include "imgui/imgui.h"
-#include "imgui/misc/cpp/imgui_stdlib.h"
-#include "imgui/backends/imgui_impl_glfw.h"
-#include "imgui/backends/imgui_impl_opengl3.h"
-#include <glm/gtx/matrix_decompose.hpp>
-#include <glm/mat4x4.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <imgui/imgui.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
+#include <imgui/backends/imgui_impl_glfw.h>
+#include <imgui/backends/imgui_impl_opengl3.h>
+// #include <glm/gtx/matrix_decompose.hpp>
+// #include <glm/mat4x4.hpp>
+// #include <glm/gtc/type_ptr.hpp>
+// #include <glm/gtc/matrix_transform.hpp>
 
 namespace
 {
@@ -74,7 +75,7 @@ bool CEditorUI::ShouldBeRendered() const
   return m_Engine != nullptr;
 }
 
-void CEditorUI::RenderInternal(CRenderer &_Renderer)
+void CEditorUI::RenderInternal(IRenderer &_Renderer)
 {
   RenderBegin();
 
@@ -254,7 +255,8 @@ void CEditorUI::RenderLightDebugLines()
 
   const glm::mat4 View = Camera->GetView();
   const glm::mat4 Proj = Camera->GetProjection();
-  const glm::ivec2 Viewport = m_Engine->GetWindowSize();
+  const TVector2i Viewport = m_Engine->GetWindowSize();
+  const glm::ivec2 GlmViewport{Viewport.X, Viewport.Y};
 
   ImDrawList *DrawList = ImGui::GetForegroundDrawList();
 
@@ -275,8 +277,8 @@ void CEditorUI::RenderLightDebugLines()
 
   ImVec2 StartScreen;
   ImVec2 EndScreen;
-  if (!ProjectWorldToScreen(StartWorld, View, Proj, Viewport, StartScreen) ||
-      !ProjectWorldToScreen(EndWorld, View, Proj, Viewport, EndScreen))
+  if (!ProjectWorldToScreen(StartWorld, View, Proj, GlmViewport, StartScreen) ||
+      !ProjectWorldToScreen(EndWorld, View, Proj, GlmViewport, EndScreen))
     return;
 
   ImU32 Color = IM_COL32(255, 255, 0, 200);

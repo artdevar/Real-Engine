@@ -5,19 +5,20 @@
 #include "ecs/Coordinator.h"
 #include "graphics/Shader.h"
 #include "graphics/ShaderTypes.h"
-#include "graphics/Renderer.h"
+#include "interfaces/Renderer.h"
 #include "graphics/Model.h"
 #include "graphics/Texture.h"
 #include "engine/Camera.h"
 #include "utils/Common.h"
 #include "utils/Resource.h"
 #include "tiny_gltf.h"
+#include "graphics/RenderTypes.h"
 
 #include "ecs/systems/ShadowRenderSystem.h"
 namespace ecs
 {
     static void ActivateTexture(
-        CRenderer &_Renderer,
+        IRenderer &_Renderer,
         const std::shared_ptr<CTextureBase> &_Texture,
         GLint _TextureIndex,
         std::string_view _UniformName)
@@ -39,7 +40,7 @@ namespace ecs
         m_ModelShader = resource::LoadShader("basic");
     }
 
-    void CWorldRenderSystem::RenderInternal(CRenderer &_Renderer)
+    void CWorldRenderSystem::RenderInternal(IRenderer &_Renderer)
     {
         const std::shared_ptr<CCamera> &Camera = _Renderer.GetCamera();
         const glm::mat4 ViewProjection = Camera->GetProjection() * Camera->GetView();
@@ -83,12 +84,12 @@ namespace ecs
                     _Renderer.SetUniform("u_Material.IsDoubleSided", Material.IsDoubleSided);
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
-                    _Renderer.SetCullFace(Material.IsDoubleSided ? GL_NONE : GL_BACK);
+                    _Renderer.SetCullFace(Material.IsDoubleSided ? ECullMode::None : ECullMode::Back);
                     _Renderer.SetBlending(Material.AlphaMode);
                 }
 
                 Primitive.VAO.Bind();
-                _Renderer.DrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
+                _Renderer.DrawElements(EPrimitiveMode::Triangles, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
                 Primitive.VAO.Unbind();
             }
         }

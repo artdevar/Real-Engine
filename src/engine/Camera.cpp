@@ -77,10 +77,10 @@ glm::mat4 CCamera::GetView() const
 
 glm::mat4 CCamera::GetProjection() const
 {
-  const glm::ivec2 WindowSize = CEngine::Instance().GetWindowSize();
+  const TVector2i WindowSize = CEngine::Instance().GetWindowSize();
   return glm::perspective(
       glm::radians(CConfig::Instance().GetCameraFOV()),
-      WindowSize.x / float(WindowSize.y),
+      WindowSize.X / float(WindowSize.Y),
       CConfig::Instance().GetCameraZNear(),
       CConfig::Instance().GetCameraZFar());
 }

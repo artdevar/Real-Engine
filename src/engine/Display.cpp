@@ -120,11 +120,11 @@ void CDisplay::SetTitle(const std::string &_Title)
         glfwSetWindowTitle(m_Window, _Title.c_str());
 }
 
-glm::ivec2 CDisplay::GetSize() const
+TVector2i CDisplay::GetSize() const
 {
-    glm::ivec2 Size;
+    TVector2i Size;
     if (m_Window)
-        glfwGetWindowSize(m_Window, &Size.x, &Size.y);
+        glfwGetWindowSize(m_Window, &Size.X, &Size.Y);
     return Size;
 }
 
