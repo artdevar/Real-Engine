@@ -13,16 +13,11 @@
 #include "ecs/Coordinator.h"
 #include "ecs/EntityBuilder.h"
 #include "ecs/ComponentsFactory.h"
-#include "utils/MathUtils.h"
 #include "platform/SysUtils.h"
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
-// #include <glm/gtx/matrix_decompose.hpp>
-// #include <glm/mat4x4.hpp>
-// #include <glm/gtc/type_ptr.hpp>
-// #include <glm/gtc/matrix_transform.hpp>
 
 namespace
 {
