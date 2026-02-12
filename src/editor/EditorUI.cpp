@@ -332,35 +332,30 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
   bool ValueChanged = false;
 
   ImGui::SeparatorText("Position##ObjPos");
-
   ValueChanged |= ImGui::DragFloat("X##ObjXPos", &Translation.x, 0.5f);
   ValueChanged |= ImGui::DragFloat("Y##ObjYPos", &Translation.y, 0.5f);
   ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z, 0.5f);
 
   ImGui::SeparatorText("Scale##ObjScale");
-
   const float kMinScale = 0.01f;
-  const float kMaxScale = 10000.0f; // reasonable upper bound to avoid extreme values
+  const float kMaxScale = 10000.0f;
   ValueChanged |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, kMinScale, kMaxScale);
   ValueChanged |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, kMinScale, kMaxScale);
   ValueChanged |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, kMinScale, kMaxScale);
 
-  ImGui::SeparatorText("Rotation##ObjRot");
+  ImGui::SeparatorText("Rotation##ObjRotQuat");
+  float quat[4] = {Rotation.x, Rotation.y, Rotation.z, Rotation.w};
+  bool QuatChanged = false;
+  QuatChanged |= ImGui::DragFloat("X##ObjQuatX", &quat[0], 0.01f, -1.0f, 1.0f);
+  QuatChanged |= ImGui::DragFloat("Y##ObjQuatY", &quat[1], 0.01f, -1.0f, 1.0f);
+  QuatChanged |= ImGui::DragFloat("Z##ObjQuatZ", &quat[2], 0.01f, -1.0f, 1.0f);
+  QuatChanged |= ImGui::DragFloat("W##ObjQuatW", &quat[3], 0.01f, -1.0f, 1.0f);
 
-  EulerAngles RotationAngles = utils::ToEulerAngles(Rotation);
-
-  bool AngleChanged = false;
-  AngleChanged |= ImGui::DragFloat("Roll##EntRoll", &RotationAngles.Roll, 1.0f);
-  AngleChanged |= ImGui::DragFloat("Pitch##EntPitch", &RotationAngles.Pitch, 1.0f);
-  AngleChanged |= ImGui::DragFloat("Yaw##EntYaw", &RotationAngles.Yaw, 1.0f);
-  ValueChanged |= AngleChanged;
-
-  if (AngleChanged)
+  if (QuatChanged)
   {
-    const float kPitchLimit = 89.9f;
-    RotationAngles.Pitch = glm::clamp(RotationAngles.Pitch, -kPitchLimit, kPitchLimit);
-
-    Rotation = glm::quat(glm::radians(glm::vec3(RotationAngles.Roll, RotationAngles.Pitch, RotationAngles.Yaw)));
+    Rotation = glm::quat(quat[3], quat[0], quat[1], quat[2]);
+    Rotation = glm::normalize(Rotation);
+    ValueChanged = true;
   }
 
   if (ValueChanged)
