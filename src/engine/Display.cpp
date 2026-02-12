@@ -72,9 +72,7 @@ int CDisplay::Init(const std::string &_Title)
     glfwSwapInterval(1); // VSYNC
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
-    // glEnable(GL_BLEND);
     glEnable(GL_MULTISAMPLE);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);

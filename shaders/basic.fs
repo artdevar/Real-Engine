@@ -75,7 +75,7 @@ float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
 void main()
 {
     vec4 baseColorSample = texture(u_Material.BaseColorTexture, io_TexCoords) * u_Material.BaseColorFactor;
-    if (u_Material.AlphaMode == 2 && baseColorSample.a < u_Material.AlphaCutoff)
+    if (u_Material.AlphaMode == 1 && baseColorSample.a < u_Material.AlphaCutoff)
         discard;
 
     // ambient

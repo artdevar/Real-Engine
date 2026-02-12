@@ -120,16 +120,33 @@ glm::mat4 CRenderer::GetLightSpaceMatrix() const
   return m_LightSpaceMatrix;
 }
 
-void CRenderer::SetBlending(bool _Enabled)
+void CRenderer::SetBlending(EAlphaMode _Mode)
 {
-  if (_Enabled)
+  if (m_AlphaMode == _Mode)
+    return;
+
+  m_AlphaMode = _Mode;
+
+  switch (_Mode)
   {
+  case EAlphaMode::Opaque:
+    glDisable(GL_BLEND);
+    glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+    glDepthMask(GL_TRUE);
+    break;
+
+  case EAlphaMode::Mask:
+    glDisable(GL_BLEND);
+    glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE); // optional
+    glDepthMask(GL_TRUE);
+    break;
+
+  case EAlphaMode::Blend:
+    glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  }
-  else
-  {
-    glDisable(GL_BLEND);
+    glDepthMask(GL_FALSE);
+    break;
   }
 }
 

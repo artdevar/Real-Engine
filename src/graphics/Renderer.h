@@ -46,7 +46,7 @@ public:
   void SetLightingData(TShaderLighting &&_Data);
   glm::mat4 GetLightSpaceMatrix() const;
 
-  void SetBlending(bool _Enabled);
+  void SetBlending(EAlphaMode _Mode);
   void SetCullFace(GLenum _Mode);
 
 private:
@@ -60,6 +60,7 @@ public:
 
   TShaderLighting m_Lighting;
   CUniformBuffer m_LightingUBO;
+  EAlphaMode m_AlphaMode = static_cast<EAlphaMode>(-1);
   GLenum m_CullingMode = -1;
 
   mutable glm::mat4 m_LightSpaceMatrix;

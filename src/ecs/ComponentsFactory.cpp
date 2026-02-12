@@ -83,6 +83,26 @@ namespace ecs
       return resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, ParseSampler(_ModelData.Samplers[_Texture.SamplerIndex]));
   }
 
+  static void ParseMaterials(const TModelData &_ModelData, TModelComponent &_Component)
+  {
+    _Component.Materials.reserve(_ModelData.Materials.size());
+    for (const TMaterial &SrcMaterial : _ModelData.Materials)
+    {
+      TModelComponent::TMaterialData &Material = _Component.Materials.emplace_back();
+      Material.BaseColorFactor = SrcMaterial.BaseColorFactor;
+      Material.EmissiveFactor = SrcMaterial.EmissiveFactor;
+      Material.MetallicFactor = SrcMaterial.MetallicFactor;
+      Material.RoughnessFactor = SrcMaterial.RoughnessFactor;
+      Material.IsDoubleSided = SrcMaterial.IsDoubleSided;
+      Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
+      Material.AlphaMode = GetAlphaMode(SrcMaterial.AlphaMode);
+      Material.BaseColorTexture = LoadTexture(_ModelData, SrcMaterial.BaseColorTexture, ETextureType::BasicColor);
+      Material.MetallicRoughnessTexture = LoadTexture(_ModelData, SrcMaterial.MetallicRoughnessTexture, ETextureType::Roughness);
+      Material.NormalTexture = LoadTexture(_ModelData, SrcMaterial.NormalTexture, ETextureType::Normal);
+      Material.EmissiveTexture = LoadTexture(_ModelData, SrcMaterial.EmissiveTexture, ETextureType::Emissive);
+    }
+  }
+
   static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelComponent &_Component)
   {
     for (const TPrimitive &Primitive : _Mesh.Primitives)
@@ -137,37 +157,50 @@ namespace ecs
     }
   }
 
+  static void SortPrimitives(TModelComponent &_Component)
+  {
+    std::stable_sort(
+        _Component.Primitives.begin(),
+        _Component.Primitives.end(),
+        [&_Component](const TModelComponent::TPrimitiveData &A, const TModelComponent::TPrimitiveData &B)
+        {
+          auto getAlphaMode = [&_Component](int idx) -> EAlphaMode
+          {
+            if (idx >= 0 && idx < static_cast<int>(_Component.Materials.size()))
+              return _Component.Materials[idx].AlphaMode;
+            return EAlphaMode::Opaque;
+          };
+
+          const EAlphaMode AMode = getAlphaMode(A.MaterialIndex);
+          const EAlphaMode BMode = getAlphaMode(B.MaterialIndex);
+
+          // Only BLEND materials go to the back
+          const bool AIsBlend = (AMode == EAlphaMode::Blend);
+          const bool BIsBlend = (BMode == EAlphaMode::Blend);
+
+          if (AIsBlend != BIsBlend)
+            return !AIsBlend;
+
+          return false;
+        });
+  }
+
   void CComponentsFactory::CreateModelComponent(const std::shared_ptr<CModel> &_Model, TModelComponent &_Component)
   {
     MEASURE_ZONE("CreateModelComponent");
 
     const TModelData &ModelData = _Model->GetModelData();
 
-    assert(!ModelData.Materials.empty());
-
-    _Component.Materials.reserve(ModelData.Materials.size());
-    for (const TMaterial &SrcMaterial : ModelData.Materials)
-    {
-      TModelComponent::TMaterialData &Material = _Component.Materials.emplace_back();
-      Material.BaseColorFactor = SrcMaterial.BaseColorFactor;
-      Material.EmissiveFactor = SrcMaterial.EmissiveFactor;
-      Material.MetallicFactor = SrcMaterial.MetallicFactor;
-      Material.RoughnessFactor = SrcMaterial.RoughnessFactor;
-      Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
-      Material.AlphaMode = GetAlphaMode(SrcMaterial.AlphaMode);
-      Material.IsDoubleSided = SrcMaterial.IsDoubleSided;
-
-      Material.BaseColorTexture = LoadTexture(ModelData, SrcMaterial.BaseColorTexture, ETextureType::BasicColor);
-      Material.MetallicRoughnessTexture = LoadTexture(ModelData, SrcMaterial.MetallicRoughnessTexture, ETextureType::Roughness);
-      Material.NormalTexture = LoadTexture(ModelData, SrcMaterial.NormalTexture, ETextureType::Normal);
-      Material.EmissiveTexture = LoadTexture(ModelData, SrcMaterial.EmissiveTexture, ETextureType::Emissive);
-    }
+    assert(!ModelData.Materials.empty() && "Model should have at least one material. Handle this case by adding a default material if needed.");
+    ParseMaterials(ModelData, _Component);
 
     for (int NodeIndex : ModelData.RootNodes)
     {
       assert(NodeIndex >= 0 && NodeIndex < ModelData.Nodes.size());
       ParseNodes(ModelData, ModelData.Nodes[NodeIndex], _Component);
     }
+
+    SortPrimitives(_Component);
   }
 
   void CComponentsFactory::CreateSkyboxComponent(const std::shared_ptr<CTextureBase> &_Skybox, TSkyboxComponent &_Component)

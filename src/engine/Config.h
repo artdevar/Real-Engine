@@ -54,7 +54,7 @@ private:
 
     // Light parameters
     float LightSpaceMatrix_ZNear = -20.0f;
-    float LightSpaceMatrix_ZFar = 25.0f;
+    float LightSpaceMatrix_ZFar = 45.0f;
     float LightSpaceMatrix_OrthLeftBot = -30.0f;
     float LightSpaceMatrix_OrthRightTop = 30.0f;
 };

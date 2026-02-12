@@ -62,17 +62,14 @@ namespace ecs
                 {
                     TModelComponent::TMaterialData &Material = ModelComponent.Materials[Primitive.MaterialIndex];
 
-                    int TextureUnit = 0;
                     if (Material.BaseColorTexture)
                     {
-                        Material.BaseColorTexture->Bind(GL_TEXTURE0 + TextureUnit);
-                        _Renderer.SetUniform("u_Material.BaseColorTexture", TextureUnit);
-                        ++TextureUnit;
+                        Material.BaseColorTexture->Bind(TEXTURE_BASIC_COLOR_UNIT);
+                        _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
                     }
 
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
-                    _Renderer.SetBlending(Material.AlphaMode == EAlphaMode::Blend);
                 }
                 Primitive.VAO.Bind();
                 _Renderer.DrawElements(GL_TRIANGLES, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);

@@ -101,6 +101,7 @@ int CEngine::Run()
   CRenderer Renderer;
   Renderer.SetCamera(m_Camera);
   Renderer.SetCullFace(GL_BACK);
+  Renderer.SetBlending(EAlphaMode::Opaque);
 
   m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
 

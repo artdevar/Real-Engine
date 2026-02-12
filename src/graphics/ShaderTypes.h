@@ -25,7 +25,7 @@ constexpr inline GLint TEXTURE_NORMAL_INDEX = 1;
 constexpr inline GLenum TEXTURE_EMISSIVE_UNIT = GL_TEXTURE2;
 constexpr inline GLint TEXTURE_EMISSIVE_INDEX = 2;
 constexpr inline GLenum TEXTURE_METALLIC_ROUGHNESS_UNIT = GL_TEXTURE3;
-constexpr inline GLint TEXTURE_ETALLIC_ROUGHNESS_INDEX = 3;
+constexpr inline GLint TEXTURE_METALLIC_ROUGHNESS_INDEX = 3;
 constexpr inline GLenum TEXTURE_SHADOW_MAP_UNIT = GL_TEXTURE20;
 constexpr inline GLint TEXTURE_SHADOW_MAP_INDEX = 20;
 

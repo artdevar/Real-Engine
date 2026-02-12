@@ -14,8 +14,10 @@ in vec2 io_TexCoords;
 
 void main()
 {
+    bool isEnableCutoff = u_Material.AlphaMode == 1 || u_Material.AlphaMode == 2; // Treat BLEND as MASK in the depth pass
+
     vec4 baseColorSample = texture(u_Material.BaseColorTexture, io_TexCoords);
-    if (u_Material.AlphaMode == 2 && baseColorSample.a < u_Material.AlphaCutoff)
+    if (isEnableCutoff && baseColorSample.a < u_Material.AlphaCutoff)
         discard;
 
     // gl_FragDepth = gl_FragCoord.z;
