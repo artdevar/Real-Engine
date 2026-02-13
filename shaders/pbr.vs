@@ -2,8 +2,8 @@
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec2 aTexCoords;
-layout (location = 3) in vec3 aTangent;
+layout (location = 2) in vec3 aTangent;
+layout (location = 3) in vec2 aTexCoords_0;
 
 out vec3 io_Normal;
 out vec3 io_FragPos;
@@ -25,7 +25,7 @@ void main()
   io_TBN = mat3(T, B, N);
   io_FragPos = vec3(u_Model * vec4(aPos, 1.0));
   io_Normal = mat3(u_Model) * aNormal;
-  io_TexCoords = aTexCoords;
+  io_TexCoords = aTexCoords_0;
   io_FragLightPos = u_LightSpaceMatrix * vec4(io_FragPos, 1.0);
   gl_Position = u_MVP * vec4(aPos, 1.0);
 }

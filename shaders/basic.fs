@@ -16,9 +16,16 @@ layout (std140) uniform u_Lighting
 struct TMaterial
 {
   sampler2D BaseColorTexture;
-  sampler2D RoughnessTexture;
+  int BaseColorTextureTexCoordIndex;
+
+  sampler2D MetallicRoughnessTexture;
+  int MetallicRoughnessTextureTexCoordIndex;
+
   sampler2D NormalTexture;
+  int NormalTextureTexCoordIndex;
+
   sampler2D EmissiveTexture;
+  int EmissiveTextureTexCoordIndex;
 
   vec4  BaseColorFactor;
   vec3  EmissiveFactor;
@@ -36,9 +43,9 @@ uniform vec3      u_ViewPos;
 
 in vec3 io_Normal;
 in vec3 io_FragPos;
-in vec2 io_TexCoords;
 in vec4 io_FragLightPos;
 in mat3 io_TBN;
+in vec2 io_TexCoords[4];
 
 out vec4 o_FragColor;
 
@@ -74,7 +81,12 @@ float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
 
 void main()
 {
-    vec4 baseColorSample = texture(u_Material.BaseColorTexture, io_TexCoords) * u_Material.BaseColorFactor;
+    vec2 baseColorTexCoords = io_TexCoords[u_Material.BaseColorTextureTexCoordIndex];
+    vec2 normalTexCoords = io_TexCoords[u_Material.NormalTextureTexCoordIndex];
+    vec2 emissiveTexCoords = io_TexCoords[u_Material.EmissiveTextureTexCoordIndex];
+    vec2 metallicRoughnessTexCoords = io_TexCoords[u_Material.MetallicRoughnessTextureTexCoordIndex];
+
+    vec4 baseColorSample = texture(u_Material.BaseColorTexture, baseColorTexCoords) * u_Material.BaseColorFactor;
     if (u_Material.AlphaMode == 1 && baseColorSample.a < u_Material.AlphaCutoff)
         discard;
 
@@ -82,14 +94,13 @@ void main()
     vec3 ambient = LightDirectional.Ambient;
 
     // diffuse
-    vec3 normal = texture(u_Material.NormalTexture, io_TexCoords).rgb;
+    vec3 normal = texture(u_Material.NormalTexture, normalTexCoords).rgb;
     normal = normal * 2.0 - 1.0;
     normal = normalize(io_TBN * normal);
 
     if (u_Material.IsDoubleSided && !gl_FrontFacing)
       normal = -normal;
 
-    //vec3 normal = normalize(io_Normal);
     vec3 lightDir = normalize(-LightDirectional.Direction);
     float diff = max(dot(normal, lightDir), 0.0);
     vec3 diffuse = diff * LightDirectional.Diffuse;
@@ -102,7 +113,7 @@ void main()
     vec3 specular = specularStrength * spec * LightDirectional.Specular;
 
     // emmissive
-    vec4 emissiveSample = texture(u_Material.EmissiveTexture, io_TexCoords) * vec4(u_Material.EmissiveFactor, 1.0);
+    vec4 emissiveSample = texture(u_Material.EmissiveTexture, emissiveTexCoords) * vec4(u_Material.EmissiveFactor, 1.0);
 
     //  shadow
     float shadow = CalculateShadow(io_FragLightPos, lightDir);

@@ -55,6 +55,25 @@ namespace
     }
   }
 
+  EAttributeType ToAttributeType(const std::string &_Name)
+  {
+    if (_Name == "POSITION")
+      return EAttributeType::Position;
+    else if (_Name == "NORMAL")
+      return EAttributeType::Normal;
+    else if (_Name == "TEXCOORD_0")
+      return EAttributeType::TexCoords_0;
+    else if (_Name == "TEXCOORD_1")
+      return EAttributeType::TexCoords_1;
+    else if (_Name == "TEXCOORD_2")
+      return EAttributeType::TexCoords_2;
+    else if (_Name == "TEXCOORD_3")
+      return EAttributeType::TexCoords_3;
+    else if (_Name == "TANGENT")
+      return EAttributeType::Tangent;
+    else
+      return static_cast<EAttributeType>(-1);
+  }
 }
 
 bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelData &_Model)
@@ -169,11 +188,7 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
 
   for (const auto &[Name, AccessorIndex] : _SourcePrimitive.attributes)
   {
-    const EAttributeType Type = Name == "POSITION" ? EAttributeType::Position : Name == "NORMAL"   ? EAttributeType::Normal
-                                                                            : Name == "TEXCOORD_0" ? EAttributeType::TexCoords
-                                                                            : Name == "TANGENT"    ? EAttributeType::Tangent
-                                                                                                   : static_cast<EAttributeType>(-1);
-
+    const EAttributeType Type = ToAttributeType(Name);
     if (Type == static_cast<EAttributeType>(-1))
     {
       CLogger::Log(ELogType::Debug, "Unsupported attribute type: {}", Name);
@@ -248,24 +263,28 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
     if (PBR.baseColorTexture.index >= 0)
     {
       Material.BaseColorTexture.ImageIndex = PBR.baseColorTexture.index;
+      Material.BaseColorTexture.TexCoordIndex = PBR.baseColorTexture.texCoord;
       Material.BaseColorTexture.SamplerIndex = _Source.textures[PBR.baseColorTexture.index].sampler;
     }
 
     if (PBR.metallicRoughnessTexture.index >= 0)
     {
       Material.MetallicRoughnessTexture.ImageIndex = PBR.metallicRoughnessTexture.index;
+      Material.MetallicRoughnessTexture.TexCoordIndex = PBR.metallicRoughnessTexture.texCoord;
       Material.MetallicRoughnessTexture.SamplerIndex = _Source.textures[PBR.metallicRoughnessTexture.index].sampler;
     }
 
     if (SourceMaterial.normalTexture.index >= 0)
     {
       Material.NormalTexture.ImageIndex = SourceMaterial.normalTexture.index;
+      Material.NormalTexture.TexCoordIndex = SourceMaterial.normalTexture.texCoord;
       Material.NormalTexture.SamplerIndex = _Source.textures[SourceMaterial.normalTexture.index].sampler;
     }
 
     if (SourceMaterial.emissiveTexture.index >= 0)
     {
       Material.EmissiveTexture.ImageIndex = SourceMaterial.emissiveTexture.index;
+      Material.EmissiveTexture.TexCoordIndex = SourceMaterial.emissiveTexture.texCoord;
       Material.EmissiveTexture.SamplerIndex = _Source.textures[SourceMaterial.emissiveTexture.index].sampler;
     }
 
@@ -303,17 +322,17 @@ void CTinyGLTFParseStrategy::ParseImages(const tinygltf::Model &_Source, TModelD
 
 void CTinyGLTFParseStrategy::GenerateTangentsIfMissing(TPrimitive &Primitive)
 {
-  const bool HasTangent = Primitive.Attributes.find(EAttributeType::Tangent) != Primitive.Attributes.end();
-  const bool HasPosition = Primitive.Attributes.find(EAttributeType::Position) != Primitive.Attributes.end();
-  const bool HasNormal = Primitive.Attributes.find(EAttributeType::Normal) != Primitive.Attributes.end();
-  const bool HasTex = Primitive.Attributes.find(EAttributeType::TexCoords) != Primitive.Attributes.end();
+  const bool HasTangent = Primitive.Attributes.contains(EAttributeType::Tangent);
+  const bool HasPosition = Primitive.Attributes.contains(EAttributeType::Position);
+  const bool HasNormal = Primitive.Attributes.contains(EAttributeType::Normal);
+  const bool HasTex = Primitive.Attributes.contains(EAttributeType::TexCoords_0);
 
-  if (HasTangent && !HasPosition || !HasNormal || !HasTex || Primitive.Indices.empty())
+  if (HasTangent || !HasPosition || !HasNormal || !HasTex || Primitive.Indices.empty())
     return;
 
   const TAttribute &PosAttr = Primitive.Attributes.at(EAttributeType::Position);
   const TAttribute &NorAttr = Primitive.Attributes.at(EAttributeType::Normal);
-  const TAttribute &UvAttr = Primitive.Attributes.at(EAttributeType::TexCoords);
+  const TAttribute &UvAttr = Primitive.Attributes.at(EAttributeType::TexCoords_0);
 
   const size_t vertCount = PosAttr.Data.size() / PosAttr.ByteStride;
 

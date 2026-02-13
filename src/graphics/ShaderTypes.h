@@ -8,11 +8,11 @@ using UniformType = std::variant<GLint, GLuint, GLfloat, glm::mat3, glm::mat4, g
 
 constexpr inline GLuint ATTRIB_LOC_POSITION = 0;
 constexpr inline GLuint ATTRIB_LOC_NORMAL = 1;
-constexpr inline GLuint ATTRIB_LOC_TEXCOORDS = 2;
-constexpr inline GLuint ATTRIB_LOC_TANGENT = 3;
-constexpr inline GLuint ATTRIB_LOC_BITANGENT = 4;
-constexpr inline GLuint ATTRIB_LOC_DRAW_ID = 5;
-constexpr inline GLuint ATTRIB_LOC_TRANSFORM = 10;
+constexpr inline GLuint ATTRIB_LOC_TANGENT = 2;
+constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_0 = 3;
+constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_1 = 4;
+constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_2 = 5;
+constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_3 = 6;
 
 constexpr inline GLuint BINDING_DIFF_TEXTURE_BUFFER = 0;
 constexpr inline GLuint BINDING_SPEC_TEXTURE_BUFFER = 1;

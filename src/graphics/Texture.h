@@ -18,8 +18,10 @@ public:
   void Unbind();
 
   GLuint Get() const;
-
   bool IsValid() const;
+
+  static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
+  static void Unbind(GLenum _Target);
 
 protected:
   struct TImage

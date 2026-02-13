@@ -13,7 +13,10 @@ enum EAttributeType : uint32_t
 {
   Position,
   Normal,
-  TexCoords,
+  TexCoords_0,
+  TexCoords_1,
+  TexCoords_2,
+  TexCoords_3,
   Tangent
 };
 
@@ -58,6 +61,7 @@ struct TSampler
 struct TTexture
 {
   int ImageIndex = -1;
+  int TexCoordIndex = 0;
   int SamplerIndex = -1;
 };
 

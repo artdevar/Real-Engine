@@ -64,11 +64,8 @@ namespace ecs
                 {
                     TModelComponent::TMaterialData &Material = ModelComponent.Materials[Primitive.MaterialIndex];
 
-                    if (Material.BaseColorTexture)
-                    {
-                        Material.BaseColorTexture->Bind(TEXTURE_BASIC_COLOR_UNIT);
-                        _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
-                    }
+                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_BASIC_COLOR_UNIT, Material.BaseColorTexture.Texture);
+                    _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
 
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
@@ -126,7 +123,7 @@ namespace ecs
             VBO.Bind();
             VBO.Assign(QuadVertices, sizeof(QuadVertices));
             VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, 5 * sizeof(float), (void *)0);
-            VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS, 2, GL_FLOAT, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+            VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, 5 * sizeof(float), (void *)(3 * sizeof(float)));
             VAO.Unbind();
 
             return VAO;

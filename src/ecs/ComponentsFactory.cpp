@@ -61,6 +61,30 @@ namespace ecs
     }
   }
 
+  static GLint ToAttributeLocation(EAttributeType _Type)
+  {
+    switch (_Type)
+    {
+    case EAttributeType::Position:
+      return ATTRIB_LOC_POSITION;
+    case EAttributeType::Normal:
+      return ATTRIB_LOC_NORMAL;
+    case EAttributeType::TexCoords_0:
+      return ATTRIB_LOC_TEXCOORDS_0;
+    case EAttributeType::TexCoords_1:
+      return ATTRIB_LOC_TEXCOORDS_1;
+    case EAttributeType::TexCoords_2:
+      return ATTRIB_LOC_TEXCOORDS_2;
+    case EAttributeType::TexCoords_3:
+      return ATTRIB_LOC_TEXCOORDS_3;
+    case EAttributeType::Tangent:
+      return ATTRIB_LOC_TANGENT;
+    default:
+      assert(false && "Unknown attribute type");
+      return -1;
+    }
+  }
+
   static TTextureParams ParseSampler(const TSampler &_Sampler)
   {
     TTextureParams Params;
@@ -72,15 +96,21 @@ namespace ecs
     return Params;
   }
 
-  static std::shared_ptr<CTextureBase> LoadTexture(const TModelData &_ModelData, const TTexture &_Texture, ETextureType _TextureType)
+  static TModelComponent::TTexture LoadTexture(const TModelData &_ModelData, const TTexture &_Texture, ETextureType _TextureType)
   {
+    std::shared_ptr<CTextureBase> TexturePtr;
     if (_Texture.ImageIndex < 0 || _Texture.ImageIndex >= _ModelData.Images.size())
-      return resource::GetDefaultTexture(_TextureType);
-
-    if (_Texture.SamplerIndex < 0 || _Texture.SamplerIndex >= _ModelData.Samplers.size())
-      return resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI);
+      TexturePtr = resource::GetDefaultTexture(_TextureType);
+    else if (_Texture.SamplerIndex < 0 || _Texture.SamplerIndex >= _ModelData.Samplers.size())
+      TexturePtr = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI);
     else
-      return resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, ParseSampler(_ModelData.Samplers[_Texture.SamplerIndex]));
+      TexturePtr = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, ParseSampler(_ModelData.Samplers[_Texture.SamplerIndex]));
+
+    TModelComponent::TTexture Result;
+    Result.Texture = TexturePtr ? TexturePtr->Get() : 0;
+    Result.TexCoordIndex = _Texture.TexCoordIndex;
+
+    return Result;
   }
 
   static void ParseMaterials(const TModelData &_ModelData, TModelComponent &_Component)
@@ -112,10 +142,7 @@ namespace ecs
 
       for (const auto &[Type, Attribute] : Primitive.Attributes)
       {
-        const GLuint AttributeLoc = Type == EAttributeType::Position ? ATTRIB_LOC_POSITION : Type == EAttributeType::Normal  ? ATTRIB_LOC_NORMAL
-                                                                                         : Type == EAttributeType::TexCoords ? ATTRIB_LOC_TEXCOORDS
-                                                                                         : Type == EAttributeType::Tangent   ? ATTRIB_LOC_TANGENT
-                                                                                                                             : GLuint(-1);
+        const GLuint AttributeLoc = ToAttributeLocation(Type);
 
         assert(AttributeLoc != GLuint(-1));
 

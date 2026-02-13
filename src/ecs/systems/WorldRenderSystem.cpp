@@ -17,19 +17,6 @@
 #include "ecs/systems/ShadowRenderSystem.h"
 namespace ecs
 {
-    static void ActivateTexture(
-        IRenderer &_Renderer,
-        const std::shared_ptr<CTextureBase> &_Texture,
-        GLint _TextureIndex,
-        std::string_view _UniformName)
-    {
-        if (_Texture)
-        {
-            _Texture->Bind(GL_TEXTURE0 + _TextureIndex);
-            _Renderer.SetUniform(_UniformName, _TextureIndex);
-        }
-    }
-
     CWorldRenderSystem::CWorldRenderSystem() = default;
 
     void CWorldRenderSystem::Init(CCoordinator *_Coordinator)
@@ -55,7 +42,11 @@ namespace ecs
             if (auto ShadowSystem = m_Coordinator->GetSystem<ecs::CShadowRenderSystem>())
                 ShadowMapTexture = ShadowSystem->m_DepthMap;
 
-            ActivateTexture(_Renderer, ShadowMapTexture, TEXTURE_SHADOW_MAP_INDEX, "u_ShadowMap");
+            if (ShadowMapTexture)
+            {
+                ShadowMapTexture->Bind(TEXTURE_SHADOW_MAP_UNIT);
+                _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
+            }
         }
 
         for (ecs::TEntity Entity : m_Entities)
@@ -72,11 +63,19 @@ namespace ecs
                 {
                     TModelComponent::TMaterialData &Material = ModelComponent.Materials[Primitive.MaterialIndex];
 
-                    ActivateTexture(_Renderer, Material.BaseColorTexture, TEXTURE_BASIC_COLOR_INDEX, "u_Material.BaseColorTexture");
-                    ActivateTexture(_Renderer, Material.NormalTexture, TEXTURE_NORMAL_INDEX, "u_Material.NormalTexture");
-                    ActivateTexture(_Renderer, Material.EmissiveTexture, TEXTURE_EMISSIVE_INDEX, "u_Material.EmissiveTexture");
-                    ActivateTexture(_Renderer, Material.MetallicRoughnessTexture, TEXTURE_METALLIC_ROUGHNESS_INDEX, "u_Material.RoughnessTexture");
+                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_BASIC_COLOR_UNIT, Material.BaseColorTexture.Texture);
+                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_NORMAL_UNIT, Material.NormalTexture.Texture);
+                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_EMISSIVE_UNIT, Material.EmissiveTexture.Texture);
+                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_METALLIC_ROUGHNESS_UNIT, Material.MetallicRoughnessTexture.Texture);
 
+                    _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
+                    _Renderer.SetUniform("u_Material.NormalTexture", TEXTURE_NORMAL_INDEX);
+                    _Renderer.SetUniform("u_Material.EmissiveTexture", TEXTURE_EMISSIVE_INDEX);
+                    _Renderer.SetUniform("u_Material.MetallicRoughnessTexture", TEXTURE_METALLIC_ROUGHNESS_INDEX);
+                    _Renderer.SetUniform("u_Material.BaseColorTextureTexCoordIndex", Material.BaseColorTexture.TexCoordIndex);
+                    _Renderer.SetUniform("u_Material.NormalTextureTexCoordIndex", Material.NormalTexture.TexCoordIndex);
+                    _Renderer.SetUniform("u_Material.EmissiveTextureTexCoordIndex", Material.EmissiveTexture.TexCoordIndex);
+                    _Renderer.SetUniform("u_Material.MetallicRoughnessTextureTexCoordIndex", Material.MetallicRoughnessTexture.TexCoordIndex);
                     _Renderer.SetUniform("u_Material.BaseColorFactor", Material.BaseColorFactor);
                     _Renderer.SetUniform("u_Material.EmissiveFactor", Material.EmissiveFactor);
                     _Renderer.SetUniform("u_Material.MetallicFactor", Material.MetallicFactor);
@@ -84,6 +83,7 @@ namespace ecs
                     _Renderer.SetUniform("u_Material.IsDoubleSided", Material.IsDoubleSided);
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
+
                     _Renderer.SetCullFace(Material.IsDoubleSided ? ECullMode::None : ECullMode::Back);
                     _Renderer.SetBlending(Material.AlphaMode);
                 }

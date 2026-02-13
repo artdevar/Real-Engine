@@ -66,14 +66,24 @@ void CTextureBase::Shutdown()
 
 void CTextureBase::Bind(GLenum _TextureUnit)
 {
+    Bind(m_Target, _TextureUnit, Get());
+}
+
+void CTextureBase::Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID)
+{
     glActiveTexture(_TextureUnit);
-    glBindTexture(m_Target, Get());
+    glBindTexture(_Target, _TextureID);
 }
 
 void CTextureBase::Unbind()
 {
-    // glActiveTexture(0); opengl error
-    glBindTexture(m_Target, INVALID_VALUE);
+    Unbind(m_Target);
+}
+
+void CTextureBase::Unbind(GLenum _Target)
+{
+    // glActiveTexture(INVALID_VALUE); OpenGL error
+    glBindTexture(_Target, INVALID_VALUE);
 }
 
 GLuint CTextureBase::Get() const
