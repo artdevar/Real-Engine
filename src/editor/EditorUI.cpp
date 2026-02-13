@@ -105,37 +105,50 @@ void CEditorUI::RenderEnd()
 
 void CEditorUI::RenderGlobalParams()
 {
-  // bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
-  // if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
-  //   CConfig::Instance().SetShadowsEnabled(ShadowsEnabled, CPasskey(this));
+  if (ImGui::CollapsingHeader("Render"))
+  {
+    bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
+    if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
+      CConfig::Instance().SetShadowsEnabled(ShadowsEnabled, CPasskey(this));
 
-  float CameraZNear = CConfig::Instance().GetCameraZNear();
-  if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 0.5f, -50.0f, 100.0f))
-    CConfig::Instance().SetCameraZNear(CameraZNear, CPasskey(this));
+    bool UseBlinnPhong = CConfig::Instance().GetUseBlinnPhong();
+    if (ImGui::Checkbox("Use Blinn-Phong", &UseBlinnPhong))
+      CConfig::Instance().SetUseBlinnPhong(UseBlinnPhong, CPasskey(this));
+  }
 
-  float CameraZFar = CConfig::Instance().GetCameraZFar();
-  if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 10.0f, 1.0f, 10000.0f))
-    CConfig::Instance().SetCameraZFar(CameraZFar, CPasskey(this));
+  if (ImGui::CollapsingHeader("Camera"))
+  {
+    float CameraZNear = CConfig::Instance().GetCameraZNear();
+    if (ImGui::DragFloat("Camera ZNear", &CameraZNear, 0.5f, -50.0f, 100.0f))
+      CConfig::Instance().SetCameraZNear(CameraZNear, CPasskey(this));
 
-  float CameraFOV = CConfig::Instance().GetCameraFOV();
-  if (ImGui::DragFloat("Camera FOV", &CameraFOV, 1.0f, 0.0f, 180.0f))
-    CConfig::Instance().SetCameraFOV(CameraFOV, CPasskey(this));
+    float CameraZFar = CConfig::Instance().GetCameraZFar();
+    if (ImGui::DragFloat("Camera ZFar", &CameraZFar, 10.0f, 1.0f, 10000.0f))
+      CConfig::Instance().SetCameraZFar(CameraZFar, CPasskey(this));
 
-  float LightZNear = CConfig::Instance().GetLightSpaceMatrixZNear();
-  if (ImGui::DragFloat("Light ZNear", &LightZNear, 0.5f, -50.0f, 100.0f))
-    CConfig::Instance().SetLightSpaceMatrixZNear(LightZNear, CPasskey(this));
+    float CameraFOV = CConfig::Instance().GetCameraFOV();
+    if (ImGui::DragFloat("Camera FOV", &CameraFOV, 1.0f, 0.0f, 180.0f))
+      CConfig::Instance().SetCameraFOV(CameraFOV, CPasskey(this));
+  }
 
-  float LightZFar = CConfig::Instance().GetLightSpaceMatrixZFar();
-  if (ImGui::DragFloat("Light ZFar", &LightZFar, 10.0f, 1.0f, 1000.0f))
-    CConfig::Instance().SetLightSpaceMatrixZFar(LightZFar, CPasskey(this));
+  if (ImGui::CollapsingHeader("Light"))
+  {
+    float LightZNear = CConfig::Instance().GetLightSpaceMatrixZNear();
+    if (ImGui::DragFloat("Light ZNear", &LightZNear, 0.5f, -50.0f, 100.0f))
+      CConfig::Instance().SetLightSpaceMatrixZNear(LightZNear, CPasskey(this));
 
-  float LightOrthLeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
-  if (ImGui::DragFloat("Light Orth Left/Bottom", &LightOrthLeftBot, 1.0f, -100.0f, 0.0f))
-    CConfig::Instance().SetLightSpaceMatrixOrthLeftBot(LightOrthLeftBot, CPasskey(this));
+    float LightZFar = CConfig::Instance().GetLightSpaceMatrixZFar();
+    if (ImGui::DragFloat("Light ZFar", &LightZFar, 10.0f, 1.0f, 1000.0f))
+      CConfig::Instance().SetLightSpaceMatrixZFar(LightZFar, CPasskey(this));
 
-  float LightOrthRightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
-  if (ImGui::DragFloat("Light Orth Right/Top", &LightOrthRightTop, 1.0f, 0.0f, 100.0f))
-    CConfig::Instance().SetLightSpaceMatrixOrthRightTop(LightOrthRightTop, CPasskey(this));
+    float LightOrthLeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
+    if (ImGui::DragFloat("Light Orth Left/Bottom", &LightOrthLeftBot, 1.0f, -100.0f, 0.0f))
+      CConfig::Instance().SetLightSpaceMatrixOrthLeftBot(LightOrthLeftBot, CPasskey(this));
+
+    float LightOrthRightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
+    if (ImGui::DragFloat("Light Orth Right/Top", &LightOrthRightTop, 1.0f, 0.0f, 100.0f))
+      CConfig::Instance().SetLightSpaceMatrixOrthRightTop(LightOrthRightTop, CPasskey(this));
+  }
 }
 
 void CEditorUI::RenderEntities()

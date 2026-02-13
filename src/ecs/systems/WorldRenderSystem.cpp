@@ -9,12 +9,11 @@
 #include "graphics/Model.h"
 #include "graphics/Texture.h"
 #include "engine/Camera.h"
+#include "engine/Config.h"
 #include "utils/Common.h"
 #include "utils/Resource.h"
 #include "tiny_gltf.h"
 #include "graphics/RenderTypes.h"
-
-#include "ecs/systems/ShadowRenderSystem.h"
 namespace ecs
 {
     CWorldRenderSystem::CWorldRenderSystem() = default;
@@ -35,18 +34,13 @@ namespace ecs
         _Renderer.SetShader(m_ModelShader.lock());
         _Renderer.SetUniform("u_ViewPos", Camera->GetPosition());
         _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
+        _Renderer.SetUniform("u_Blinn", CConfig::Instance().GetUseBlinnPhong());
 
-        { // TODO: Remove this dependency on ShadowRenderSystem
-
-            std::shared_ptr<CTextureBase> ShadowMapTexture;
-            if (auto ShadowSystem = m_Coordinator->GetSystem<ecs::CShadowRenderSystem>())
-                ShadowMapTexture = ShadowSystem->m_DepthMap;
-
-            if (ShadowMapTexture)
-            {
-                ShadowMapTexture->Bind(TEXTURE_SHADOW_MAP_UNIT);
-                _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
-            }
+        const auto &ShadowMapTexture = _Renderer.GetShadowMap();
+        if (ShadowMapTexture)
+        {
+            ShadowMapTexture->Bind(TEXTURE_SHADOW_MAP_UNIT);
+            _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
         }
 
         for (ecs::TEntity Entity : m_Entities)
@@ -89,7 +83,15 @@ namespace ecs
                 }
 
                 Primitive.VAO.Bind();
-                _Renderer.DrawElements(EPrimitiveMode::Triangles, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
+                std::visit(Overloaded{[&_Renderer, &Primitive](const TModelComponent::TIndicesData &Data)
+                                      {
+                                          _Renderer.DrawElements(Primitive.Mode, Data.Indices, Data.Type, (int8_t *)0 + Data.Offset);
+                                      },
+                                      [&_Renderer, &Primitive](const TModelComponent::TVerticesData &Data)
+                                      {
+                                          _Renderer.DrawArrays(Primitive.Mode, Data.Vertices);
+                                      }},
+                           Primitive.DrawData);
                 Primitive.VAO.Unbind();
             }
         }

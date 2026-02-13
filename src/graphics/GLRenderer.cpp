@@ -2,9 +2,9 @@
 #include "Shader.h"
 #include "engine/Camera.h"
 #include "engine/Config.h"
+#include "graphics/Texture.h"
 #include "utils/Logger.h"
 #include <cstring>
-// #include <glm/gtc/type_ptr.hpp>
 
 COpenGLRenderer::COpenGLRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
 {
@@ -73,35 +73,95 @@ void COpenGLRenderer::DrawArrays(EPrimitiveMode mode, int count)
   GLenum glMode = GL_TRIANGLES;
   switch (mode)
   {
-  case EPrimitiveMode::Triangles:
-    glMode = GL_TRIANGLES;
-    break;
-  case EPrimitiveMode::Lines:
-    glMode = GL_LINES;
-    break;
   case EPrimitiveMode::Points:
     glMode = GL_POINTS;
     break;
+  case EPrimitiveMode::Line:
+    glMode = GL_LINES;
+    break;
+  case EPrimitiveMode::LineLoop:
+    glMode = GL_LINE_LOOP;
+    break;
+  case EPrimitiveMode::LineStrip:
+    glMode = GL_LINE_STRIP;
+    break;
+  case EPrimitiveMode::Triangles:
+    glMode = GL_TRIANGLES;
+    break;
+  case EPrimitiveMode::TriangleStrip:
+    glMode = GL_TRIANGLE_STRIP;
+    break;
+  case EPrimitiveMode::TriangleFan:
+    glMode = GL_TRIANGLE_FAN;
+    break;
+  default:
+    assert(false && "Invalid primitive mode");
+    break;
   }
-  glDrawArrays(glMode, 0, count);
+  glDrawArrays(glMode, static_cast<GLint>(0), static_cast<GLsizei>(count));
 }
 
-void COpenGLRenderer::DrawElements(EPrimitiveMode mode, int count, int indexType, const void *offset)
+void COpenGLRenderer::DrawElements(EPrimitiveMode mode, int count, EIndexType indexType, const void *offset)
 {
   GLenum glMode = GL_TRIANGLES;
   switch (mode)
   {
-  case EPrimitiveMode::Triangles:
-    glMode = GL_TRIANGLES;
-    break;
-  case EPrimitiveMode::Lines:
-    glMode = GL_LINES;
-    break;
   case EPrimitiveMode::Points:
     glMode = GL_POINTS;
     break;
+  case EPrimitiveMode::Line:
+    glMode = GL_LINES;
+    break;
+  case EPrimitiveMode::LineLoop:
+    glMode = GL_LINE_LOOP;
+    break;
+  case EPrimitiveMode::LineStrip:
+    glMode = GL_LINE_STRIP;
+    break;
+  case EPrimitiveMode::Triangles:
+    glMode = GL_TRIANGLES;
+    break;
+  case EPrimitiveMode::TriangleStrip:
+    glMode = GL_TRIANGLE_STRIP;
+    break;
+  case EPrimitiveMode::TriangleFan:
+    glMode = GL_TRIANGLE_FAN;
+    break;
+  default:
+    assert(false && "Invalid primitive mode");
+    break;
   }
-  glDrawElements(glMode, count, indexType, offset);
+
+  GLenum glIndexType = GL_UNSIGNED_INT;
+  switch (indexType)
+  {
+  case EIndexType::Byte:
+    glIndexType = GL_BYTE;
+    break;
+  case EIndexType::UnsignedByte:
+    glIndexType = GL_UNSIGNED_BYTE;
+    break;
+  case EIndexType::Short:
+    glIndexType = GL_SHORT;
+    break;
+  case EIndexType::UnsignedShort:
+    glIndexType = GL_UNSIGNED_SHORT;
+    break;
+  case EIndexType::Int:
+    glIndexType = GL_INT;
+    break;
+  case EIndexType::UnsignedInt:
+    glIndexType = GL_UNSIGNED_INT;
+    break;
+  case EIndexType::Float:
+    glIndexType = GL_FLOAT;
+    break;
+  default:
+    assert(false && "Invalid index type");
+    break;
+  }
+
+  glDrawElements(glMode, static_cast<GLsizei>(count), static_cast<GLenum>(glIndexType), offset);
 }
 
 void COpenGLRenderer::SetCamera(const std::shared_ptr<CCamera> &_Camera)
@@ -221,6 +281,16 @@ void COpenGLRenderer::SetUniform(std::string_view _Name, const UniformType &_Val
     return;
 
   m_CurrentShader->SetUniform(_Name, _Value);
+}
+
+void COpenGLRenderer::SetShadowMap(const std::shared_ptr<CTextureBase> &_ShadowMap)
+{
+  m_ShadowMap = _ShadowMap;
+}
+
+const std::shared_ptr<CTextureBase> &COpenGLRenderer::GetShadowMap() const
+{
+  return m_ShadowMap;
 }
 
 void COpenGLRenderer::InitShaderValues()

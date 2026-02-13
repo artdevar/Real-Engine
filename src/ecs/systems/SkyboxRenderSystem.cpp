@@ -90,9 +90,8 @@ namespace ecs
         ecs::TEntity Entity = m_Entities[0];
         auto &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
-        const int TextureIndex = 0;
-        SkyboxComponent.SkyboxTexture->Bind(GL_TEXTURE0 + TextureIndex);
-        _Renderer.SetUniform("u_Cubemap", TextureIndex);
+        SkyboxComponent.SkyboxTexture->Bind(TEXTURE_SKYBOX_UNIT);
+        _Renderer.SetUniform("u_Cubemap", TEXTURE_SKYBOX_INDEX);
         _Renderer.DrawArrays(EPrimitiveMode::Triangles, ARRAY_SIZE(SKYBOX_VERTICES) / 3);
 
         SkyboxComponent.SkyboxTexture->Unbind();

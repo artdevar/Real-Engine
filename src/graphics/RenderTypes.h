@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include "TextureParams.h"
 
-enum EClearFlags : uint32_t
+enum EClearFlags : uint8_t
 {
     Color = 1 << 0,
     Depth = 1 << 1,
@@ -10,14 +11,51 @@ enum EClearFlags : uint32_t
     All = Color | Depth | Stencil
 };
 
-enum class EPrimitiveMode
+enum EAttributeType : uint8_t
 {
-    Triangles,
-    Lines,
-    Points
+    Position,
+    Normal,
+    TexCoords_0,
+    TexCoords_1,
+    TexCoords_2,
+    TexCoords_3,
+    Tangent
 };
 
-enum class ECullMode
+enum EAttributeComponentType : uint8_t
+{
+    Byte,
+    UnsignedByte,
+    Short,
+    UnsignedShort,
+    Int,
+    UnsignedInt,
+    Float
+};
+
+enum class EPrimitiveMode : uint8_t
+{
+    Points,
+    Line,
+    LineLoop,
+    LineStrip,
+    Triangles,
+    TriangleStrip,
+    TriangleFan
+};
+
+enum class EIndexType : uint8_t
+{
+    Byte,
+    UnsignedByte,
+    Short,
+    UnsignedShort,
+    Int,
+    UnsignedInt,
+    Float
+};
+
+enum class ECullMode : uint8_t
 {
     None,
     Front,
@@ -25,7 +63,7 @@ enum class ECullMode
     Back
 };
 
-enum class EAlphaMode
+enum class EAlphaMode : uint8_t
 {
     Opaque,
     Mask,

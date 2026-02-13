@@ -2,13 +2,14 @@
 #include "ecs/Components.h"
 #include "ecs/Coordinator.h"
 #include "utils/Common.h"
+#include "interfaces/Renderer.h"
 #include <cstring>
 #include <cassert>
 
 namespace ecs
 {
 
-    TShaderLighting CLightingSystem::ComposeLightingData() const
+    void CLightingSystem::ComposeLightingData(IRenderer &_Renderer) const
     {
         TShaderLighting Lighting;
         std::memset(&Lighting, 0x00, sizeof(Lighting));
@@ -34,7 +35,7 @@ namespace ecs
             }
         }
 
-        return Lighting;
+        _Renderer.SetLightingData(std::move(Lighting));
     }
 
 }

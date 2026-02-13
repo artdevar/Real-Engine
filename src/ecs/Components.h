@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <variant>
 #include "graphics/Buffer.h"
 #include "graphics/ShaderTypes.h"
 #include "graphics/RenderTypes.h"
@@ -22,7 +23,6 @@ enum class ELightType
 
 namespace ecs
 {
-
   struct TTransformComponent
   {
     glm::mat4x4 Transform = glm::mat4x4(1.0f);
@@ -30,6 +30,18 @@ namespace ecs
 
   struct TModelComponent
   {
+    struct TIndicesData
+    {
+      uint32_t Indices = 0;
+      uint32_t Offset = 0;
+      EIndexType Type = EIndexType::UnsignedInt;
+    };
+
+    struct TVerticesData
+    {
+      uint32_t Vertices = 0;
+    };
+
     struct TTexture
     {
       GLuint Texture = 0;
@@ -38,8 +50,8 @@ namespace ecs
     struct TPrimitiveData
     {
       CVertexArray VAO;
-      uint32_t Indices = 0;
-      uint32_t Offset = 0;
+      EPrimitiveMode Mode = EPrimitiveMode::Triangles;
+      std::variant<TIndicesData, TVerticesData> DrawData;
       int MaterialIndex = -1;
     };
 

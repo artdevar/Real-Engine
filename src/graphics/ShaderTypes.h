@@ -28,6 +28,8 @@ constexpr inline GLenum TEXTURE_METALLIC_ROUGHNESS_UNIT = GL_TEXTURE3;
 constexpr inline GLint TEXTURE_METALLIC_ROUGHNESS_INDEX = 3;
 constexpr inline GLenum TEXTURE_SHADOW_MAP_UNIT = GL_TEXTURE20;
 constexpr inline GLint TEXTURE_SHADOW_MAP_INDEX = 20;
+constexpr inline GLenum TEXTURE_SKYBOX_UNIT = GL_TEXTURE30;
+constexpr inline GLint TEXTURE_SKYBOX_INDEX = 30;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 

@@ -40,9 +40,7 @@ bool CWorld::ShouldBeUpdated() const
 
 void CWorld::RenderInternal(IRenderer &_Renderer)
 {
-  TShaderLighting ShaderLight = m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->ComposeLightingData();
-  _Renderer.SetLightingData(std::move(ShaderLight));
-
+  m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->ComposeLightingData(_Renderer);
   m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Render(_Renderer);
   m_EntitiesCoordinator->GetSystem<ecs::CShadowRenderSystem>()->Render(_Renderer);
   m_EntitiesCoordinator->GetSystem<ecs::CWorldRenderSystem>()->Render(_Renderer);

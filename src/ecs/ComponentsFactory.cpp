@@ -4,63 +4,9 @@
 #include "graphics/Texture.h"
 #include "utils/Stopwatch.h"
 #include "utils/Resource.h"
-#include <glad/glad.h>
 
 namespace ecs
 {
-  static EAlphaMode GetAlphaMode(EModelAlphaMode _ModelAlphaMode)
-  {
-    switch (_ModelAlphaMode)
-    {
-    case EModelAlphaMode::Mask:
-      return EAlphaMode::Mask;
-    case EModelAlphaMode::Blend:
-      return EAlphaMode::Blend;
-    default:
-      return EAlphaMode::Opaque;
-    }
-  }
-
-  static ETextureWrap ToTextureWrap(ETextureWrapMode _Wrap)
-  {
-    switch (_Wrap)
-    {
-    case ETextureWrapMode::Repeat:
-      return ETextureWrap::Repeat;
-    case ETextureWrapMode::ClampToEdge:
-      return ETextureWrap::ClampToEdge;
-    case ETextureWrapMode::ClampToBorder:
-      return ETextureWrap::ClampToBorder;
-    case ETextureWrapMode::MirroredRepeat:
-      return ETextureWrap::MirroredRepeat;
-    default:
-      assert(false && "Unknown wrap mode");
-      return ETextureWrap::Repeat;
-    }
-  }
-
-  static ETextureFilter ToTextureFilter(ETextureFilterMode _Filter)
-  {
-    switch (_Filter)
-    {
-    case ETextureFilterMode::Nearest:
-      return ETextureFilter::Nearest;
-    case ETextureFilterMode::Linear:
-      return ETextureFilter::Linear;
-    case ETextureFilterMode::LinearMipmapLinear:
-      return ETextureFilter::LinearMipmapLinear;
-    case ETextureFilterMode::LinearMipmapNearest:
-      return ETextureFilter::LinearMipmapNearest;
-    case ETextureFilterMode::NearestMipmapNearest:
-      return ETextureFilter::NearestMipmapNearest;
-    case ETextureFilterMode::NearestMipmapLinear:
-      return ETextureFilter::NearestMipmapLinear;
-    default:
-      assert(false && "Unknown filter mode");
-      return ETextureFilter::LinearMipmapLinear;
-    }
-  }
-
   static GLint ToAttributeLocation(EAttributeType _Type)
   {
     switch (_Type)
@@ -85,13 +31,37 @@ namespace ecs
     }
   }
 
+  static GLenum ToRawAttributeComponentType(EAttributeComponentType _ComponentType)
+  {
+    switch (_ComponentType)
+    {
+    case EAttributeComponentType::Byte:
+      return GL_BYTE;
+    case EAttributeComponentType::UnsignedByte:
+      return GL_UNSIGNED_BYTE;
+    case EAttributeComponentType::Short:
+      return GL_SHORT;
+    case EAttributeComponentType::UnsignedShort:
+      return GL_UNSIGNED_SHORT;
+    case EAttributeComponentType::Int:
+      return GL_INT;
+    case EAttributeComponentType::UnsignedInt:
+      return GL_UNSIGNED_INT;
+    case EAttributeComponentType::Float:
+      return GL_FLOAT;
+    default:
+      assert(false && "Unknown attribute component type");
+      return 0;
+    }
+  }
+
   static TTextureParams ParseSampler(const TSampler &_Sampler)
   {
     TTextureParams Params;
-    Params.WrapS = ToTextureWrap(_Sampler.WrapS);
-    Params.WrapT = ToTextureWrap(_Sampler.WrapT);
-    Params.MinFilter = ToTextureFilter(_Sampler.MinFilter);
-    Params.MagFilter = ToTextureFilter(_Sampler.MagFilter);
+    Params.WrapS = _Sampler.WrapS;
+    Params.WrapT = _Sampler.WrapT;
+    Params.MinFilter = _Sampler.MinFilter;
+    Params.MagFilter = _Sampler.MagFilter;
 
     return Params;
   }
@@ -105,6 +75,8 @@ namespace ecs
       TexturePtr = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI);
     else
       TexturePtr = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, ParseSampler(_ModelData.Samplers[_Texture.SamplerIndex]));
+
+    assert(TexturePtr && "Failed to load texture");
 
     TModelComponent::TTexture Result;
     Result.Texture = TexturePtr ? TexturePtr->Get() : 0;
@@ -125,7 +97,7 @@ namespace ecs
       Material.RoughnessFactor = SrcMaterial.RoughnessFactor;
       Material.IsDoubleSided = SrcMaterial.IsDoubleSided;
       Material.AlphaCutoff = SrcMaterial.AlphaCutoff;
-      Material.AlphaMode = GetAlphaMode(SrcMaterial.AlphaMode);
+      Material.AlphaMode = SrcMaterial.AlphaMode;
       Material.BaseColorTexture = LoadTexture(_ModelData, SrcMaterial.BaseColorTexture, ETextureType::BasicColor);
       Material.MetallicRoughnessTexture = LoadTexture(_ModelData, SrcMaterial.MetallicRoughnessTexture, ETextureType::Roughness);
       Material.NormalTexture = LoadTexture(_ModelData, SrcMaterial.NormalTexture, ETextureType::Normal);
@@ -139,6 +111,7 @@ namespace ecs
     {
       TModelComponent::TPrimitiveData &PrimitiveData = _Component.Primitives.emplace_back();
       PrimitiveData.MaterialIndex = Primitive.MaterialIndex;
+      PrimitiveData.Mode = Primitive.Mode;
 
       for (const auto &[Type, Attribute] : Primitive.Attributes)
       {
@@ -152,14 +125,15 @@ namespace ecs
         VBO.Bind();
         VBO.Assign(Attribute.Data);
 
-        PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, Attribute.ComponentType, Attribute.ByteStride);
+        PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, ToRawAttributeComponentType(Attribute.ComponentType), Attribute.ByteStride);
         PrimitiveData.VAO.Unbind();
       }
 
       if (!Primitive.Indices.empty())
       {
-        PrimitiveData.Indices = Primitive.IndicesCount;
-        PrimitiveData.Offset = 0;
+        PrimitiveData.DrawData = TModelComponent::TIndicesData{
+            .Indices = Primitive.IndicesCount,
+            .Type = Primitive.IndicesType};
 
         PrimitiveData.VAO.Bind();
 
@@ -168,6 +142,11 @@ namespace ecs
         EBO.Assign(Primitive.Indices);
 
         PrimitiveData.VAO.Unbind();
+      }
+      else
+      {
+        PrimitiveData.DrawData = TModelComponent::TVerticesData{
+            .Vertices = Primitive.VerticesCount};
       }
     }
   }

@@ -12,6 +12,8 @@
 #include "graphics/ShaderTypes.h"
 #include "engine/Config.h"
 
+#define RENDER_DEBUG_QUAD 0 // Set to 1 to render the depth map on a quad for debugging purposes
+
 namespace ecs
 {
     CShadowRenderSystem::CShadowRenderSystem() = default;
@@ -20,18 +22,7 @@ namespace ecs
     {
         CSystem::Init(_Coordinator);
 
-        TTextureParams DepthMapParams;
-        DepthMapParams.Width = SHADOW_MAP_SIZE;
-        DepthMapParams.Height = SHADOW_MAP_SIZE;
-        DepthMapParams.InternalFormat = GL_DEPTH_COMPONENT16;
-        DepthMapParams.Format = GL_DEPTH_COMPONENT;
-        DepthMapParams.Type = GL_FLOAT;
-        DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});
-        DepthMapParams.WrapS = ETextureWrap::ClampToBorder;
-        DepthMapParams.WrapT = ETextureWrap::ClampToBorder;
-        DepthMapParams.MinFilter = ETextureFilter::Nearest;
-        DepthMapParams.MagFilter = ETextureFilter::Nearest;
-        m_DepthMap = resource::CreateTexture("ShadowDepthMap", DepthMapParams);
+        CreateDepthMap();
         m_DepthShader = resource::LoadShader("depth");
 
         m_DepthMapFBO.Bind();
@@ -70,8 +61,17 @@ namespace ecs
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
                 }
+
                 Primitive.VAO.Bind();
-                _Renderer.DrawElements(EPrimitiveMode::Triangles, Primitive.Indices, GL_UNSIGNED_INT, (int8_t *)0 + Primitive.Offset);
+                std::visit(Overloaded{[&_Renderer, &Primitive](const TModelComponent::TIndicesData &Data)
+                                      {
+                                          _Renderer.DrawElements(Primitive.Mode, Data.Indices, Data.Type, (int8_t *)0 + Data.Offset);
+                                      },
+                                      [&_Renderer, &Primitive](const TModelComponent::TVerticesData &Data)
+                                      {
+                                          _Renderer.DrawArrays(Primitive.Mode, Data.Vertices);
+                                      }},
+                           Primitive.DrawData);
                 Primitive.VAO.Unbind();
             }
         }
@@ -82,12 +82,32 @@ namespace ecs
         _Renderer.SetCullFace(ECullMode::Back);
         _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Depth | EClearFlags::Color));
 
-        // RenderDebugQuad(_Renderer);
+        _Renderer.SetShadowMap(m_DepthMap); // TODO: We don't need to set the shadow map every tick
+
+#if RENDER_DEBUG_QUAD
+        RenderDebugQuad(_Renderer);
+#endif
     }
 
     bool CShadowRenderSystem::ShouldBeRendered() const
     {
         return CConfig::Instance().GetShadowsEnabled() && !m_Entities.Empty();
+    }
+
+    void CShadowRenderSystem::CreateDepthMap()
+    {
+        TTextureParams DepthMapParams;
+        DepthMapParams.Width = SHADOW_MAP_SIZE;
+        DepthMapParams.Height = SHADOW_MAP_SIZE;
+        DepthMapParams.InternalFormat = GL_DEPTH_COMPONENT16;
+        DepthMapParams.Format = GL_DEPTH_COMPONENT;
+        DepthMapParams.Type = GL_FLOAT;
+        DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});
+        DepthMapParams.WrapS = ETextureWrap::ClampToBorder;
+        DepthMapParams.WrapT = ETextureWrap::ClampToBorder;
+        DepthMapParams.MinFilter = ETextureFilter::Nearest;
+        DepthMapParams.MagFilter = ETextureFilter::Nearest;
+        m_DepthMap = resource::CreateTexture("ShadowDepthMap", DepthMapParams);
     }
 
     void CShadowRenderSystem::RenderDebugQuad(IRenderer &_Renderer)

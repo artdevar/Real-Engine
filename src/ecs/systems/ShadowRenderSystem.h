@@ -24,6 +24,8 @@ namespace ecs
 
         void RenderDebugQuad(IRenderer &_Renderer);
 
+        void CreateDepthMap();
+
     public:
         static constexpr inline int SHADOW_MAP_SIZE = 2048;
 

@@ -18,6 +18,7 @@ public:
 
 #if DEV_STAGE
     void SetShadowsEnabled(bool _Enabled, CPasskey<CEditorUI>) { AreShadowsEnabled = _Enabled; }
+    void SetUseBlinnPhong(bool _Use, CPasskey<CEditorUI>) { UseBlinnPhong = _Use; }
 
     void SetCameraZNear(float _ZNear, CPasskey<CEditorUI>) { Camera_ZNear = _ZNear; }
     void SetCameraZFar(float _ZFar, CPasskey<CEditorUI>) { Camera_ZFar = _ZFar; }
@@ -29,6 +30,7 @@ public:
     void SetLightSpaceMatrixOrthRightTop(float _RightTop, CPasskey<CEditorUI>) { LightSpaceMatrix_OrthRightTop = _RightTop; }
 #endif
     bool GetShadowsEnabled() const { return AreShadowsEnabled; }
+    bool GetUseBlinnPhong() const { return UseBlinnPhong; }
 
     float GetCameraZNear() const { return Camera_ZNear; }
     float GetCameraZFar() const { return Camera_ZFar; }
@@ -39,13 +41,14 @@ public:
     float GetLightSpaceMatrixOrthLeftBot() const { return LightSpaceMatrix_OrthLeftBot; }
     float GetLightSpaceMatrixOrthRightTop() const { return LightSpaceMatrix_OrthRightTop; }
 
+    std::filesystem::path GetShadersDir() const { return SHADERS_DIR; }
     std::filesystem::path GetAssetsDir() const { return ASSETS_DIR; }
     std::filesystem::path GetTexturesDir() const { return GetAssetsDir() / "textures"; }
-    std::filesystem::path GetShadersDir() const { return SHADERS_DIR; }
 
 private:
     // Render
     bool AreShadowsEnabled = true;
+    bool UseBlinnPhong = true;
 
     // Camera parameters
     float Camera_ZNear = 0.1f;

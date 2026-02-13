@@ -8,6 +8,7 @@
 
 class CShader;
 class CCamera;
+class CTextureBase;
 
 class IRenderer
 {
@@ -31,8 +32,11 @@ public:
     virtual void SetViewport(TVector2i _Viewport) = 0;
     virtual TVector2i GetViewport() const = 0;
 
-    virtual void DrawElements(EPrimitiveMode _Mode, int _Count, int _IndexType, const void *_Offset = nullptr) = 0;
+    virtual void DrawElements(EPrimitiveMode _Mode, int _Count, EIndexType _IndexType, const void *_Offset = nullptr) = 0;
     virtual void DrawArrays(EPrimitiveMode _Mode, int _Count) = 0;
+
+    virtual void SetShadowMap(const std::shared_ptr<CTextureBase> &_ShadowMap) = 0;
+    virtual const std::shared_ptr<CTextureBase> &GetShadowMap() const = 0;
 
     virtual void SetLightingData(TShaderLighting &&_Data) = 0;
     virtual glm::mat4 GetLightSpaceMatrix() const = 0;

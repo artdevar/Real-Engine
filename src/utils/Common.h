@@ -14,3 +14,13 @@ public:                          \
 
 #define IS_SAME_TYPE(Lhs, Rhs) \
   static_assert(std::is_same_v<std::decay_t<decltype((Lhs))>, std::decay_t<decltype((Rhs))>>)
+
+// Helper for std::visit with multiple lambdas
+template <class... Ts>
+struct Overloaded : Ts...
+{
+  using Ts::operator()...;
+};
+
+template <class... Ts>
+Overloaded(Ts...) -> Overloaded<Ts...>;

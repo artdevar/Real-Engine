@@ -8,42 +8,7 @@
 #include <glm/vec4.hpp>
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/quaternion.hpp>
-
-enum EAttributeType : uint32_t
-{
-  Position,
-  Normal,
-  TexCoords_0,
-  TexCoords_1,
-  TexCoords_2,
-  TexCoords_3,
-  Tangent
-};
-
-enum class EModelAlphaMode
-{
-  Opaque,
-  Mask,
-  Blend
-};
-
-enum class ETextureWrapMode
-{
-  Repeat,
-  ClampToEdge,
-  ClampToBorder,
-  MirroredRepeat
-};
-
-enum class ETextureFilterMode
-{
-  Nearest,
-  Linear,
-  LinearMipmapLinear,
-  LinearMipmapNearest,
-  NearestMipmapNearest,
-  NearestMipmapLinear
-};
+#include "RenderTypes.h"
 
 struct TImage
 {
@@ -52,10 +17,10 @@ struct TImage
 
 struct TSampler
 {
-  ETextureWrapMode WrapS;
-  ETextureWrapMode WrapT;
-  ETextureFilterMode MinFilter;
-  ETextureFilterMode MagFilter;
+  ETextureWrap WrapS;
+  ETextureWrap WrapT;
+  ETextureFilter MinFilter;
+  ETextureFilter MagFilter;
 };
 
 struct TTexture
@@ -72,7 +37,7 @@ struct TMaterial
   float MetallicFactor = 1.0f;
   float RoughnessFactor = 1.0f;
   float AlphaCutoff = 0.5f;
-  EModelAlphaMode AlphaMode = EModelAlphaMode::Opaque;
+  EAlphaMode AlphaMode = EAlphaMode::Opaque;
   bool IsDoubleSided = false;
 
   TTexture BaseColorTexture;
@@ -84,7 +49,7 @@ struct TMaterial
 struct TAttribute
 {
   std::vector<uint8_t> Data;
-  int ComponentType;
+  EAttributeComponentType ComponentType;
   int ByteStride;
   int Type;
 };
@@ -92,9 +57,12 @@ struct TAttribute
 struct TPrimitive
 {
   std::map<EAttributeType, TAttribute> Attributes;
-  std::vector<uint32_t> Indices;
-  int IndicesCount = 0;
+  std::vector<uint8_t> Indices;
+  EPrimitiveMode Mode = EPrimitiveMode::Triangles;
+  EIndexType IndicesType = EIndexType::UnsignedInt;
+  uint32_t IndicesCount = 0;
   int MaterialIndex = -1;
+  uint32_t VerticesCount = 0;
 };
 
 struct TMesh

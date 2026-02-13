@@ -9,49 +9,49 @@
 namespace
 {
 
-  EModelAlphaMode ToModelAlphaMode(const std::string &_Mode)
+  EAlphaMode ToModelAlphaMode(const std::string &_Mode)
   {
     if (_Mode == "MASK")
-      return EModelAlphaMode::Mask;
+      return EAlphaMode::Mask;
     else if (_Mode == "BLEND")
-      return EModelAlphaMode::Blend;
+      return EAlphaMode::Blend;
     else
-      return EModelAlphaMode::Opaque;
+      return EAlphaMode::Opaque;
   }
 
-  ETextureWrapMode ToTextureWrapMode(int _Wrap)
+  ETextureWrap ToTextureWrapMode(int _Wrap)
   {
     switch (_Wrap)
     {
     case TINYGLTF_TEXTURE_WRAP_REPEAT:
-      return ETextureWrapMode::Repeat;
+      return ETextureWrap::Repeat;
     case TINYGLTF_TEXTURE_WRAP_CLAMP_TO_EDGE:
-      return ETextureWrapMode::ClampToEdge;
+      return ETextureWrap::ClampToEdge;
     case TINYGLTF_TEXTURE_WRAP_MIRRORED_REPEAT:
-      return ETextureWrapMode::MirroredRepeat;
+      return ETextureWrap::MirroredRepeat;
     default:
-      return ETextureWrapMode::Repeat;
+      return ETextureWrap::Repeat;
     }
   }
 
-  ETextureFilterMode ToTextureFilterMode(int _Filter)
+  ETextureFilter ToTextureFilterMode(int _Filter)
   {
     switch (_Filter)
     {
     case TINYGLTF_TEXTURE_FILTER_NEAREST:
-      return ETextureFilterMode::Nearest;
+      return ETextureFilter::Nearest;
     case TINYGLTF_TEXTURE_FILTER_LINEAR:
-      return ETextureFilterMode::Linear;
+      return ETextureFilter::Linear;
     case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_NEAREST:
-      return ETextureFilterMode::NearestMipmapNearest;
+      return ETextureFilter::NearestMipmapNearest;
     case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_NEAREST:
-      return ETextureFilterMode::LinearMipmapNearest;
+      return ETextureFilter::LinearMipmapNearest;
     case TINYGLTF_TEXTURE_FILTER_NEAREST_MIPMAP_LINEAR:
-      return ETextureFilterMode::NearestMipmapLinear;
+      return ETextureFilter::NearestMipmapLinear;
     case TINYGLTF_TEXTURE_FILTER_LINEAR_MIPMAP_LINEAR:
-      return ETextureFilterMode::LinearMipmapLinear;
+      return ETextureFilter::LinearMipmapLinear;
     default:
-      return ETextureFilterMode::Nearest;
+      return ETextureFilter::Nearest;
     }
   }
 
@@ -73,6 +73,75 @@ namespace
       return EAttributeType::Tangent;
     else
       return static_cast<EAttributeType>(-1);
+  }
+
+  EPrimitiveMode ToPrimitiveRenderMode(int _Mode)
+  {
+    switch (_Mode)
+    {
+    case TINYGLTF_MODE_POINTS:
+      return EPrimitiveMode::Points;
+    case TINYGLTF_MODE_LINE:
+      return EPrimitiveMode::Line;
+    case TINYGLTF_MODE_LINE_LOOP:
+      return EPrimitiveMode::LineLoop;
+    case TINYGLTF_MODE_LINE_STRIP:
+      return EPrimitiveMode::LineStrip;
+    case TINYGLTF_MODE_TRIANGLES:
+      return EPrimitiveMode::Triangles;
+    case TINYGLTF_MODE_TRIANGLE_STRIP:
+      return EPrimitiveMode::TriangleStrip;
+    case TINYGLTF_MODE_TRIANGLE_FAN:
+      return EPrimitiveMode::TriangleFan;
+    default:
+      return EPrimitiveMode::Triangles;
+    }
+  }
+
+  EAttributeComponentType ToAttributeComponentType(int _ComponentType)
+  {
+    switch (_ComponentType)
+    {
+    case TINYGLTF_COMPONENT_TYPE_BYTE:
+      return EAttributeComponentType::Byte;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+      return EAttributeComponentType::UnsignedByte;
+    case TINYGLTF_COMPONENT_TYPE_SHORT:
+      return EAttributeComponentType::Short;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+      return EAttributeComponentType::UnsignedShort;
+    case TINYGLTF_COMPONENT_TYPE_INT:
+      return EAttributeComponentType::Int;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+      return EAttributeComponentType::UnsignedInt;
+    case TINYGLTF_COMPONENT_TYPE_FLOAT:
+      return EAttributeComponentType::Float;
+    default:
+      return EAttributeComponentType::Float;
+    }
+  }
+
+  EIndexType ToIndexType(int _ComponentType)
+  {
+    switch (_ComponentType)
+    {
+    case TINYGLTF_COMPONENT_TYPE_BYTE:
+      return EIndexType::Byte;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+      return EIndexType::UnsignedByte;
+    case TINYGLTF_COMPONENT_TYPE_SHORT:
+      return EIndexType::Short;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+      return EIndexType::UnsignedShort;
+    case TINYGLTF_COMPONENT_TYPE_INT:
+      return EIndexType::Int;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+      return EIndexType::UnsignedInt;
+    case TINYGLTF_COMPONENT_TYPE_FLOAT:
+      return EIndexType::Float;
+    default:
+      return EIndexType::UnsignedInt;
+    }
   }
 }
 
@@ -172,6 +241,7 @@ void CTinyGLTFParseStrategy::ParseMeshes(const tinygltf::Model &_Source, TModelD
     for (const tinygltf::Primitive &SourcePrimitive : SourceMesh.primitives)
     {
       TPrimitive &Primitive = Mesh.Primitives.emplace_back();
+      Primitive.Mode = ToPrimitiveRenderMode(SourcePrimitive.mode);
       Primitive.MaterialIndex = SourcePrimitive.material;
 
       ParseAttributes(_Source, SourcePrimitive, Primitive);
@@ -200,7 +270,7 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
     const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
 
     TAttribute Attribute;
-    Attribute.ComponentType = Accessor.componentType;
+    Attribute.ComponentType = ToAttributeComponentType(Accessor.componentType);
     Attribute.ByteStride = Accessor.ByteStride(BufferView);
     Attribute.Type = Accessor.type;
 
@@ -211,15 +281,18 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
     const size_t Stride = Attribute.ByteStride == 0 ? ElementSize : static_cast<size_t>(Attribute.ByteStride);
     const size_t Size = static_cast<size_t>(Accessor.count) * Stride;
 
+    if (Type == EAttributeType::Position)
+      _TargetPrimitive.VerticesCount = static_cast<uint32_t>(Accessor.count);
+
     if (Offset + Size > Buffer.data.size())
     {
       CLogger::Log(ELogType::Error, "Attribute data out of bounds (name: {}, offset: {}, size: {}, buffer: {})", Name, Offset, Size, Buffer.data.size());
       continue;
     }
 
-    Attribute.Data.reserve(Size);
-    Attribute.Data.insert(Attribute.Data.end(), Buffer.data.begin() + Offset, Buffer.data.begin() + Offset + Size);
-
+    const size_t DataIn = Attribute.Data.size();
+    Attribute.Data.resize(Size + DataIn);
+    std::memcpy(Attribute.Data.data() + DataIn, Buffer.data.data() + Offset, Size);
     _TargetPrimitive.Attributes.emplace(Type, std::move(Attribute));
   }
 }
@@ -227,18 +300,23 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
 void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const tinygltf::Primitive &_SourcePrimitive, TPrimitive &_TargetPrimitive)
 {
   if (_SourcePrimitive.indices < 0)
+  {
+    CLogger::Log(ELogType::Debug, "Primitive has no indices!");
     return;
+  }
 
   const tinygltf::Accessor &Accessor = _Source.accessors[_SourcePrimitive.indices];
   const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
   const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
 
-  assert(Accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT && "Only unsigned int indices are expected");
+  assert(Accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT && "Really?");
 
   _TargetPrimitive.IndicesCount = Accessor.count;
+  _TargetPrimitive.IndicesType = ToIndexType(Accessor.componentType);
 
   const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
-  const size_t Size = static_cast<size_t>(Accessor.count);
+  const size_t ComponentSize = tinygltf::GetComponentSizeInBytes(Accessor.componentType);
+  const size_t Size = static_cast<size_t>(Accessor.count) * ComponentSize;
 
   if (Offset + Size > Buffer.data.size())
   {
@@ -246,9 +324,9 @@ void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const 
     return;
   }
 
-  const uint32_t *Src = reinterpret_cast<const uint32_t *>(Buffer.data.data() + Offset);
-  _TargetPrimitive.Indices.reserve(Accessor.count);
-  _TargetPrimitive.Indices.insert(_TargetPrimitive.Indices.end(), Src, Src + Size);
+  const size_t IndicesIn = _TargetPrimitive.Indices.size();
+  _TargetPrimitive.Indices.resize(Size + IndicesIn);
+  std::memcpy(_TargetPrimitive.Indices.data() + IndicesIn, Buffer.data.data() + Offset, Size);
 }
 
 void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TModelData &_Target)
@@ -359,7 +437,33 @@ void CTinyGLTFParseStrategy::GenerateTangentsIfMissing(TPrimitive &Primitive)
     uvs[i] = glm::vec2(t[0], t[1]);
   }
 
-  const std::vector<uint32_t> &indices = Primitive.Indices;
+  assert(Primitive.IndicesCount != 0 && "How is it 0?");
+
+  // Determine index size (1, 2, or 4 bytes)
+  const std::vector<uint8_t> &indicesRaw = Primitive.Indices;
+  const size_t indexCount = Primitive.IndicesCount;
+  const size_t indexSize = indicesRaw.size() / indexCount;
+  // Defensive: fallback to 1 if indexCount is 0
+  if (indexSize != 1 && indexSize != 2 && indexSize != 4)
+    return;
+
+  // Convert indices to uint32_t for tangent generation
+  std::vector<uint32_t> indices(indexCount);
+  for (size_t i = 0; i < indexCount; ++i)
+  {
+    switch (indexSize)
+    {
+    case 1:
+      indices[i] = indicesRaw[i];
+      break;
+    case 2:
+      indices[i] = *reinterpret_cast<const uint16_t *>(&indicesRaw[i * 2]);
+      break;
+    case 4:
+      indices[i] = *reinterpret_cast<const uint32_t *>(&indicesRaw[i * 4]);
+      break;
+    }
+  }
 
   struct MikkUserData
   {
@@ -450,7 +554,7 @@ void CTinyGLTFParseStrategy::GenerateTangentsIfMissing(TPrimitive &Primitive)
   }
 
   TAttribute TangentAttr;
-  TangentAttr.ComponentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+  TangentAttr.ComponentType = EAttributeComponentType::Float;
   TangentAttr.Type = 4;
   TangentAttr.ByteStride = static_cast<int>(4 * sizeof(float));
   TangentAttr.Data.resize(vertCount * 4 * sizeof(float));
