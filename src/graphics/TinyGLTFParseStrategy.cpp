@@ -143,6 +143,17 @@ namespace
       return EIndexType::UnsignedInt;
     }
   }
+
+  static void CopyData(const std::vector<uint8_t> &_Src, std::vector<uint8_t> &_Dst, size_t _Offset, size_t _Count, size_t _Stride, size_t _ElementSize)
+  {
+    _Dst.reserve(_Dst.size() + _Count * _ElementSize);
+
+    for (size_t i = 0; i < _Count; ++i)
+    {
+      const size_t SrcIndex = _Offset + i * _Stride;
+      std::copy(_Src.begin() + SrcIndex, _Src.begin() + SrcIndex + _ElementSize, std::back_inserter(_Dst));
+    }
+  }
 }
 
 bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelData &_Model)
@@ -269,30 +280,27 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
     const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
     const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
 
-    TAttribute Attribute;
-    Attribute.ComponentType = ToAttributeComponentType(Accessor.componentType);
-    Attribute.ByteStride = Accessor.ByteStride(BufferView);
-    Attribute.Type = Accessor.type;
-
     const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
+    const size_t Stride = Accessor.ByteStride(BufferView);
     const size_t ComponentSize = tinygltf::GetComponentSizeInBytes(Accessor.componentType);
     const size_t ComponentCount = tinygltf::GetNumComponentsInType(Accessor.type);
     const size_t ElementSize = ComponentSize * ComponentCount;
-    const size_t Stride = Attribute.ByteStride == 0 ? ElementSize : static_cast<size_t>(Attribute.ByteStride);
-    const size_t Size = static_cast<size_t>(Accessor.count) * Stride;
+
+    if (Accessor.sparse.isSparse)
+    {
+      CLogger::Log(ELogType::Warning, "Sparse accessors are not supported (attribute: {})", Name);
+      continue;
+    }
 
     if (Type == EAttributeType::Position)
       _TargetPrimitive.VerticesCount = static_cast<uint32_t>(Accessor.count);
 
-    if (Offset + Size > Buffer.data.size())
-    {
-      CLogger::Log(ELogType::Error, "Attribute data out of bounds (name: {}, offset: {}, size: {}, buffer: {})", Name, Offset, Size, Buffer.data.size());
-      continue;
-    }
+    TAttribute Attribute;
+    Attribute.ComponentType = ToAttributeComponentType(Accessor.componentType);
+    Attribute.ByteStride = Stride;
+    Attribute.Type = Accessor.type;
 
-    const size_t DataIn = Attribute.Data.size();
-    Attribute.Data.resize(Size + DataIn);
-    std::memcpy(Attribute.Data.data() + DataIn, Buffer.data.data() + Offset, Size);
+    CopyData(Buffer.data, Attribute.Data, Offset, Accessor.count, Stride, ElementSize);
     _TargetPrimitive.Attributes.emplace(Type, std::move(Attribute));
   }
 }
@@ -315,18 +323,12 @@ void CTinyGLTFParseStrategy::ParseIndices(const tinygltf::Model &_Source, const 
   _TargetPrimitive.IndicesType = ToIndexType(Accessor.componentType);
 
   const size_t Offset = BufferView.byteOffset + Accessor.byteOffset;
+  const size_t Stride = Accessor.ByteStride(BufferView);
   const size_t ComponentSize = tinygltf::GetComponentSizeInBytes(Accessor.componentType);
-  const size_t Size = static_cast<size_t>(Accessor.count) * ComponentSize;
+  const size_t ComponentCount = tinygltf::GetNumComponentsInType(Accessor.type);
+  const size_t ElementSize = ComponentSize * ComponentCount;
 
-  if (Offset + Size > Buffer.data.size())
-  {
-    CLogger::Log(ELogType::Error, "Index data out of bounds (offset: {}, size: {}, buffer: {})", Offset, Size, Buffer.data.size());
-    return;
-  }
-
-  const size_t IndicesIn = _TargetPrimitive.Indices.size();
-  _TargetPrimitive.Indices.resize(Size + IndicesIn);
-  std::memcpy(_TargetPrimitive.Indices.data() + IndicesIn, Buffer.data.data() + Offset, Size);
+  CopyData(Buffer.data, _TargetPrimitive.Indices, Offset, Accessor.count, Stride, ElementSize);
 }
 
 void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TModelData &_Target)
