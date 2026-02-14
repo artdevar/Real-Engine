@@ -81,7 +81,7 @@ class CVertexArray final : public CBuffer<CVertexArray> // VAO
   friend CBuffer;
 
 public:
-  void EnableAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void *_Offset = (GLvoid *)0)
+  void EnableAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLboolean _Normalized, GLsizei _Stride, const void *_Offset = (GLvoid *)0)
   {
     glEnableVertexArrayAttrib(m_ID, _Index);
 
@@ -101,15 +101,9 @@ public:
       break;
 
     default:
-      glVertexAttribPointer(_Index, _Size, _Type, GL_FALSE, _Stride, _Offset);
+      glVertexAttribPointer(_Index, _Size, _Type, _Normalized, _Stride, _Offset);
       break;
     }
-  }
-
-  void EnableAttribWithDivisor(GLuint _Index, GLint _Size, GLenum _Type, GLsizei _Stride, const void *_Offset, GLuint _Divisor)
-  {
-    EnableAttrib(_Index, _Size, _Type, _Stride, _Offset);
-    glVertexAttribDivisor(_Index, _Divisor);
   }
 
 protected:

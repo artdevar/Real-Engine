@@ -70,7 +70,7 @@ namespace ecs
         m_VAO.Bind();
         m_VBO.Bind();
         m_VBO.Assign(SKYBOX_VERTICES, sizeof(SKYBOX_VERTICES));
-        m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, 3 * sizeof(float), (GLvoid *)0);
+        m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 3 * sizeof(float), (GLvoid *)0);
         m_VAO.Unbind();
     }
 

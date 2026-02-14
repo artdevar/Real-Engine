@@ -52,6 +52,7 @@ struct TAttribute
   EAttributeComponentType ComponentType;
   int ByteStride;
   int Type;
+  bool IsNormalized = false;
 };
 
 struct TPrimitive

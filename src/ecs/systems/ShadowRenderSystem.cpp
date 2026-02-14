@@ -143,8 +143,8 @@ namespace ecs
             VAO.Bind();
             VBO.Bind();
             VBO.Assign(QuadVertices, sizeof(QuadVertices));
-            VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, 5 * sizeof(float), (void *)0);
-            VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+            VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float), (void *)0);
+            VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, false, 5 * sizeof(float), (void *)(3 * sizeof(float)));
             VAO.Unbind();
 
             return VAO;

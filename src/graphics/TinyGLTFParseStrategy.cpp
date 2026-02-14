@@ -272,6 +272,12 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
     }
 
     const tinygltf::Accessor &Accessor = _Source.accessors[AccessorIndex];
+    if (Accessor.bufferView < 0)
+    {
+      CLogger::Log(ELogType::Warning, "Accessor {} has no buffer view", Name);
+      continue;
+    }
+
     const tinygltf::BufferView &BufferView = _Source.bufferViews[Accessor.bufferView];
     const tinygltf::Buffer &Buffer = _Source.buffers[BufferView.buffer];
 
@@ -283,7 +289,7 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
 
     if (Accessor.sparse.isSparse)
     {
-      CLogger::Log(ELogType::Warning, "Sparse accessors are not supported (attribute: {})", Name);
+      CLogger::Log(ELogType::Debug, "Sparse accessors are not supported (attribute: {})", Name);
       continue;
     }
 
@@ -292,8 +298,10 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
 
     TAttribute &Attribute = _TargetPrimitive.Attributes[Type];
     Attribute.ComponentType = ToAttributeComponentType(Accessor.componentType);
-    Attribute.ByteStride = Stride;
+    Attribute.ByteStride = ElementSize;
     Attribute.Type = Accessor.type;
+    Attribute.IsNormalized = Accessor.normalized;
+
     CopyData(Buffer.data, Attribute.Data, Offset, Accessor.count, Stride, ElementSize);
   }
 }
@@ -335,30 +343,30 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
 
     if (PBR.baseColorTexture.index >= 0)
     {
-      Material.BaseColorTexture.ImageIndex = PBR.baseColorTexture.index;
-      Material.BaseColorTexture.TexCoordIndex = PBR.baseColorTexture.texCoord;
+      Material.BaseColorTexture.ImageIndex = _Source.textures[PBR.baseColorTexture.index].source;
       Material.BaseColorTexture.SamplerIndex = _Source.textures[PBR.baseColorTexture.index].sampler;
+      Material.BaseColorTexture.TexCoordIndex = PBR.baseColorTexture.texCoord;
     }
 
     if (PBR.metallicRoughnessTexture.index >= 0)
     {
-      Material.MetallicRoughnessTexture.ImageIndex = PBR.metallicRoughnessTexture.index;
-      Material.MetallicRoughnessTexture.TexCoordIndex = PBR.metallicRoughnessTexture.texCoord;
+      Material.MetallicRoughnessTexture.ImageIndex = _Source.textures[PBR.metallicRoughnessTexture.index].source;
       Material.MetallicRoughnessTexture.SamplerIndex = _Source.textures[PBR.metallicRoughnessTexture.index].sampler;
+      Material.MetallicRoughnessTexture.TexCoordIndex = PBR.metallicRoughnessTexture.texCoord;
     }
 
     if (SourceMaterial.normalTexture.index >= 0)
     {
-      Material.NormalTexture.ImageIndex = SourceMaterial.normalTexture.index;
-      Material.NormalTexture.TexCoordIndex = SourceMaterial.normalTexture.texCoord;
+      Material.NormalTexture.ImageIndex = _Source.textures[SourceMaterial.normalTexture.index].source;
       Material.NormalTexture.SamplerIndex = _Source.textures[SourceMaterial.normalTexture.index].sampler;
+      Material.NormalTexture.TexCoordIndex = SourceMaterial.normalTexture.texCoord;
     }
 
     if (SourceMaterial.emissiveTexture.index >= 0)
     {
-      Material.EmissiveTexture.ImageIndex = SourceMaterial.emissiveTexture.index;
-      Material.EmissiveTexture.TexCoordIndex = SourceMaterial.emissiveTexture.texCoord;
+      Material.EmissiveTexture.ImageIndex = _Source.textures[SourceMaterial.emissiveTexture.index].source;
       Material.EmissiveTexture.SamplerIndex = _Source.textures[SourceMaterial.emissiveTexture.index].sampler;
+      Material.EmissiveTexture.TexCoordIndex = SourceMaterial.emissiveTexture.texCoord;
     }
 
     const std::vector<double> &Factor = PBR.baseColorFactor;

@@ -107,14 +107,14 @@ namespace ecs
         }
     }
 
-    static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelComponent &_Component, const glm::mat4 &nodeTransform)
+    static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelComponent &_Component, const glm::mat4 &_NodeTransform)
     {
         for (const TPrimitive &Primitive : _Mesh.Primitives)
         {
             TModelComponent::TPrimitiveData &PrimitiveData = _Component.Primitives.emplace_back();
             PrimitiveData.MaterialIndex = Primitive.MaterialIndex;
             PrimitiveData.Mode = Primitive.Mode;
-            PrimitiveData.PrimitiveMatrix = nodeTransform;
+            PrimitiveData.PrimitiveMatrix = _NodeTransform;
 
             for (const auto &[Type, Attribute] : Primitive.Attributes)
             {
@@ -128,7 +128,7 @@ namespace ecs
                 VBO.Bind();
                 VBO.Assign(Attribute.Data);
 
-                PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, ToRawAttributeComponentType(Attribute.ComponentType), Attribute.ByteStride);
+                PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, ToRawAttributeComponentType(Attribute.ComponentType), Attribute.IsNormalized, Attribute.ByteStride);
                 PrimitiveData.VAO.Unbind();
             }
 
@@ -154,29 +154,30 @@ namespace ecs
         }
     }
 
-    static glm::mat4 ComputeNodeTransform(const TNode &node)
+    static glm::mat4 ComputeNodeTransform(const TNode &_Node)
     {
-        if (std::holds_alternative<TMatrix>(node.TransformData))
-            return std::get<TMatrix>(node.TransformData).Value;
-        const TTRS &TRS = std::get<TTRS>(node.TransformData);
-        glm::mat4 translation = glm::translate(glm::mat4(1.0f), TRS.Translation);
-        glm::mat4 rotation = glm::mat4_cast(TRS.Rotation);
-        glm::mat4 scale = glm::scale(glm::mat4(1.0f), TRS.Scale);
-        return translation * rotation * scale;
+        if (std::holds_alternative<TMatrix>(_Node.TransformData))
+            return std::get<TMatrix>(_Node.TransformData).Value;
+
+        const TTRS &TRS = std::get<TTRS>(_Node.TransformData);
+        glm::mat4 Translation = glm::translate(glm::mat4(1.0f), TRS.Translation);
+        glm::mat4 Rotation = glm::mat4_cast(TRS.Rotation);
+        glm::mat4 Scale = glm::scale(glm::mat4(1.0f), TRS.Scale);
+        return Translation * Rotation * Scale;
     }
 
-    static void ParseNodes(const TModelData &_Model, const TNode &_Node, TModelComponent &_Component, const glm::mat4 &parentTransform)
+    static void ParseNodes(const TModelData &_Model, const TNode &_Node, TModelComponent &_Component, const glm::mat4 &_ParentTransform)
     {
-        glm::mat4 localTransform = ComputeNodeTransform(_Node);
-        glm::mat4 worldTransform = parentTransform * localTransform;
+        glm::mat4 LocalTransform = ComputeNodeTransform(_Node);
+        glm::mat4 WorldTransform = _ParentTransform * LocalTransform;
 
         if (_Node.MeshIndex >= 0)
-            ParseMesh(_Model, _Model.Meshes[_Node.MeshIndex], _Component, worldTransform);
+            ParseMesh(_Model, _Model.Meshes[_Node.MeshIndex], _Component, WorldTransform);
 
         for (int NodeChild : _Node.Children)
         {
             assert(NodeChild >= 0 && NodeChild < _Model.Nodes.size());
-            ParseNodes(_Model, _Model.Nodes[NodeChild], _Component, worldTransform);
+            ParseNodes(_Model, _Model.Nodes[NodeChild], _Component, WorldTransform);
         }
     }
 
