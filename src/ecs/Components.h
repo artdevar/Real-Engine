@@ -25,7 +25,7 @@ namespace ecs
 {
   struct TTransformComponent
   {
-    glm::mat4x4 Transform = glm::mat4x4(1.0f);
+    glm::mat4x4 WorldMatrix = glm::mat4x4(1.0f);
   };
 
   struct TModelComponent
@@ -52,6 +52,7 @@ namespace ecs
       CVertexArray VAO;
       EPrimitiveMode Mode = EPrimitiveMode::Triangles;
       std::variant<TIndicesData, TVerticesData> DrawData;
+      glm::mat4 PrimitiveMatrix = glm::mat4(1.0f);
       int MaterialIndex = -1;
     };
 

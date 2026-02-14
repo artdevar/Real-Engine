@@ -70,14 +70,23 @@ struct TMesh
   std::vector<TPrimitive> Primitives;
 };
 
-struct TNode
+struct TMatrix
 {
-  std::vector<int> Children;
-  int MeshIndex = -1;
+  glm::mat4 Value = glm::mat4(1.0f);
+};
 
+struct TTRS
+{
   glm::vec3 Translation = glm::vec3(0.0f);
   glm::quat Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
   glm::vec3 Scale = glm::vec3(1.0f);
+};
+
+struct TNode
+{
+  std::vector<int> Children;
+  std::variant<TMatrix, TTRS> TransformData;
+  int MeshIndex = -1;
 };
 
 struct TModelData

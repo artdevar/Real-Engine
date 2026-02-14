@@ -213,30 +213,25 @@ void CTinyGLTFParseStrategy::ParseNodes(const tinygltf::Model &_Source, TModelDa
     Node.Children.reserve(SourceNode.children.size());
     Node.Children.insert(Node.Children.end(), SourceNode.children.begin(), SourceNode.children.end());
 
+    if (!SourceNode.matrix.empty())
+    {
+      Node.TransformData = TMatrix{glm::make_mat4(SourceNode.matrix.data())};
+      continue;
+    }
+
+    glm::vec3 Translation = glm::vec3(0.0f);
     if (!SourceNode.translation.empty())
-    {
-      Node.Translation = glm::vec3(
-          SourceNode.translation[0],
-          SourceNode.translation[1],
-          SourceNode.translation[2]);
-    }
+      Translation = glm::make_vec3(SourceNode.translation.data());
 
+    glm::quat Rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     if (!SourceNode.rotation.empty())
-    {
-      Node.Rotation = glm::quat(
-          static_cast<float>(SourceNode.rotation[3]),
-          static_cast<float>(SourceNode.rotation[0]),
-          static_cast<float>(SourceNode.rotation[1]),
-          static_cast<float>(SourceNode.rotation[2]));
-    }
+      Rotation = glm::make_quat(SourceNode.rotation.data());
 
+    glm::vec3 Scale = glm::vec3(1.0f);
     if (!SourceNode.scale.empty())
-    {
-      Node.Scale = glm::vec3(
-          SourceNode.scale[0],
-          SourceNode.scale[1],
-          SourceNode.scale[2]);
-    }
+      Scale = glm::make_vec3(SourceNode.scale.data());
+
+    Node.TransformData = TTRS{Translation, Rotation, Scale};
   }
 }
 
@@ -295,13 +290,11 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model &_Source, con
     if (Type == EAttributeType::Position)
       _TargetPrimitive.VerticesCount = static_cast<uint32_t>(Accessor.count);
 
-    TAttribute Attribute;
+    TAttribute &Attribute = _TargetPrimitive.Attributes[Type];
     Attribute.ComponentType = ToAttributeComponentType(Accessor.componentType);
     Attribute.ByteStride = Stride;
     Attribute.Type = Accessor.type;
-
     CopyData(Buffer.data, Attribute.Data, Offset, Accessor.count, Stride, ElementSize);
-    _TargetPrimitive.Attributes.emplace(Type, std::move(Attribute));
   }
 }
 

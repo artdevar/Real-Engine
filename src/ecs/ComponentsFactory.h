@@ -51,7 +51,7 @@ namespace ecs
     [[nodiscard]] static Component Create(glm::mat4x4 _Transform)
     {
       TTransformComponent TransformComponent;
-      TransformComponent.Transform = _Transform;
+      TransformComponent.WorldMatrix = _Transform;
 
       return TransformComponent;
     }

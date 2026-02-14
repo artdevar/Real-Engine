@@ -76,11 +76,11 @@ void CEditorUI::RenderInternal(IRenderer &_Renderer)
 
   ImGui::Begin("Main window##MainWindow");
 
-  if (ImGui::Button("Load config"))
-    m_Engine->LoadConfig();
-  ImGui::SameLine();
-  if (ImGui::Button("Save config"))
-    m_Engine->SaveConfig();
+  // if (ImGui::Button("Load config"))
+  //   m_Engine->LoadConfig();
+  // ImGui::SameLine();
+  // if (ImGui::Button("Save config"))
+  //   m_Engine->SaveConfig();
 
   RenderEntities();
   RenderLightDebugLines();
@@ -280,7 +280,7 @@ void CEditorUI::RenderLightDebugLines()
 
   glm::vec3 StartWorld = Light->Position;
   if (auto *Transform = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(m_SelectedEntity.value()); Transform)
-    StartWorld = glm::vec3(Transform->Transform[3]);
+    StartWorld = glm::vec3(Transform->WorldMatrix[3]);
   const glm::vec3 EndWorld = StartWorld + Direction * 1.0f;
 
   ImVec2 StartScreen;
@@ -334,7 +334,7 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
   glm::vec3 Skew;
   glm::vec4 Perspective;
 
-  const bool Decomposed = glm::decompose(_TransformComponent.Transform, Scale, Rotation, Translation, Skew, Perspective);
+  const bool Decomposed = glm::decompose(_TransformComponent.WorldMatrix, Scale, Rotation, Translation, Skew, Perspective);
   assert(Decomposed);
 
   bool ValueChanged = false;
@@ -369,7 +369,7 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
   if (ValueChanged)
   {
     Scale = glm::max(Scale, glm::vec3(kMinScale));
-    _TransformComponent.Transform = glm::recompose(Scale, Rotation, Translation, Skew, Perspective);
+    _TransformComponent.WorldMatrix = glm::recompose(Scale, Rotation, Translation, Skew, Perspective);
   }
 
   ImGui::Separator();

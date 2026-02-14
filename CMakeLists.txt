@@ -42,6 +42,7 @@ target_sources(${TARGET} PRIVATE
   src/ecs/systems/PhysicsSystem.cpp
   src/ecs/systems/LightingSystem.cpp
   src/ecs/systems/ShadowRenderSystem.cpp
+  src/ecs/factories/ModelComponentFactory.cpp
   src/ecs/EntityManager.cpp
   src/ecs/ComponentsFactory.cpp
   src/editor/EditorUI.cpp

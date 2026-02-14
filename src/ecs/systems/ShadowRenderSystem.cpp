@@ -47,8 +47,6 @@ namespace ecs
             auto &TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
             auto &ModelComponent = m_Coordinator->GetComponent<TModelComponent>(Entity);
 
-            _Renderer.SetUniform("u_Model", TransformComponent.Transform);
-
             for (TModelComponent::TPrimitiveData &Primitive : ModelComponent.Primitives)
             {
                 if (Primitive.MaterialIndex >= 0 && Primitive.MaterialIndex < ModelComponent.Materials.size())
@@ -61,6 +59,9 @@ namespace ecs
                     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Material.AlphaMode));
                     _Renderer.SetUniform("u_Material.AlphaCutoff", Material.AlphaCutoff);
                 }
+
+                glm::mat4 ModelMatrix = TransformComponent.WorldMatrix * Primitive.PrimitiveMatrix;
+                _Renderer.SetUniform("u_Model", ModelMatrix);
 
                 Primitive.VAO.Bind();
                 std::visit(Overloaded{[&_Renderer, &Primitive](const TModelComponent::TIndicesData &Data)
