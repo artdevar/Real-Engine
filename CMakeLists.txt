@@ -21,43 +21,18 @@ endif()
 
 add_executable(Real_Engine)
 
-target_sources(Real_Engine PRIVATE
-    src/Main.cpp
-    src/engine/Engine.cpp
-    src/engine/Display.cpp
-    src/engine/InputManager.cpp
-    src/engine/Camera.cpp
-    src/engine/ResourceManager.cpp
-    src/scenes/World.cpp
-    src/graphics/GLRenderer.cpp
-    src/graphics/Texture.cpp
-    src/graphics/Shader.cpp
-    src/graphics/Model.cpp
-    src/graphics/TinyGLTFParseStrategy.cpp
-    src/ecs/systems/WorldRenderSystem.cpp
-    src/ecs/systems/SkyboxRenderSystem.cpp
-    src/ecs/systems/PhysicsSystem.cpp
-    src/ecs/systems/LightingSystem.cpp
-    src/ecs/systems/ShadowRenderSystem.cpp
-    src/ecs/factories/ModelComponentFactory.cpp
-    src/ecs/factories/SkyboxComponentFactory.cpp
-    src/ecs/EntityManager.cpp
-    src/ecs/ComponentsFactory.cpp
-    src/editor/EditorUI.cpp
-    src/utils/Logger.cpp
-    src/utils/Resource.cpp
-    src/utils/Path.cpp
-)
+file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
+     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h)
 
 if (WIN32)
-    target_sources(Real_Engine PRIVATE
-        src/editor/platform/SysUtils_Windows.cpp
-    )
-elseif (UNIX AND NOT APPLE)
-    target_sources(Real_Engine PRIVATE
-        src/editor/platform/SysUtils_Unix.cpp
-    )
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX ".*SysUtils_Unix.cpp$")
+elseif (UNIX)
+    list(FILTER PROJECT_SOURCES EXCLUDE REGEX ".*SysUtils_Windows.cpp$")
 endif()
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "src" FILES ${PROJECT_SOURCES})
+target_sources(Real_Engine PRIVATE ${PROJECT_SOURCES})
 
 # Definitions
 
