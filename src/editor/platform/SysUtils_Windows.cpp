@@ -1,64 +1,59 @@
 #include "SysUtils.h"
 #if DEV_STAGE
 #include <Windows.h>
+#include <shlobj.h>
 #include <string.h>
 
 namespace utils
 {
 
-  std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
+std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
+{
+  const _FILEOPENDIALOGOPTIONS Option = _Mode == EFileDialogMode::SelectFile ? FOS_FILEMUSTEXIST :
+    _Mode == EFileDialogMode::SelectFolder ? FOS_PICKFOLDERS : FOS_FILEMUSTEXIST;
+
+  IFileDialog * pfd = nullptr;
+
+  HRESULT hr = CoCreateInstance(
+    CLSID_FileOpenDialog,
+    nullptr,
+    CLSCTX_ALL,
+    IID_PPV_ARGS(&pfd)
+  );
+
+  if (FAILED(hr))
+    return {};
+
+  DWORD options;
+  pfd->GetOptions(&options);
+  pfd->SetOptions(options | Option);
+
+  hr = pfd->Show(nullptr);
+  if (FAILED(hr))
   {
-    std::filesystem::path Path;
-
-    if (_Mode == EFileDialogMode::File)
-    {
-      TCHAR FilenameWide[MAX_PATH];
-      char Filename[MAX_PATH];
-
-      OPENFILENAME ofn;
-      ZeroMemory(&ofn, sizeof(ofn));
-      ZeroMemory(FilenameWide, sizeof(FilenameWide));
-      ZeroMemory(Filename, sizeof(Filename));
-
-      ofn.lStructSize = sizeof(ofn);
-      ofn.hwndOwner = NULL;
-      ofn.lpstrFile = FilenameWide;
-      ofn.nMaxFile = sizeof(FilenameWide);
-      ofn.lpstrFilter = L"All\0*.*\0Text\0*.TXT\0";
-      ofn.nFilterIndex = 1;
-      ofn.lpstrFileTitle = NULL;
-      ofn.nMaxFileTitle = 0;
-      ofn.lpstrInitialDir = NULL;
-      ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
-
-      if (GetOpenFileName(&ofn) == TRUE)
-      {
-        size_t NumCharConverted;
-        wcstombs_s(&NumCharConverted, Filename, MAX_PATH, FilenameWide, MAX_PATH);
-        Path = Filename;
-      }
-    }
-    else if (_Mode == EFileDialogMode::Directory)
-    {
-      BROWSEINFO bi = {0};
-      bi.lpszTitle = L"Select a folder";
-      LPITEMIDLIST pidl = SHBrowseForFolder(&bi);
-      if (pidl != 0)
-      {
-        TCHAR FolderPath[MAX_PATH];
-        if (SHGetPathFromIDList(pidl, FolderPath))
-        {
-          char FolderPathA[MAX_PATH];
-          size_t NumCharConverted;
-          wcstombs_s(&NumCharConverted, FolderPathA, MAX_PATH, FolderPath, MAX_PATH);
-          Path = FolderPathA;
-        }
-        CoTaskMemFree(pidl);
-      }
-    }
-
-    return Path;
+    pfd->Release();
+    return {};
   }
+
+  IShellItem * psi = nullptr;
+  hr = pfd->GetResult(&psi);
+  if (FAILED(hr))
+  {
+    pfd->Release();
+    return {};
+  }
+
+  PWSTR path = nullptr;
+  psi->GetDisplayName(SIGDN_FILESYSPATH, &path);
+
+  std::filesystem::path result(path);
+
+  CoTaskMemFree(path);
+  psi->Release();
+  pfd->Release();
+
+  return result;
+}
 
 }
 #endif
