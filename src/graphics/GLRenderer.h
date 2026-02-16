@@ -36,6 +36,9 @@ public:
 
   void SetBlending(EAlphaMode _Mode) override;
   void SetCullFace(ECullMode _Mode) override;
+  void SetDepthTest(bool _Enable) override;
+  void SetDepthFunc(int _Func) override;
+  void SetDepthMask(bool _Flag) override;
 
   void SetShadowMap(const std::shared_ptr<CTextureBase> &_ShadowMap) override;
   const std::shared_ptr<CTextureBase> &GetShadowMap() const override;

@@ -44,6 +44,7 @@ struct TTextureParams
     std::optional<CStaticArray<float, BordersCount>> BorderColors;
     ETextureWrap WrapS = ETextureWrap::Repeat;
     ETextureWrap WrapT = ETextureWrap::Repeat;
+    ETextureWrap WrapR = ETextureWrap::Repeat; // For cubemaps
     ETextureFilter MinFilter = ETextureFilter::LinearMipmapLinear;
     ETextureFilter MagFilter = ETextureFilter::Linear;
 };

@@ -47,6 +47,11 @@ public:
     return m_ID;
   }
 
+  bool IsValid() const
+  {
+    return m_ID != INVALID_BUFFER;
+  }
+
 protected:
   CBuffer() : m_ID(INVALID_BUFFER)
   {
@@ -83,7 +88,7 @@ class CVertexArray final : public CBuffer<CVertexArray> // VAO
 public:
   void EnableAttrib(GLuint _Index, GLint _Size, GLenum _Type, GLboolean _Normalized, GLsizei _Stride, const void *_Offset = (GLvoid *)0)
   {
-    glEnableVertexArrayAttrib(m_ID, _Index);
+    glEnableVertexAttribArray(_Index);
 
     switch (_Type)
     {
@@ -104,6 +109,11 @@ public:
       glVertexAttribPointer(_Index, _Size, _Type, _Normalized, _Stride, _Offset);
       break;
     }
+  }
+
+  void DisableAttrib(GLuint _Index)
+  {
+    glDisableVertexAttribArray(_Index);
   }
 
 protected:
@@ -147,8 +157,8 @@ public:
 
   void DisableColorBuffer()
   {
-    glNamedFramebufferDrawBuffer(m_ID, GL_NONE);
-    glNamedFramebufferReadBuffer(m_ID, GL_NONE);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
   }
 
 protected:
@@ -235,9 +245,9 @@ public:
     assert(_DataSizeInBytes > 0);
 
     if (m_Capacity == _DataSizeInBytes)
-      glNamedBufferSubData(m_ID, 0, _DataSizeInBytes, _Data);
+      glBufferSubData(m_Target, 0, _DataSizeInBytes, _Data);
     else
-      glNamedBufferData(m_ID, _DataSizeInBytes, _Data, m_Usage);
+      glBufferData(m_Target, _DataSizeInBytes, _Data, m_Usage);
 
     m_Capacity = _DataSizeInBytes;
     m_ActualSize = _DataSizeInBytes;
@@ -258,7 +268,7 @@ public:
     if (m_ActualSize + _DataSizeInBytes > m_Capacity)
       Reallocate(m_ActualSize + _DataSizeInBytes);
 
-    glNamedBufferSubData(m_ID, m_ActualSize, _DataSizeInBytes, _Data);
+    glBufferSubData(m_Target, m_ActualSize, _DataSizeInBytes, _Data);
     m_ActualSize += _DataSizeInBytes;
   }
 
@@ -275,8 +285,8 @@ public:
     glBindBuffer(m_Target, NewBufferID);
     glBufferData(m_Target, m_Capacity - _SizeInBytes, nullptr, m_Usage);
 
-    glCopyNamedBufferSubData(m_ID, NewBufferID, 0, 0, _Offset);
-    glCopyNamedBufferSubData(m_ID, NewBufferID, _Offset + _SizeInBytes, _Offset, m_ActualSize - _Offset - _SizeInBytes);
+    glCopyBufferSubData(m_Target, NewBufferID, 0, 0, _Offset);
+    glCopyBufferSubData(m_Target, NewBufferID, _Offset + _SizeInBytes, _Offset, m_ActualSize - _Offset - _SizeInBytes);
     glDeleteBuffers(1, &m_ID);
     m_ID = NewBufferID;
 
@@ -354,8 +364,8 @@ protected:
     glBindBuffer(GL_COPY_READ_BUFFER, m_ID);
     glBindBuffer(GL_COPY_WRITE_BUFFER, NewBufferID);
     glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, m_ActualSize);
-    glBindBuffer(GL_COPY_READ_BUFFER, 0);
-    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+    glBindBuffer(GL_COPY_READ_BUFFER, INVALID_BUFFER);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, INVALID_BUFFER);
     glDeleteBuffers(1, &m_ID);
     m_ID = NewBufferID;
   }
@@ -372,7 +382,7 @@ protected:
 
   void UnbindBuffer()
   {
-    glBindBuffer(m_Target, 0);
+    glBindBuffer(m_Target, INVALID_BUFFER);
   }
 
   void DeleteBuffer()

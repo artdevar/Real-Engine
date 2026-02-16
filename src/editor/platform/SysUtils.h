@@ -6,8 +6,13 @@
 
 namespace utils
 {
+    enum class EFileDialogMode
+    {
+        SelectFile,
+        SelectFolder
+    };
 
-    std::filesystem::path OpenFileDialog();
+    std::filesystem::path OpenFileDialog(EFileDialogMode _Mode);
 
 }
 

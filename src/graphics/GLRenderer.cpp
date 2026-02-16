@@ -4,7 +4,6 @@
 #include "engine/Config.h"
 #include "graphics/Texture.h"
 #include "utils/Logger.h"
-#include <cstring>
 
 COpenGLRenderer::COpenGLRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
 {
@@ -241,6 +240,24 @@ void COpenGLRenderer::SetBlending(EAlphaMode _Mode)
     glDepthMask(GL_FALSE);
     break;
   }
+}
+
+void COpenGLRenderer::SetDepthTest(bool _Enable)
+{
+  if (_Enable)
+    glEnable(GL_DEPTH_TEST);
+  else
+    glDisable(GL_DEPTH_TEST);
+}
+
+void COpenGLRenderer::SetDepthFunc(int _Func)
+{
+  glDepthFunc(_Func);
+}
+
+void COpenGLRenderer::SetDepthMask(bool _Flag)
+{
+  glDepthMask(_Flag ? GL_TRUE : GL_FALSE);
 }
 
 void COpenGLRenderer::SetCullFace(ECullMode _Mode)

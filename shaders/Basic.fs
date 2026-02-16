@@ -38,7 +38,6 @@ struct TMaterial
 
 uniform TMaterial u_Material;
 uniform sampler2D u_ShadowMap;
-uniform bool      u_Blinn;
 uniform mat4      u_LightSpaceMatrix;
 uniform vec3      u_ViewPos;
 
@@ -105,17 +104,8 @@ void main()
     vec3 diffuse = diff * LightDirectional.Diffuse;
 
     // specular
-    float spec = 0.0;
-    if (u_Blinn)
-    {
-      vec3 halfwayDir = normalize(lightDir + viewDir);
-      spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
-    }
-    else
-    {
-      vec3 reflectDir = reflect(-lightDir, normal);
-      spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    }
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), 16.0);
     vec3 specular = LightDirectional.Specular * spec;
 
     // emmissive

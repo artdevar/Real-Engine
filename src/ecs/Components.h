@@ -33,7 +33,6 @@ namespace ecs
     struct TIndicesData
     {
       uint32_t Indices = 0;
-      uint32_t Offset = 0;
       EIndexType Type = EIndexType::UnsignedInt;
     };
 
@@ -47,6 +46,7 @@ namespace ecs
       GLuint Texture = 0;
       GLint TexCoordIndex = 0;
     };
+
     struct TPrimitiveData
     {
       CVertexArray VAO;
@@ -94,7 +94,9 @@ namespace ecs
 
   struct TSkyboxComponent
   {
-    std::shared_ptr<CTextureBase> SkyboxTexture;
+    CVertexArray VAO;
+    GLuint SkyboxTexture = 0;
+    int VerticesCount = 0;
   };
 
 }

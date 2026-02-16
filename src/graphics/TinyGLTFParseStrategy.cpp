@@ -391,6 +391,7 @@ void CTinyGLTFParseStrategy::ParseImages(const tinygltf::Model &_Source, TModelD
     Image.URI = (_ModelDirectory / SourceImage.uri).string();
   }
 
+  _Target.Samplers.reserve(_Source.samplers.size());
   for (const tinygltf::Sampler &SourceSampler : _Source.samplers)
   {
     TSampler &Sampler = _Target.Samplers.emplace_back();

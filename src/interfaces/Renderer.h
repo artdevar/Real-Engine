@@ -43,4 +43,7 @@ public:
 
     virtual void SetBlending(EAlphaMode _Mode) = 0;
     virtual void SetCullFace(ECullMode _Mode) = 0;
+    virtual void SetDepthTest(bool _Enable) = 0;
+    virtual void SetDepthFunc(int _Func) = 0;
+    virtual void SetDepthMask(bool _Flag) = 0;
 };

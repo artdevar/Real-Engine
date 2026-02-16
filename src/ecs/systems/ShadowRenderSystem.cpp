@@ -4,6 +4,7 @@
 #include "ecs/Components.h"
 #include "ecs/Coordinator.h"
 #include "utils/Resource.h"
+#include "utils/Logger.h"
 #include "graphics/Texture.h"
 #include "interfaces/Renderer.h"
 #include "graphics/RenderTypes.h"
@@ -16,14 +17,17 @@
 
 namespace ecs
 {
-    CShadowRenderSystem::CShadowRenderSystem() = default;
+    CShadowRenderSystem::CShadowRenderSystem() : SHADOW_MAP_SIZE(CConfig::Instance().GetShadowMapSize())
+    {
+        // Empty
+    }
 
     void CShadowRenderSystem::Init(CCoordinator *_Coordinator)
     {
         CSystem::Init(_Coordinator);
 
         CreateDepthMap();
-        m_DepthShader = resource::LoadShader("depth");
+        m_DepthShader = resource::LoadShader("Depth");
 
         m_DepthMapFBO.Bind();
         m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, m_DepthMap->Get());
@@ -34,12 +38,9 @@ namespace ecs
     void CShadowRenderSystem::RenderInternal(IRenderer &_Renderer)
     {
         const auto OldViewport = _Renderer.GetViewport();
-
         m_DepthMapFBO.Bind();
-        _Renderer.SetViewport({SHADOW_MAP_SIZE, SHADOW_MAP_SIZE});
-        _Renderer.Clear(EClearFlags::Depth);
-        _Renderer.SetShader(m_DepthShader);
-        _Renderer.SetCullFace(ECullMode::Front);
+        PrepareRenderState(_Renderer, {SHADOW_MAP_SIZE, SHADOW_MAP_SIZE});
+
         _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
 
         for (ecs::TEntity Entity : m_Entities)
@@ -66,7 +67,7 @@ namespace ecs
                 Primitive.VAO.Bind();
                 std::visit(Overloaded{[&_Renderer, &Primitive](const TModelComponent::TIndicesData &Data)
                                       {
-                                          _Renderer.DrawElements(Primitive.Mode, Data.Indices, Data.Type, (int8_t *)0 + Data.Offset);
+                                          _Renderer.DrawElements(Primitive.Mode, Data.Indices, Data.Type);
                                       },
                                       [&_Renderer, &Primitive](const TModelComponent::TVerticesData &Data)
                                       {
@@ -77,22 +78,34 @@ namespace ecs
             }
         }
 
-        m_DepthMapFBO.Unbind();
-
-        _Renderer.SetViewport(OldViewport);
-        _Renderer.SetCullFace(ECullMode::Back);
-        _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Depth | EClearFlags::Color));
-
         _Renderer.SetShadowMap(m_DepthMap); // TODO: We don't need to set the shadow map every tick
+        m_DepthMapFBO.Unbind();
+        RestoreRenderState(_Renderer, OldViewport);
 
 #if RENDER_DEBUG_QUAD
         RenderDebugQuad(_Renderer);
 #endif
     }
 
+    void CShadowRenderSystem::PrepareRenderState(IRenderer &_Renderer, TVector2i _NewViewport)
+    {
+        _Renderer.Clear(EClearFlags::Depth);
+        _Renderer.SetShader(m_DepthShader.lock());
+        _Renderer.SetViewport(_NewViewport);
+        _Renderer.SetCullFace(ECullMode::Front);
+    }
+
+    void CShadowRenderSystem::RestoreRenderState(IRenderer &_Renderer, TVector2i _OldViewport)
+    {
+        _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Depth | EClearFlags::Color));
+        _Renderer.SetViewport(_OldViewport);
+    }
+
     bool CShadowRenderSystem::ShouldBeRendered() const
     {
-        return CConfig::Instance().GetShadowsEnabled() && !m_Entities.Empty();
+        return CConfig::Instance().GetShadowsEnabled() &&
+               !m_Entities.Empty() &&
+               !m_DepthShader.expired();
     }
 
     void CShadowRenderSystem::CreateDepthMap()
@@ -116,27 +129,14 @@ namespace ecs
         static CVertexArray VAO = [this]()
         {
             constexpr float QuadVertices[] = {
-                -1.0f,
-                1.0f,
-                0.0f,
-                0.0f,
-                1.0f,
-                -1.0f,
-                -1.0f,
-                0.0f,
-                0.0f,
-                0.0f,
-                1.0f,
-                1.0f,
-                0.0f,
-                1.0f,
-                1.0f,
-                1.0f,
-                -1.0f,
-                0.0f,
-                1.0f,
-                0.0f,
-            };
+                // positions   // texcoords
+                -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+                -1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+                1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+
+                -1.0f, 1.0f, 0.0f, 0.0f, 1.0f,
+                1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+                1.0f, 1.0f, 0.0f, 1.0f, 1.0f};
 
             CVertexArray VAO;
             CVertexBuffer VBO(GL_STATIC_DRAW);
@@ -150,7 +150,7 @@ namespace ecs
             return VAO;
         }();
 
-        static std::shared_ptr<CShader> DebugShader = resource::LoadShader("debug_depth");
+        static std::shared_ptr<CShader> DebugShader = resource::LoadShader("DebugDepth");
         _Renderer.SetShader(DebugShader);
 
         m_DepthMap->Bind(GL_TEXTURE0);
@@ -159,7 +159,7 @@ namespace ecs
         _Renderer.SetUniform("u_FarPlane", CConfig::Instance().GetLightSpaceMatrixZFar());
 
         VAO.Bind();
-        _Renderer.DrawArrays(EPrimitiveMode::Triangles, 4);
+        _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
         VAO.Unbind();
     }
 }

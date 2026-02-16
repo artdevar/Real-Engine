@@ -12,8 +12,10 @@
 #include "engine/Config.h"
 #include "utils/Common.h"
 #include "utils/Resource.h"
+#include "utils/Logger.h"
 #include "tiny_gltf.h"
 #include "graphics/RenderTypes.h"
+
 namespace ecs
 {
     CWorldRenderSystem::CWorldRenderSystem() = default;
@@ -22,19 +24,19 @@ namespace ecs
     {
         CSystem::Init(_Coordinator);
 
-        // m_ModelShader = resource::LoadShader("pbr");
-        m_ModelShader = resource::LoadShader("basic");
+        // m_ModelShader = resource::LoadShader("PBR");
+        m_ModelShader = resource::LoadShader("Basic");
     }
 
     void CWorldRenderSystem::RenderInternal(IRenderer &_Renderer)
     {
+        PrepareRenderState(_Renderer);
+
         const std::shared_ptr<CCamera> &Camera = _Renderer.GetCamera();
         const glm::mat4 ViewProjection = Camera->GetProjection() * Camera->GetView();
 
-        _Renderer.SetShader(m_ModelShader.lock());
         _Renderer.SetUniform("u_ViewPos", Camera->GetPosition());
         _Renderer.SetUniform("u_LightSpaceMatrix", _Renderer.GetLightSpaceMatrix());
-        _Renderer.SetUniform("u_Blinn", CConfig::Instance().GetUseBlinnPhong());
 
         const auto &ShadowMapTexture = _Renderer.GetShadowMap();
         if (ShadowMapTexture)
@@ -45,19 +47,17 @@ namespace ecs
 
         for (ecs::TEntity Entity : m_Entities)
         {
-            auto &TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
             auto &ModelComponent = m_Coordinator->GetComponent<TModelComponent>(Entity);
-
             for (TModelComponent::TPrimitiveData &Primitive : ModelComponent.Primitives)
             {
                 if (Primitive.MaterialIndex >= 0 && Primitive.MaterialIndex < ModelComponent.Materials.size())
                 {
                     TModelComponent::TMaterialData &Material = ModelComponent.Materials[Primitive.MaterialIndex];
 
-                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_BASIC_COLOR_UNIT, Material.BaseColorTexture.Texture);
-                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_NORMAL_UNIT, Material.NormalTexture.Texture);
-                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_EMISSIVE_UNIT, Material.EmissiveTexture.Texture);
-                    CTextureBase::Bind(GL_TEXTURE_2D, TEXTURE_METALLIC_ROUGHNESS_UNIT, Material.MetallicRoughnessTexture.Texture);
+                    CTexture::Bind(CTexture::TARGET, TEXTURE_BASIC_COLOR_UNIT, Material.BaseColorTexture.Texture);
+                    CTexture::Bind(CTexture::TARGET, TEXTURE_NORMAL_UNIT, Material.NormalTexture.Texture);
+                    CTexture::Bind(CTexture::TARGET, TEXTURE_EMISSIVE_UNIT, Material.EmissiveTexture.Texture);
+                    CTexture::Bind(CTexture::TARGET, TEXTURE_METALLIC_ROUGHNESS_UNIT, Material.MetallicRoughnessTexture.Texture);
 
                     _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
                     _Renderer.SetUniform("u_Material.NormalTexture", TEXTURE_NORMAL_INDEX);
@@ -78,7 +78,12 @@ namespace ecs
                     _Renderer.SetCullFace(Material.IsDoubleSided ? ECullMode::None : ECullMode::Back);
                     _Renderer.SetBlending(Material.AlphaMode);
                 }
+                else
+                {
+                    CLogger::Log(ELogType::Warning, "Primitive with invalid material index: " + std::to_string(Primitive.MaterialIndex));
+                }
 
+                auto &TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
                 glm::mat4 ModelMatrix = TransformComponent.WorldMatrix * Primitive.PrimitiveMatrix;
                 _Renderer.SetUniform("u_MVP", ViewProjection * ModelMatrix);
                 _Renderer.SetUniform("u_Model", ModelMatrix);
@@ -86,7 +91,7 @@ namespace ecs
                 Primitive.VAO.Bind();
                 std::visit(Overloaded{[&_Renderer, &Primitive](const TModelComponent::TIndicesData &Data)
                                       {
-                                          _Renderer.DrawElements(Primitive.Mode, Data.Indices, Data.Type, (int8_t *)0 + Data.Offset);
+                                          _Renderer.DrawElements(Primitive.Mode, Data.Indices, Data.Type);
                                       },
                                       [&_Renderer, &Primitive](const TModelComponent::TVerticesData &Data)
                                       {
@@ -96,7 +101,15 @@ namespace ecs
                 Primitive.VAO.Unbind();
             }
         }
-        _Renderer.SetBlending(EAlphaMode::Opaque);
+    }
+
+    void CWorldRenderSystem::PrepareRenderState(IRenderer &_Renderer)
+    {
+        _Renderer.SetShader(m_ModelShader.lock());
+        _Renderer.SetCullFace(ECullMode::Back);
+        _Renderer.SetDepthTest(true);
+        _Renderer.SetDepthMask(true);
+        _Renderer.SetDepthFunc(GL_LESS);
     }
 
     void CWorldRenderSystem::SetVisibility(ecs::TEntity _Entity, bool _IsVisible)

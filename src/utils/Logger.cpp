@@ -41,8 +41,9 @@ void CLogger::LogToFile(const std::string &_Log)
   static auto Flags = std::ios::out;
 
   std::fstream LogFile(Filename.data(), Flags);
-  assert(LogFile.is_open());
-  Flags = std::ios::app;
-
-  LogFile << _Log;
+  if (LogFile.is_open())
+  {
+    Flags = std::ios::app;
+    LogFile << _Log;
+  }
 }

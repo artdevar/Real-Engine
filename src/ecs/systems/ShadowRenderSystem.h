@@ -3,6 +3,7 @@
 #include "ecs/SystemManager.h"
 #include "interfaces/Renderable.h"
 #include "graphics/Buffer.h"
+#include "engine/MathTypes.h"
 
 class CTextureBase;
 class CShader;
@@ -21,17 +22,19 @@ namespace ecs
     private:
         void RenderInternal(IRenderer &_Renderer) override;
         bool ShouldBeRendered() const override;
+        void PrepareRenderState(IRenderer &_Renderer, TVector2i _NewViewport);
+        void RestoreRenderState(IRenderer &_Renderer, TVector2i _OldViewport);
 
         void RenderDebugQuad(IRenderer &_Renderer);
 
         void CreateDepthMap();
 
     public:
-        static constexpr inline int SHADOW_MAP_SIZE = 2048;
+        const int SHADOW_MAP_SIZE;
 
         CFrameBuffer m_DepthMapFBO;
+        std::weak_ptr<CShader> m_DepthShader;
         std::shared_ptr<CTextureBase> m_DepthMap;
-        std::shared_ptr<CShader> m_DepthShader;
     };
 
 }

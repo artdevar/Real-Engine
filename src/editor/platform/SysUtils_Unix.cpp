@@ -2,17 +2,26 @@
 
 #if DEV_STAGE
 #include "utils/Common.h"
+#include "engine/Config.h"
 #include <cstring>
 
 namespace utils
 {
 
-  std::filesystem::path OpenFileDialog()
+  std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
   {
     char PathBuffer[256];
     std::memset(PathBuffer, 0x00, sizeof(PathBuffer));
 
-    FILE *File = popen("zenity \"$@\" 2>/dev/null --file-selection --title=\"Select a file\"", "r");
+    const std::string AssetsDir = CConfig::Instance().GetAssetsDir().string();
+
+    const std::string_view Title = (_Mode == EFileDialogMode::SelectFolder) ? "Select a folder" : "Select a file";
+    const std::string_view ModeOption = (_Mode == EFileDialogMode::SelectFolder) ? "--directory" : "";
+    const std::string_view Template = "zenity \"$@\" 2>/dev/null --file-selection {} --title=\"{}\" --filename=\"{}\"";
+
+    const std::string Command = std::vformat(Template, std::make_format_args(ModeOption, Title, AssetsDir));
+
+    FILE *File = popen(Command.c_str(), "r");
 
     fgets(PathBuffer, sizeof(PathBuffer), File);
     pclose(File);

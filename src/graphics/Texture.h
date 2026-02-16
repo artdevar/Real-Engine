@@ -3,6 +3,7 @@
 #include <glad/glad.h>
 #include "interfaces/TextureAsset.h"
 #include "interfaces/GeneratableTexture.h"
+#include "utils/StaticArray.h"
 
 class CTextureBase : public ITextureAsset,
                      public IGeneratableTexture
@@ -36,6 +37,7 @@ protected:
   CTextureBase(GLenum _Target);
 
   static constexpr inline GLuint INVALID_VALUE = 0u;
+  static constexpr inline GLenum FORMATS[] = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
 
   GLuint m_ID;
   const GLenum m_Target;
@@ -53,13 +55,23 @@ public:
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
+  static constexpr inline GLenum TARGET = GL_TEXTURE_2D;
+
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
 };
 
 class CCubemap final : public CTextureBase
 {
-  static constexpr inline int CUBEMAP_FACES = 6;
+  static constexpr inline int CUBEMAP_FACES_COUNT = 6;
+
+  CStaticArray<std::string, CUBEMAP_FACES_COUNT> CUBEMAP_FACES = {
+      "right",
+      "left",
+      "top",
+      "bottom",
+      "front",
+      "back"};
 
 public:
   CCubemap();
@@ -68,4 +80,9 @@ public:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
+
+  static constexpr inline GLenum TARGET = GL_TEXTURE_CUBE_MAP;
+
+private:
+  bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
 };

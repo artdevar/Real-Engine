@@ -43,11 +43,13 @@ target_sources(${TARGET} PRIVATE
   src/ecs/systems/LightingSystem.cpp
   src/ecs/systems/ShadowRenderSystem.cpp
   src/ecs/factories/ModelComponentFactory.cpp
+  src/ecs/factories/SkyboxComponentFactory.cpp
   src/ecs/EntityManager.cpp
   src/ecs/ComponentsFactory.cpp
   src/editor/EditorUI.cpp
   src/utils/Logger.cpp
   src/utils/Resource.cpp
+  src/utils/Path.cpp
 )
 
 if (WIN32)

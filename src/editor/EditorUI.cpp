@@ -110,10 +110,6 @@ void CEditorUI::RenderGlobalParams()
     bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
     if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
       CConfig::Instance().SetShadowsEnabled(ShadowsEnabled, CPasskey(this));
-
-    bool UseBlinnPhong = CConfig::Instance().GetUseBlinnPhong();
-    if (ImGui::Checkbox("Use Blinn-Phong", &UseBlinnPhong))
-      CConfig::Instance().SetUseBlinnPhong(UseBlinnPhong, CPasskey(this));
   }
 
   if (ImGui::CollapsingHeader("Camera"))
@@ -466,7 +462,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
   {
   case TEntityType::StaticMesh:
   {
-    const std::filesystem::path ModelPathToLoad = utils::OpenFileDialog();
+    const std::filesystem::path ModelPathToLoad = utils::OpenFileDialog(utils::EFileDialogMode::SelectFile);
     if (ModelPathToLoad.empty())
       return;
 
@@ -485,7 +481,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
 
   case TEntityType::Skybox:
   {
-    const std::filesystem::path ModelPathToLoad = utils::OpenFileDialog();
+    const std::filesystem::path ModelPathToLoad = utils::OpenFileDialog(utils::EFileDialogMode::SelectFolder);
     if (ModelPathToLoad.empty())
       return;
 

@@ -3,7 +3,7 @@
 #include "utils/Logger.h"
 #include "utils/Json.h"
 #include "utils/Logger.h"
-#include <json.hpp>
+#include "utils/Path.h"
 #include <stb_image.h>
 #include <vector>
 
@@ -82,7 +82,7 @@ void CTextureBase::Unbind()
 
 void CTextureBase::Unbind(GLenum _Target)
 {
-    // glActiveTexture(INVALID_VALUE); OpenGL error
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(_Target, INVALID_VALUE);
 }
 
@@ -103,7 +103,7 @@ CTextureBase::CTextureBase(GLenum _Target) : m_ID(INVALID_VALUE),
 
 // CTexture
 
-CTexture::CTexture() : CTextureBase(GL_TEXTURE_2D) {}
+CTexture::CTexture() : CTextureBase(TARGET) {}
 
 bool CTexture::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
@@ -131,8 +131,7 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
         return false;
     }
 
-    constexpr GLenum Formats[] = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
-    const GLenum Format = Formats[Image.Channels - 1];
+    const GLenum Format = FORMATS[Image.Channels - 1];
 
     glGenTextures(1, &m_ID);
     glBindTexture(m_Target, m_ID);
@@ -184,30 +183,54 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 
 // CCubemap
 
-CCubemap::CCubemap() : CTextureBase(GL_TEXTURE_CUBE_MAP) {}
+CCubemap::CCubemap() : CTextureBase(TARGET) {}
 
 bool CCubemap::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
-    assert(_Path.extension() == ".json");
-    const nlohmann::json JsonContent = utils::ParseJson(_Path.string());
-    const auto Faces = JsonContent["Faces"].get<std::vector<std::string>>();
-    assert(Faces.size() == CUBEMAP_FACES);
+    TTextureParams Params;
+    Params.WrapS = ETextureWrap::ClampToEdge;
+    Params.WrapT = ETextureWrap::ClampToEdge;
+    Params.WrapR = ETextureWrap::ClampToEdge;
+    Params.MinFilter = ETextureFilter::Linear;
+    Params.MagFilter = ETextureFilter::Linear;
+    return Load(_Path, Params);
+}
 
-    CStaticArray<TImage, CUBEMAP_FACES> Images;
+bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &Params, CPasskey<CResourceManager>)
+{
+    return Load(_Path, Params);
+}
 
-    stbi_set_flip_vertically_on_load(false);
-    for (int i = 0; i < CUBEMAP_FACES; ++i)
+bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager>)
+{
+    assert(false && "Cubemap generation isn't supported yet");
+    return false;
+}
+
+bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &_Params)
+{
+    const auto Files = utils::GetFilesInDirectory(_Path);
+    CStaticArray<TImage, CUBEMAP_FACES_COUNT> Images;
+    bool Success = false;
+
+    for (const std::string &Face : CUBEMAP_FACES)
     {
-        TImage Image;
-        Image.Data = stbi_load((_Path.parent_path() / Faces[i]).c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
+        const auto It = std::find_if(Files.begin(), Files.end(), [&Face](const std::filesystem::path &File)
+                                     { return File.stem().string() == Face; });
 
+        if (It == Files.end())
+        {
+            CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load: missing face '{}'", _Path.c_str(), Face.c_str());
+            break;
+        }
+
+        TImage Image;
+        Image.Data = stbi_load((*It).c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
         if (Image.Data)
             Images.PushBack(std::move(Image));
     }
-    stbi_set_flip_vertically_on_load(true);
 
-    bool Success = false;
-    if (Success = (Images.GetActualSize() == CUBEMAP_FACES))
+    if (Success = (Images.GetActualSize() == CUBEMAP_FACES_COUNT))
     {
         glGenTextures(1, &m_ID);
         glBindTexture(m_Target, m_ID);
@@ -215,15 +238,15 @@ bool CCubemap::Load(const std::filesystem::path &_Path, CPasskey<CResourceManage
         for (int i = 0; i < Images.GetActualSize(); ++i)
         {
             const TImage &Image = Images[i];
-            GLint PrevAlign = 4;
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, Image.Width, Image.Height, 0, GL_RGB, GL_UNSIGNED_BYTE, Image.Data);
+            const GLenum Format = FORMATS[Image.Channels - 1];
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.Width, Image.Height, 0, Format, GL_UNSIGNED_BYTE, Image.Data);
         }
 
-        glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
+        glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
+        glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
+        glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
+        glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, ToGLWrap(_Params.WrapR));
 
         CLogger::Log(ELogType::Info, "[CCubemap] Texture '{}' loaded successfully", _Path.c_str());
     }
@@ -240,16 +263,4 @@ bool CCubemap::Load(const std::filesystem::path &_Path, CPasskey<CResourceManage
 #endif
 
     return Success;
-}
-
-bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &Params, CPasskey<CResourceManager>)
-{
-    assert(false && "Cubemap loading with parameters isn't supported yet");
-    return false;
-}
-
-bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager>)
-{
-    assert(false && "Cubemap generation isn't supported yet");
-    return false;
 }

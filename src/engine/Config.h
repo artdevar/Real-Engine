@@ -18,7 +18,6 @@ public:
 
 #if DEV_STAGE
     void SetShadowsEnabled(bool _Enabled, CPasskey<CEditorUI>) { AreShadowsEnabled = _Enabled; }
-    void SetUseBlinnPhong(bool _Use, CPasskey<CEditorUI>) { UseBlinnPhong = _Use; }
 
     void SetCameraZNear(float _ZNear, CPasskey<CEditorUI>) { Camera_ZNear = _ZNear; }
     void SetCameraZFar(float _ZFar, CPasskey<CEditorUI>) { Camera_ZFar = _ZFar; }
@@ -29,8 +28,8 @@ public:
     void SetLightSpaceMatrixOrthLeftBot(float _LeftBot, CPasskey<CEditorUI>) { LightSpaceMatrix_OrthLeftBot = _LeftBot; }
     void SetLightSpaceMatrixOrthRightTop(float _RightTop, CPasskey<CEditorUI>) { LightSpaceMatrix_OrthRightTop = _RightTop; }
 #endif
+    int GetShadowMapSize() const { return ShadowMapSize; }
     bool GetShadowsEnabled() const { return AreShadowsEnabled; }
-    bool GetUseBlinnPhong() const { return UseBlinnPhong; }
 
     float GetCameraZNear() const { return Camera_ZNear; }
     float GetCameraZFar() const { return Camera_ZFar; }
@@ -47,8 +46,8 @@ public:
 
 private:
     // Render
+    int ShadowMapSize = 2048;
     bool AreShadowsEnabled = true;
-    bool UseBlinnPhong = true;
 
     // Camera parameters
     float Camera_ZNear = 0.1f;
