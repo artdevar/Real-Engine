@@ -12,7 +12,6 @@
 #include "ecs/systems/PhysicsSystem.h"
 #include "ecs/systems/ShadowRenderSystem.h"
 #include "graphics/Shader.h"
-#include <nlohmann/json.hpp>
 
 CWorld::CWorld() = default;
 

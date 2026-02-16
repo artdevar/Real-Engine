@@ -124,10 +124,10 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_Params)
 {
     TImage Image;
-    Image.Data = stbi_load(_Path.c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
+    Image.Data = stbi_load(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
     if (!Image.Data)
     {
-        CLogger::Log(ELogType::Error, "[CTexture] Texture '{}' failed to load", _Path.c_str());
+        CLogger::Log(ELogType::Error, "[CTexture] Texture '{}' failed to load", _Path.string());
         return false;
     }
 
@@ -220,12 +220,12 @@ bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 
         if (It == Files.end())
         {
-            CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load: missing face '{}'", _Path.c_str(), Face.c_str());
+            CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load: missing face '{}'", _Path.string(), Face);
             break;
         }
 
         TImage Image;
-        Image.Data = stbi_load((*It).c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
+        Image.Data = stbi_load(It->string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
         if (Image.Data)
             Images.PushBack(std::move(Image));
     }
@@ -248,11 +248,11 @@ bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &_P
         glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
         glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, ToGLWrap(_Params.WrapR));
 
-        CLogger::Log(ELogType::Info, "[CCubemap] Texture '{}' loaded successfully", _Path.c_str());
+        CLogger::Log(ELogType::Info, "[CCubemap] Texture '{}' loaded successfully", _Path.string());
     }
     else
     {
-        CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load", _Path.c_str());
+        CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load", _Path.string());
     }
 
     for (TImage &Image : Images)

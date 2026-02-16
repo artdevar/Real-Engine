@@ -62,12 +62,12 @@ bool CShader::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager
   {
     char ErrorLog[512] = {'\0'};
     glGetShaderInfoLog(m_ID, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, std::format("[CShader] Shader '{}' linkage error:\n{}", _Path.c_str(), ErrorLog));
+    CLogger::Log(ELogType::Error, std::format("[CShader] Shader '{}' linkage error:\n{}", _Path.string(), ErrorLog));
     Shutdown();
     return false;
   }
 
-  CLogger::Log(ELogType::Debug, std::format("[CShader] Shader '{}' loaded successfully", _Path.c_str()));
+  CLogger::Log(ELogType::Debug, std::format("[CShader] Shader '{}' loaded successfully", _Path.string()));
 
 #if SHADERS_HOT_RELOAD
   m_BasePath = _Path;
@@ -187,7 +187,7 @@ void CShader::Validate()
   {
     char ErrorLog[512] = {'\0'};
     glGetProgramInfoLog(NewProgram, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, "[CShader] Hot reload linkage error for '{}':\n{}", m_BasePath.c_str(), ErrorLog);
+    CLogger::Log(ELogType::Error, "[CShader] Hot reload linkage error for '{}':\n{}", m_BasePath.string(), ErrorLog);
     glDeleteProgram(NewProgram);
     return;
   }
@@ -202,7 +202,7 @@ void CShader::Validate()
   if (OldProgram != INVALID_VALUE)
     UnloadShader(OldProgram);
 
-  CLogger::Log(ELogType::Debug, "[CShader] Hot reloaded '{}'", m_BasePath.c_str());
+  CLogger::Log(ELogType::Debug, "[CShader] Hot reloaded '{}'", m_BasePath.string());
 #endif
 }
 
@@ -218,7 +218,7 @@ GLuint CShader::LoadShader(const std::filesystem::path &_Path, GLenum _ShaderTyp
   std::ifstream ShaderFile(_Path);
   if (!ShaderFile.is_open())
   {
-    CLogger::Log(ELogType::Error, std::format("Shader '{}' is absent", _Path.c_str()));
+    CLogger::Log(ELogType::Error, std::format("Shader '{}' is absent", _Path.string()));
     return INVALID_VALUE;
   }
 
@@ -240,7 +240,7 @@ GLuint CShader::LoadShader(const std::filesystem::path &_Path, GLenum _ShaderTyp
   {
     char ErrorLog[512] = {'\0'};
     glGetShaderInfoLog(Shader, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, std::format("Shader '{}' compilation error:\n{}", _Path.c_str(), ErrorLog));
+    CLogger::Log(ELogType::Error, std::format("Shader '{}' compilation error:\n{}", _Path.string(), ErrorLog));
     glDeleteShader(Shader);
     Shader = INVALID_VALUE;
   }

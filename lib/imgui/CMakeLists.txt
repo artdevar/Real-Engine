@@ -16,4 +16,5 @@ list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_opengl3.c
 
 add_library(${TARGET} STATIC ${IMGUI_SRCS})
 target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(${TARGET} PUBLIC glfw)
 set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)

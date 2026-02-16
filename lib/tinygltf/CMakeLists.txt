@@ -10,6 +10,6 @@ file(GLOB TINYGLTF_SRCS
 add_library(${TARGET} STATIC ${TINYGLTF_SRCS})
 target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
-target_compile_options(${TARGET} PRIVATE
-  $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-literal-operator>
-)
+if (NOT MSVC)
+  target_compile_options(${TARGET} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-Wno-deprecated-literal-operator>)
+endif()

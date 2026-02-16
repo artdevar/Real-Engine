@@ -9,4 +9,5 @@ file(GLOB GLAD_SRCS
 
 add_library(${TARGET} STATIC ${GLAD_SRCS})
 target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 set_target_properties(${TARGET} PROPERTIES POSITION_INDEPENDENT_CODE ON)
