@@ -1,8 +1,6 @@
 #include "engine/Engine.h"
 #include "utils/Logger.h"
 
-#define TINYGLTF_IMPLEMENTATION
-
 int main(int argc, char *argv[])
 {
   CLogger::SetSinks(CLogger::Console | CLogger::File);
@@ -10,7 +8,7 @@ int main(int argc, char *argv[])
 
   CEngine &Engine = CEngine::Instance();
 
-  if (const int InitCode = Engine.Init("", "Real Engine"); InitCode != EXIT_SUCCESS)
+  if (const int InitCode = Engine.Init(); InitCode != EXIT_SUCCESS)
   {
     CLogger::Log(ELogType::Fatal, "Engine initialisation failed. Error: {}", InitCode);
     Engine.Shutdown();

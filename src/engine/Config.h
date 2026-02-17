@@ -52,6 +52,11 @@ public:
     LightSpaceMatrix_OrthRightTop = _RightTop;
   }
 #endif
+  std::string GetAppTitle() const
+  {
+    return APP_NAME;
+  }
+
   int GetShadowMapSize() const
   {
     return ShadowMapSize;

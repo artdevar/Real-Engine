@@ -1,4 +1,5 @@
 #include "Engine.h"
+#include "Config.h"
 #include "Camera.h"
 #include "Display.h"
 #include "InputManager.h"
@@ -54,9 +55,10 @@ void CEngine::Shutdown()
   delete Singleton;
 }
 
-int CEngine::Init(const std::string &_ConfigPath, const std::string &_GameTitle)
+int CEngine::Init()
 {
-  const int DisplayInitCode = m_Display->Init(_GameTitle);
+  const std::string GameTitle       = CConfig::Instance().GetAppTitle();
+  const int         DisplayInitCode = m_Display->Init(GameTitle);
   if (DisplayInitCode != EXIT_SUCCESS)
     return DisplayInitCode;
 

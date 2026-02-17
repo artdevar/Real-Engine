@@ -36,7 +36,7 @@ public:
 
   void Shutdown();
 
-  int Init(const std::string &_ConfigPath, const std::string &_GameTitle);
+  int Init();
   int Run();
 
   void LoadConfig();

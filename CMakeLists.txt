@@ -17,6 +17,8 @@ else()
     set(SHADERS_HOT_RELOAD_VAL 0)
 endif()
 
+set (PROJECT_NAME "Real Engine")
+
 # Exec
 
 add_executable(Real_Engine)
@@ -38,6 +40,7 @@ target_sources(Real_Engine PRIVATE ${PROJECT_SOURCES})
 
 target_compile_definitions(Real_Engine PRIVATE
     GLM_ENABLE_EXPERIMENTAL
+    APP_NAME="${PROJECT_NAME}"
     DEV_STAGE=${DEV_STAGE_VAL}
     SHADERS_HOT_RELOAD=${SHADERS_HOT_RELOAD_VAL}
     ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
