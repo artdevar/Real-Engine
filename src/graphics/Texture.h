@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glad/glad.h>
-#include "interfaces/TextureAsset.h"
 #include "interfaces/GeneratableTexture.h"
+#include "interfaces/TextureAsset.h"
 #include "utils/StaticArray.h"
 
 class CTextureBase : public ITextureAsset,
@@ -37,9 +37,9 @@ protected:
   CTextureBase(GLenum _Target);
 
   static constexpr inline GLuint INVALID_VALUE = 0u;
-  static constexpr inline GLenum FORMATS[] = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
+  static constexpr inline GLenum FORMATS[]     = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
 
-  GLuint m_ID;
+  GLuint       m_ID;
   const GLenum m_Target;
 };
 
@@ -65,13 +65,7 @@ class CCubemap final : public CTextureBase
 {
   static constexpr inline int CUBEMAP_FACES_COUNT = 6;
 
-  CStaticArray<std::string, CUBEMAP_FACES_COUNT> CUBEMAP_FACES = {
-      "right",
-      "left",
-      "top",
-      "bottom",
-      "front",
-      "back"};
+  CStaticArray<std::string, CUBEMAP_FACES_COUNT> CUBEMAP_FACES = {"right", "left", "top", "bottom", "front", "back"};
 
 public:
   CCubemap();

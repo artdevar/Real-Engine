@@ -1,42 +1,42 @@
-#include "pch.h"
 #include "EditorUI.h"
+#include "pch.h"
 
 #if DEV_STAGE
-#include "engine/Config.h"
-#include "engine/Engine.h"
-#include "engine/Display.h"
-#include "scenes/World.h"
+#include "ecs/ComponentsFactory.h"
+#include "ecs/Coordinator.h"
+#include "ecs/EntityBuilder.h"
 #include "engine/Camera.h"
+#include "engine/Config.h"
+#include "engine/Display.h"
+#include "engine/Engine.h"
 #include "engine/ResourceManager.h"
 #include "graphics/Model.h"
 #include "graphics/Shader.h"
-#include "ecs/Coordinator.h"
-#include "ecs/EntityBuilder.h"
-#include "ecs/ComponentsFactory.h"
 #include "platform/SysUtils.h"
-#include <imgui/imgui.h>
-#include <imgui/misc/cpp/imgui_stdlib.h>
+#include "scenes/World.h"
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
+#include <imgui/imgui.h>
+#include <imgui/misc/cpp/imgui_stdlib.h>
 
 namespace
 {
-  bool ProjectWorldToScreen(const glm::vec3 &_WorldPos, const glm::mat4 &_View, const glm::mat4 &_Proj, const glm::ivec2 &_Viewport, ImVec2 &_Out)
-  {
-    const glm::vec4 Clip = _Proj * _View * glm::vec4(_WorldPos, 1.0f);
-    if (Clip.w <= 0.0001f)
-      return false;
+bool ProjectWorldToScreen(const glm::vec3 &_WorldPos, const glm::mat4 &_View, const glm::mat4 &_Proj, const glm::ivec2 &_Viewport, ImVec2 &_Out)
+{
+  const glm::vec4 Clip = _Proj * _View * glm::vec4(_WorldPos, 1.0f);
+  if (Clip.w <= 0.0001f)
+    return false;
 
-    const glm::vec3 Ndc = glm::vec3(Clip) / Clip.w;
-    if (Ndc.x < -1.0f || Ndc.x > 1.0f || Ndc.y < -1.0f || Ndc.y > 1.0f)
-      return false;
+  const glm::vec3 Ndc = glm::vec3(Clip) / Clip.w;
+  if (Ndc.x < -1.0f || Ndc.x > 1.0f || Ndc.y < -1.0f || Ndc.y > 1.0f)
+    return false;
 
-    const float X = (Ndc.x * 0.5f + 0.5f) * _Viewport.x;
-    const float Y = (1.0f - (Ndc.y * 0.5f + 0.5f)) * _Viewport.y;
-    _Out = ImVec2(X, Y);
-    return true;
-  }
+  const float X = (Ndc.x * 0.5f + 0.5f) * _Viewport.x;
+  const float Y = (1.0f - (Ndc.y * 0.5f + 0.5f)) * _Viewport.y;
+  _Out          = ImVec2(X, Y);
+  return true;
 }
+} // namespace
 
 void CEditorUI::Shutdown()
 {
@@ -162,13 +162,12 @@ void CEditorUI::RenderEntities()
 
     if (ImGui::BeginPopupModal("Spawn entity", &IsPopupOpen, ImGuiWindowFlags_AlwaysAutoResize))
     {
-      constexpr std::pair<const char *, TEntityType> EntityTypes[] = {
-          std::make_pair("Static mesh", TEntityType::StaticMesh),
-          // std::make_pair("Point light", TEntityType::PointLight),
-          std::make_pair("Directional light", TEntityType::DirectionalLight),
-          // std::make_pair("Spotlight", TEntityType::Spotlight),
-          std::make_pair("Skybox", TEntityType::Skybox)};
-      static int CurrentIndex = -1;
+      constexpr std::pair<const char *, TEntityType> EntityTypes[] = {std::make_pair("Static mesh", TEntityType::StaticMesh),
+                                                                      // std::make_pair("Point light", TEntityType::PointLight),
+                                                                      std::make_pair("Directional light", TEntityType::DirectionalLight),
+                                                                      // std::make_pair("Spotlight", TEntityType::Spotlight),
+                                                                      std::make_pair("Skybox", TEntityType::Skybox)};
+      static int                                     CurrentIndex  = -1;
 
       if (ImGui::BeginListBox("Select entity type"))
       {
@@ -218,10 +217,8 @@ void CEditorUI::RenderEntities()
     int CurrentEntityIndex = GetSelectedEntityIndex(Entities);
 
     if (ImGui::ListBox(
-            "Entities",
-            &CurrentEntityIndex,
-            [](void *_Vec, int _Index, const char **_Ret) -> bool
-            {
+            "Entities", &CurrentEntityIndex,
+            [](void *_Vec, int _Index, const char **_Ret) -> bool {
               auto EntitiesNames = reinterpret_cast<std::vector<std::string> *>(_Vec);
 
               if (_Index < 0 || _Index >= EntitiesNames->size())
@@ -230,9 +227,7 @@ void CEditorUI::RenderEntities()
               *_Ret = EntitiesNames->at(_Index).c_str();
               return true;
             },
-            reinterpret_cast<void *>(&EntitiesNames),
-            EntitiesNames.size(),
-            4))
+            reinterpret_cast<void *>(&EntitiesNames), EntitiesNames.size(), 4))
     {
       m_SelectedEntity = Entities[CurrentEntityIndex];
     }
@@ -252,14 +247,14 @@ void CEditorUI::RenderLightDebugLines()
   if (!m_SelectedEntity.has_value())
     return;
 
-  CWorld &World = *m_Engine->GetWorld();
+  CWorld    &World  = *m_Engine->GetWorld();
   const auto Camera = m_Engine->GetCamera();
   if (!Camera)
     return;
 
-  const glm::mat4 View = Camera->GetView();
-  const glm::mat4 Proj = Camera->GetProjection();
-  const TVector2i Viewport = m_Engine->GetWindowSize();
+  const glm::mat4  View     = Camera->GetView();
+  const glm::mat4  Proj     = Camera->GetProjection();
+  const TVector2i  Viewport = m_Engine->GetWindowSize();
   const glm::ivec2 GlmViewport{Viewport.X, Viewport.Y};
 
   ImDrawList *DrawList = ImGui::GetForegroundDrawList();
@@ -281,8 +276,7 @@ void CEditorUI::RenderLightDebugLines()
 
   ImVec2 StartScreen;
   ImVec2 EndScreen;
-  if (!ProjectWorldToScreen(StartWorld, View, Proj, GlmViewport, StartScreen) ||
-      !ProjectWorldToScreen(EndWorld, View, Proj, GlmViewport, EndScreen))
+  if (!ProjectWorldToScreen(StartWorld, View, Proj, GlmViewport, StartScreen) || !ProjectWorldToScreen(EndWorld, View, Proj, GlmViewport, EndScreen))
     return;
 
   ImU32 Color = IM_COL32(255, 255, 0, 200);
@@ -343,28 +337,28 @@ void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
   ImGui::SeparatorText("Scale##ObjScale");
   const float kMinScale = 0.01f;
   const float kMaxScale = 10000.0f;
-  ValueChanged |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, kMinScale, kMaxScale);
-  ValueChanged |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, kMinScale, kMaxScale);
-  ValueChanged |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, kMinScale, kMaxScale);
+  ValueChanged         |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, kMinScale, kMaxScale);
+  ValueChanged         |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, kMinScale, kMaxScale);
+  ValueChanged         |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, kMinScale, kMaxScale);
 
   ImGui::SeparatorText("Rotation##ObjRotQuat");
-  float quat[4] = {Rotation.x, Rotation.y, Rotation.z, Rotation.w};
-  bool QuatChanged = false;
-  QuatChanged |= ImGui::DragFloat("X##ObjQuatX", &quat[0], 0.01f, -1.0f, 1.0f);
-  QuatChanged |= ImGui::DragFloat("Y##ObjQuatY", &quat[1], 0.01f, -1.0f, 1.0f);
-  QuatChanged |= ImGui::DragFloat("Z##ObjQuatZ", &quat[2], 0.01f, -1.0f, 1.0f);
-  QuatChanged |= ImGui::DragFloat("W##ObjQuatW", &quat[3], 0.01f, -1.0f, 1.0f);
+  float quat[4]     = {Rotation.x, Rotation.y, Rotation.z, Rotation.w};
+  bool  QuatChanged = false;
+  QuatChanged      |= ImGui::DragFloat("X##ObjQuatX", &quat[0], 0.01f, -1.0f, 1.0f);
+  QuatChanged      |= ImGui::DragFloat("Y##ObjQuatY", &quat[1], 0.01f, -1.0f, 1.0f);
+  QuatChanged      |= ImGui::DragFloat("Z##ObjQuatZ", &quat[2], 0.01f, -1.0f, 1.0f);
+  QuatChanged      |= ImGui::DragFloat("W##ObjQuatW", &quat[3], 0.01f, -1.0f, 1.0f);
 
   if (QuatChanged)
   {
-    Rotation = glm::quat(quat[3], quat[0], quat[1], quat[2]);
-    Rotation = glm::normalize(Rotation);
+    Rotation     = glm::quat(quat[3], quat[0], quat[1], quat[2]);
+    Rotation     = glm::normalize(Rotation);
     ValueChanged = true;
   }
 
   if (ValueChanged)
   {
-    Scale = glm::max(Scale, glm::vec3(kMinScale));
+    Scale                           = glm::max(Scale, glm::vec3(kMinScale));
     _TransformComponent.WorldMatrix = glm::recompose(Scale, Rotation, Translation, Skew, Perspective);
   }
 
@@ -384,8 +378,7 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
 
   switch ((_Light.Type = static_cast<ELightType>(LightTypeVal)))
   {
-  case ELightType::Directional:
-  {
+  case ELightType::Directional: {
     ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.25f);
     ImGui::Separator();
 
@@ -399,8 +392,7 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
     break;
   }
 
-  case ELightType::Point:
-  {
+  case ELightType::Point: {
     ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position), 0.25f);
     ImGui::Separator();
 
@@ -418,8 +410,7 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
     break;
   }
 
-  case ELightType::Spotlight:
-  {
+  case ELightType::Spotlight: {
     ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position), 0.25f);
     ImGui::Separator();
 
@@ -460,8 +451,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
 {
   switch (_Type)
   {
-  case TEntityType::StaticMesh:
-  {
+  case TEntityType::StaticMesh: {
     const std::filesystem::path ModelPathToLoad = utils::OpenFileDialog(utils::EFileDialogMode::SelectFile);
     if (ModelPathToLoad.empty())
       return;
@@ -479,8 +469,7 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     break;
   }
 
-  case TEntityType::Skybox:
-  {
+  case TEntityType::Skybox: {
     const std::filesystem::path ModelPathToLoad = utils::OpenFileDialog(utils::EFileDialogMode::SelectFolder);
     if (ModelPathToLoad.empty())
       return;
@@ -496,24 +485,21 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     break;
   }
 
-  case TEntityType::PointLight:
-  {
+  case TEntityType::PointLight: {
     CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Point));
     m_SelectedEntity = Builder.GetEntity();
     break;
   }
 
-  case TEntityType::DirectionalLight:
-  {
+  case TEntityType::DirectionalLight: {
     CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Directional));
     m_SelectedEntity = Builder.GetEntity();
     break;
   }
 
-  case TEntityType::Spotlight:
-  {
+  case TEntityType::Spotlight: {
     CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Spotlight));
     m_SelectedEntity = Builder.GetEntity();

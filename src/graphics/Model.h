@@ -4,8 +4,8 @@
 #include "interfaces/Asset.h"
 #include "interfaces/ModelParseStrategy.h"
 #include "utils/Common.h"
-#include <vector>
 #include <memory>
+#include <vector>
 
 class CModel : public IAsset
 {
@@ -24,5 +24,5 @@ public:
 
 protected:
   std::unique_ptr<IModelParseStrategy> m_ParseStrategy;
-  std::unique_ptr<TModelData> m_Model;
+  std::unique_ptr<TModelData>          m_Model;
 };

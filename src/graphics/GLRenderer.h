@@ -1,10 +1,10 @@
 #pragma once
 
 #include <glad/glad.h>
-#include "interfaces/Renderer.h"
-#include "ShaderTypes.h"
-#include "RenderTypes.h"
 #include "Buffer.h"
+#include "RenderTypes.h"
+#include "ShaderTypes.h"
+#include "interfaces/Renderer.h"
 
 class COpenGLRenderer final : public IRenderer
 {
@@ -49,15 +49,15 @@ private:
   static std::string GetGLErrorDescription(GLenum _Error);
 
 public:
-  std::shared_ptr<CCamera> m_Camera;
-  std::shared_ptr<CShader> m_CurrentShader;
+  std::shared_ptr<CCamera>      m_Camera;
+  std::shared_ptr<CShader>      m_CurrentShader;
   std::shared_ptr<CTextureBase> m_ShadowMap;
 
   TShaderLighting m_Lighting;
-  CUniformBuffer m_LightingUBO;
-  EAlphaMode m_AlphaMode = static_cast<EAlphaMode>(-1);
-  ECullMode m_CullingMode = static_cast<ECullMode>(-1);
+  CUniformBuffer  m_LightingUBO;
+  EAlphaMode      m_AlphaMode   = static_cast<EAlphaMode>(-1);
+  ECullMode       m_CullingMode = static_cast<ECullMode>(-1);
 
   mutable glm::mat4 m_LightSpaceMatrix;
-  mutable bool m_LightSpaceMatrixDirty = true;
+  mutable bool      m_LightSpaceMatrixDirty = true;
 };

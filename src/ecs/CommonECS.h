@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <bitset>
+#include <cstdint>
 
 namespace ecs
 {
@@ -14,4 +14,4 @@ constexpr inline TComponentType MAX_COMPONENTS = 32;
 
 using TSignature = std::bitset<MAX_COMPONENTS>;
 
-}
+} // namespace ecs

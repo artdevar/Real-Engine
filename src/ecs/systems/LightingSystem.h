@@ -8,10 +8,10 @@ class IRenderer;
 namespace ecs
 {
 
-    class CLightingSystem : public CSystem
-    {
-    public:
-        void ComposeLightingData(IRenderer &_Renderer) const;
-    };
+class CLightingSystem : public CSystem
+{
+public:
+  void ComposeLightingData(IRenderer &_Renderer) const;
+};
 
-}
+} // namespace ecs

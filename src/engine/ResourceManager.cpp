@@ -1,10 +1,10 @@
 #include "pch.h"
 
+#include "Passkey.h"
 #include "ResourceManager.h"
 #include "engine/Config.h"
-#include "Passkey.h"
-#include "graphics/Shader.h"
 #include "graphics/Model.h"
+#include "graphics/Shader.h"
 #include "graphics/Texture.h"
 #include "graphics/TextureParams.h"
 #include "graphics/TinyGLTFParseStrategy.h"
@@ -122,8 +122,7 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesyste
   return std::static_pointer_cast<CTextureBase>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string &_Name,
-                                                              const TTextureParams &_Params)
+std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string &_Name, const TTextureParams &_Params)
 {
   if (_Name.empty())
   {

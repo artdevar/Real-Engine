@@ -3,13 +3,12 @@
 #include "CommonECS.h"
 #include "ComponentArray.h"
 #include <ctti/type_id.hpp>
-#include <unordered_map>
 #include <memory>
+#include <unordered_map>
 
 class CComponentManager
 {
 public:
-
   template <typename T>
   void RegisterComponent()
   {
@@ -32,7 +31,7 @@ public:
   }
 
   template <typename T>
-  void AddComponent(ecs::TEntity _Entity, T && _Component)
+  void AddComponent(ecs::TEntity _Entity, T &&_Component)
   {
     GetComponentArray<T>()->InsertData(_Entity, std::forward<T>(_Component));
   }
@@ -44,13 +43,13 @@ public:
   }
 
   template <typename T>
-  T & GetComponent(ecs::TEntity _Entity)
+  T &GetComponent(ecs::TEntity _Entity)
   {
     return GetComponentArray<T>()->GetData(_Entity);
   }
 
   template <typename T>
-  T * GetComponentSafe(ecs::TEntity _Entity)
+  T *GetComponentSafe(ecs::TEntity _Entity)
   {
     return GetComponentArray<T>()->GetDataSafe(_Entity);
   }
@@ -63,12 +62,11 @@ public:
 
   void EntityDestroyed(ecs::TEntity _Entity)
   {
-    for (const auto & [TypeID, Component] : m_ComponentArrays)
+    for (const auto &[TypeID, Component] : m_ComponentArrays)
       Component->EntityDestroyed(_Entity);
   }
 
 private:
-
   std::unordered_map<ctti::type_id_t, ecs::TComponentType>              m_ComponentTypes;
   std::unordered_map<ctti::type_id_t, std::shared_ptr<IComponentArray>> m_ComponentArrays;
 

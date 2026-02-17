@@ -5,10 +5,9 @@
 class ISerializable
 {
 public:
-
   virtual ~ISerializable() = default;
 
-  virtual void ReadFromData(const nlohmann::json & _Data) = 0;
+  virtual void ReadFromData(const nlohmann::json &_Data) = 0;
 
   virtual nlohmann::json GetSaveData() const = 0;
 };

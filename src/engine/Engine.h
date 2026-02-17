@@ -1,15 +1,15 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-#include <string>
 #include "Defines.h"
 #include "MathCore.h"
-#include "interfaces/Shutdownable.h"
-#include "interfaces/Updateable.h"
 #include "interfaces/Renderable.h"
 #include "interfaces/Renderer.h"
+#include "interfaces/Shutdownable.h"
+#include "interfaces/Updateable.h"
 #include "utils/Common.h"
+#include <memory>
+#include <string>
+#include <vector>
 
 class CWorld;
 class CEditorUI;
@@ -71,10 +71,10 @@ private:
 #endif
 
 private:
-  std::unique_ptr<CDisplay> m_Display;
-  std::shared_ptr<CInputManager> m_InputManager;
-  std::shared_ptr<CCamera> m_Camera;
-  std::shared_ptr<CWorld> m_World;
+  std::unique_ptr<CDisplay>         m_Display;
+  std::shared_ptr<CInputManager>    m_InputManager;
+  std::shared_ptr<CCamera>          m_Camera;
+  std::shared_ptr<CWorld>           m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
 
 #if DEV_STAGE

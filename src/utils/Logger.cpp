@@ -1,19 +1,18 @@
 #include "Logger.h"
-#include <fstream>
-#include <iostream>
 #include <cassert>
 #include <format>
+#include <fstream>
+#include <iostream>
 
 CStaticArray<CLogger::LogCallback, CLogger::CallbacksAmount> CLogger::LogCallbacks;
-ELogType CLogger::Verbosity = ELogType::Debug;
+ELogType                                                     CLogger::Verbosity = ELogType::Debug;
 
-const std::string_view CLogger::Filename = "engine_log";
-const std::map<ELogType, std::string_view> CLogger::MessageType = {
-    {ELogType::Debug, "[DEBUG] {}\n"},
-    {ELogType::Info, "[INFO] {}\n"},
-    {ELogType::Warning, "[WARNING] {}\n"},
-    {ELogType::Error, "[ERROR] {}\n"},
-    {ELogType::Fatal, "[!] {}\n"}};
+const std::string_view                     CLogger::Filename    = "engine_log";
+const std::map<ELogType, std::string_view> CLogger::MessageType = {{ELogType::Debug, "[DEBUG] {}\n"},
+                                                                   {ELogType::Info, "[INFO] {}\n"},
+                                                                   {ELogType::Warning, "[WARNING] {}\n"},
+                                                                   {ELogType::Error, "[ERROR] {}\n"},
+                                                                   {ELogType::Fatal, "[!] {}\n"}};
 
 void CLogger::DoLog(ELogType _Type, const std::string &_Log)
 {

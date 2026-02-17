@@ -197,15 +197,15 @@ glm::mat4 COpenGLRenderer::GetLightSpaceMatrix() const
   if (m_LightSpaceMatrixDirty)
   {
     const float NearPlane = CConfig::Instance().GetLightSpaceMatrixZNear();
-    const float FarPlane = CConfig::Instance().GetLightSpaceMatrixZFar();
-    const float LeftBot = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
-    const float RightTop = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
+    const float FarPlane  = CConfig::Instance().GetLightSpaceMatrixZFar();
+    const float LeftBot   = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
+    const float RightTop  = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
 
-    const glm::vec3 LightDir = m_Lighting.LightDirectional.Direction * -1.0f;
+    const glm::vec3 LightDir        = m_Lighting.LightDirectional.Direction * -1.0f;
     const glm::mat4 LightProjection = glm::ortho(LeftBot, RightTop, LeftBot, RightTop, NearPlane, FarPlane);
-    const glm::mat4 LightView = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+    const glm::mat4 LightView       = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 
-    m_LightSpaceMatrix = LightProjection * LightView;
+    m_LightSpaceMatrix      = LightProjection * LightView;
     m_LightSpaceMatrixDirty = false;
   }
 
@@ -267,8 +267,7 @@ void COpenGLRenderer::SetCullFace(ECullMode _Mode)
 
   m_CullingMode = _Mode;
 
-  const GLenum glMode = _Mode == ECullMode::Front ? GL_FRONT : _Mode == ECullMode::Back ? GL_BACK
-                                                                                        : GL_FRONT_AND_BACK;
+  const GLenum glMode = _Mode == ECullMode::Front ? GL_FRONT : _Mode == ECullMode::Back ? GL_BACK : GL_FRONT_AND_BACK;
 
   switch (_Mode)
   {

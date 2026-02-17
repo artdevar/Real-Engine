@@ -1,15 +1,15 @@
 #pragma once
 
-#include <cassert>
-#include <vector>
 #include <algorithm>
+#include <cassert>
 #include <iostream>
+#include <vector>
 
 template <typename T>
 class CUnorderedVector
 {
 public:
-  using IteratorType = std::vector<T>::iterator;
+  using IteratorType      = std::vector<T>::iterator;
   using ConstIteratorType = std::vector<T>::const_iterator;
 
   constexpr IteratorType begin()
@@ -73,7 +73,7 @@ public:
   constexpr bool SafeErase(const T &_Value)
   {
     const IteratorType Iterator = Find(_Value);
-    const bool IsFound = Iterator != end();
+    const bool         IsFound  = Iterator != end();
 
     if (IsFound)
       Erase(Iterator);

@@ -1,0 +1,57 @@
+Language: Cpp
+BasedOnStyle: Microsoft
+IndentWidth: 2
+ColumnLimit: 150
+BinPackParameters: OnePerLine
+ReflowComments: Never
+BreakBeforeConceptDeclarations: Always
+BreakTemplateDeclarations: Yes
+BreakInheritanceList: AfterComma
+AllowShortLambdasOnASingleLine: Empty
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignFunctionDeclarations: false
+  AlignCompound: true
+  AlignFunctionPointers: false
+  PadOperators: false
+AlignConsecutiveBitFields:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignFunctionDeclarations: false
+  AlignCompound: true
+  AlignFunctionPointers: false
+  PadOperators: false
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignFunctionDeclarations: false
+  AlignCompound: true
+  AlignFunctionPointers: false
+  PadOperators: false
+AlignConsecutiveTableGenBreakingDAGArgColons:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignFunctionDeclarations: false
+  AlignCompound: true
+  AlignFunctionPointers: false
+  PadOperators: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignFunctionDeclarations: false
+  AlignCompound: true
+  AlignFunctionPointers: false
+  PadOperators: false
+AlignAfterOpenBracket: true
+AllowShortCompoundRequirementOnASingleLine: true
+IndentRequiresClause: false
+SortIncludes: false

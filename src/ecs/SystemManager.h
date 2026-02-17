@@ -2,19 +2,18 @@
 
 #include "CommonECS.h"
 #include "utils/UnorderedVector.h"
-#include <ctti/type_id.hpp>
-#include <unordered_map>
-#include <set>
-#include <memory>
 #include <cassert>
+#include <ctti/type_id.hpp>
+#include <memory>
+#include <set>
+#include <unordered_map>
 
 class CCoordinator;
 
 class CSystem
 {
 public:
-
-  virtual void Init(CCoordinator * _Coordinator)
+  virtual void Init(CCoordinator *_Coordinator)
   {
     m_Coordinator = _Coordinator;
   }
@@ -32,7 +31,6 @@ public:
   }
 
 protected:
-
   virtual void OnEntityAdded(ecs::TEntity _Entity)
   {
     // Empty
@@ -44,15 +42,13 @@ protected:
   }
 
 protected:
-
-  CCoordinator *                 m_Coordinator;
+  CCoordinator                  *m_Coordinator;
   CUnorderedVector<ecs::TEntity> m_Entities;
 };
 
 class CSystemManager
 {
 public:
-
   template <typename T>
   std::shared_ptr<T> RegisterSystem()
   {
@@ -71,13 +67,13 @@ public:
   {
     static_assert(std::is_base_of_v<CSystem, T>);
 
-    const ctti::type_id_t TypeID = ctti::type_id<T>();
+    const ctti::type_id_t    TypeID = ctti::type_id<T>();
     std::shared_ptr<CSystem> System = m_Systems.at(TypeID);
     return std::static_pointer_cast<T>(System);
   }
 
   template <typename T>
-  void SetSignature(const ecs::TSignature & _Signature)
+  void SetSignature(const ecs::TSignature &_Signature)
   {
     const ctti::type_id_t TypeID = ctti::type_id<T>();
     assert(m_Systems.find(TypeID) != m_Systems.end() && "System used before registered.");
@@ -87,15 +83,15 @@ public:
 
   void EntityDestroyed(ecs::TEntity _Entity)
   {
-    for (const auto & [Name, System] : m_Systems)
+    for (const auto &[Name, System] : m_Systems)
       System->DeleteEntity(_Entity);
   }
 
-  void EntitySignatureChanged(ecs::TEntity _Entity, const ecs::TSignature & _EntitySignature)
+  void EntitySignatureChanged(ecs::TEntity _Entity, const ecs::TSignature &_EntitySignature)
   {
-    for (const auto & [Name, System] : m_Systems)
+    for (const auto &[Name, System] : m_Systems)
     {
-      const ecs::TSignature & SystemSignature = m_Signatures[Name];
+      const ecs::TSignature &SystemSignature = m_Signatures[Name];
 
       if ((_EntitySignature & SystemSignature) == SystemSignature)
         System->AddEntity(_Entity);
@@ -105,7 +101,6 @@ public:
   }
 
 private:
-
   std::unordered_map<ctti::type_id_t, ecs::TSignature>          m_Signatures;
   std::unordered_map<ctti::type_id_t, std::shared_ptr<CSystem>> m_Systems;
 };

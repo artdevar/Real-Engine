@@ -3,7 +3,6 @@
 class IInputHandler
 {
 public:
-
   virtual ~IInputHandler() = default;
 
   virtual bool OnMousePressed(int _Button, int _Action, int _Mods)

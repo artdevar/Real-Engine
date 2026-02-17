@@ -1,11 +1,11 @@
 #pragma once
 
 #if DEV_STAGE
-#include "interfaces/Shutdownable.h"
-#include "interfaces/Updateable.h"
-#include "interfaces/Renderable.h"
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
+#include "interfaces/Renderable.h"
+#include "interfaces/Shutdownable.h"
+#include "interfaces/Updateable.h"
 #include "utils/UnorderedVector.h"
 
 class CEngine;

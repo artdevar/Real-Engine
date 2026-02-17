@@ -1,11 +1,11 @@
 #pragma once
 
-#include "utils/Common.h"
+#include "ecs/CommonECS.h"
 #include "interfaces/Identifiable.h"
-#include "interfaces/Updateable.h"
 #include "interfaces/Renderable.h"
 #include "interfaces/Shutdownable.h"
-#include "ecs/CommonECS.h"
+#include "interfaces/Updateable.h"
+#include "utils/Common.h"
 #include "utils/UnorderedVector.h"
 
 class CEngine;

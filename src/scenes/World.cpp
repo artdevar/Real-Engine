@@ -1,16 +1,16 @@
 #include "pch.h"
 
 #include "World.h"
-#include "engine/Engine.h"
-#include "ecs/Coordinator.h"
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
+#include "ecs/Coordinator.h"
 #include "ecs/EntityBuilder.h"
-#include "ecs/systems/WorldRenderSystem.h"
-#include "ecs/systems/SkyboxRenderSystem.h"
 #include "ecs/systems/LightingSystem.h"
 #include "ecs/systems/PhysicsSystem.h"
 #include "ecs/systems/ShadowRenderSystem.h"
+#include "ecs/systems/SkyboxRenderSystem.h"
+#include "ecs/systems/WorldRenderSystem.h"
+#include "engine/Engine.h"
 #include "graphics/Shader.h"
 
 CWorld::CWorld() = default;

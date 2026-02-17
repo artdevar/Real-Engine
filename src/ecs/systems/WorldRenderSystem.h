@@ -1,8 +1,8 @@
 #include "ecs/SystemManager.h"
-#include "interfaces/Renderable.h"
-#include "interfaces/Updateable.h"
-#include "interfaces/Shutdownable.h"
 #include "graphics/Buffer.h"
+#include "interfaces/Renderable.h"
+#include "interfaces/Shutdownable.h"
+#include "interfaces/Updateable.h"
 
 struct TShaderLighting;
 class CShader;
@@ -10,28 +10,28 @@ class CShader;
 namespace ecs
 {
 
-    class CWorldRenderSystem : public IRenderable,
-                               public CSystem
-    {
-    public:
-        CWorldRenderSystem();
+class CWorldRenderSystem : public IRenderable,
+                           public CSystem
+{
+public:
+  CWorldRenderSystem();
 
-        void Init(CCoordinator *_Coordinator) override;
+  void Init(CCoordinator *_Coordinator) override;
 
-        void SetVisibility(ecs::TEntity _Entity, bool _IsVisible);
+  void SetVisibility(ecs::TEntity _Entity, bool _IsVisible);
 
-    private:
-        bool ShouldBeRendered() const override;
-        void RenderInternal(IRenderer &_Renderer) override;
-        void PrepareRenderState(IRenderer &_Renderer);
+private:
+  bool ShouldBeRendered() const override;
+  void RenderInternal(IRenderer &_Renderer) override;
+  void PrepareRenderState(IRenderer &_Renderer);
 
-        void OnEntityAdded(ecs::TEntity _Entity) override;
+  void OnEntityAdded(ecs::TEntity _Entity) override;
 
-        void OnEntityDeleted(ecs::TEntity _Entity) override;
+  void OnEntityDeleted(ecs::TEntity _Entity) override;
 
-    protected:
-        std::weak_ptr<CShader> m_ModelShader;
-        CUnorderedVector<ecs::TEntity> m_HiddenEntities;
-    };
+protected:
+  std::weak_ptr<CShader>         m_ModelShader;
+  CUnorderedVector<ecs::TEntity> m_HiddenEntities;
+};
 
-}
+} // namespace ecs

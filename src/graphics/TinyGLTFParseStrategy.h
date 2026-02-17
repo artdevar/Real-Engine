@@ -1,13 +1,13 @@
 #pragma once
 
-#include "interfaces/ModelParseStrategy.h"
 #include "ModelData.h"
+#include "interfaces/ModelParseStrategy.h"
 
 namespace tinygltf
 {
-  class Model;
-  struct Primitive;
-}
+class Model;
+struct Primitive;
+} // namespace tinygltf
 
 class CTinyGLTFParseStrategy final : public IModelParseStrategy
 {

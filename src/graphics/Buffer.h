@@ -20,7 +20,7 @@ public:
     if (m_ID != _Other.m_ID)
       Shutdown();
 
-    m_ID = _Other.m_ID;
+    m_ID        = _Other.m_ID;
     _Other.m_ID = INVALID_BUFFER;
 
     return *this;
@@ -191,22 +191,17 @@ class CBufferObject : public CBuffer<CBufferObject>
   friend CBuffer;
 
 public:
-  CBufferObject(GLenum _Target, GLenum _Usage) : m_Target(_Target),
-                                                 m_Usage(_Usage),
-                                                 m_Capacity(0),
-                                                 m_ActualSize(0)
+  CBufferObject(GLenum _Target, GLenum _Usage) : m_Target(_Target), m_Usage(_Usage), m_Capacity(0), m_ActualSize(0)
   {
   }
 
-  CBufferObject(CBufferObject &&_Other) noexcept : CBuffer<CBufferObject>(std::move(_Other)),
-                                                   m_Target(_Other.m_Target),
-                                                   m_Usage(_Other.m_Usage),
-                                                   m_Capacity(_Other.m_Capacity),
-                                                   m_ActualSize(_Other.m_ActualSize)
+  CBufferObject(CBufferObject &&_Other) noexcept
+      : CBuffer<CBufferObject>(std::move(_Other)), m_Target(_Other.m_Target), m_Usage(_Other.m_Usage), m_Capacity(_Other.m_Capacity),
+        m_ActualSize(_Other.m_ActualSize)
   {
-    _Other.m_Target = 0;
-    _Other.m_Usage = 0;
-    _Other.m_Capacity = 0;
+    _Other.m_Target     = 0;
+    _Other.m_Usage      = 0;
+    _Other.m_Capacity   = 0;
     _Other.m_ActualSize = 0;
   }
 
@@ -215,15 +210,15 @@ public:
     if (m_ID != _Other.m_ID)
       Shutdown();
 
-    m_ID = _Other.m_ID;
-    m_Target = _Other.m_Target;
-    m_Usage = _Other.m_Usage;
-    m_Capacity = _Other.m_Capacity;
-    m_ActualSize = _Other.m_ActualSize;
-    _Other.m_ID = INVALID_BUFFER;
-    _Other.m_Target = 0;
-    _Other.m_Usage = 0;
-    _Other.m_Capacity = 0;
+    m_ID                = _Other.m_ID;
+    m_Target            = _Other.m_Target;
+    m_Usage             = _Other.m_Usage;
+    m_Capacity          = _Other.m_Capacity;
+    m_ActualSize        = _Other.m_ActualSize;
+    _Other.m_ID         = INVALID_BUFFER;
+    _Other.m_Target     = 0;
+    _Other.m_Usage      = 0;
+    _Other.m_Capacity   = 0;
     _Other.m_ActualSize = 0;
 
     return *this;
@@ -239,7 +234,7 @@ public:
   }
 
   template <typename T>
-    requires(std::is_trivially_copyable_v<T>)
+  requires(std::is_trivially_copyable_v<T>)
   void Assign(T *_Data, GLsizeiptr _DataSizeInBytes)
   {
     assert(_DataSizeInBytes > 0);
@@ -249,7 +244,7 @@ public:
     else
       glBufferData(m_Target, _DataSizeInBytes, _Data, m_Usage);
 
-    m_Capacity = _DataSizeInBytes;
+    m_Capacity   = _DataSizeInBytes;
     m_ActualSize = _DataSizeInBytes;
   }
 
@@ -260,7 +255,7 @@ public:
   }
 
   template <typename T>
-    requires(std::is_trivially_copyable_v<T>)
+  requires(std::is_trivially_copyable_v<T>)
   void Push(T *_Data, GLsizeiptr _DataSizeInBytes)
   {
     assert(_DataSizeInBytes > 0);
@@ -290,7 +285,7 @@ public:
     glDeleteBuffers(1, &m_ID);
     m_ID = NewBufferID;
 
-    m_Capacity -= _SizeInBytes;
+    m_Capacity   -= _SizeInBytes;
     m_ActualSize -= _SizeInBytes;
     assert(m_Capacity >= 0 && m_ActualSize >= 0);
   }
@@ -302,9 +297,7 @@ public:
 
   void BindToBase(GLuint _Index)
   {
-    assert(m_Target == GL_ATOMIC_COUNTER_BUFFER ||
-           m_Target == GL_TRANSFORM_FEEDBACK_BUFFER ||
-           m_Target == GL_UNIFORM_BUFFER ||
+    assert(m_Target == GL_ATOMIC_COUNTER_BUFFER || m_Target == GL_TRANSFORM_FEEDBACK_BUFFER || m_Target == GL_UNIFORM_BUFFER ||
            m_Target == GL_SHADER_STORAGE_BUFFER && "Wrong target");
 
     glBindBufferBase(m_Target, _Index, m_ID);
@@ -340,7 +333,7 @@ public:
 protected:
   void Reallocate(GLsizeiptr _RequiredSize)
   {
-    const bool NeedCopyData = m_ActualSize != 0;
+    const bool       NeedCopyData      = m_ActualSize != 0;
     const GLsizeiptr NewBufferCapacity = static_cast<GLsizeiptr>(_RequiredSize * 1.3f);
 
     ReallocateImpl(NewBufferCapacity, NeedCopyData);
@@ -390,8 +383,8 @@ protected:
     glDeleteBuffers(1, &m_ID);
   }
 
-  GLenum m_Target;
-  GLenum m_Usage;
+  GLenum     m_Target;
+  GLenum     m_Usage;
   GLsizeiptr m_Capacity;   // in bytes
   GLsizeiptr m_ActualSize; // in bytes
 };

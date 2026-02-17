@@ -1,8 +1,8 @@
 #pragma once
 
 #include "CommonECS.h"
-#include "EntityManager.h"
 #include "ComponentManager.h"
+#include "EntityManager.h"
 #include "SystemManager.h"
 
 class CCoordinator final
@@ -11,8 +11,8 @@ public:
   void Init()
   {
     m_ComponentManager = std::make_unique<CComponentManager>();
-    m_EntityManager = std::make_unique<CEntityManager>();
-    m_SystemManager = std::make_unique<CSystemManager>();
+    m_EntityManager    = std::make_unique<CEntityManager>();
+    m_SystemManager    = std::make_unique<CSystemManager>();
   }
 
   ecs::TEntity CreateEntity()
@@ -106,6 +106,6 @@ public:
 
 private:
   std::unique_ptr<CComponentManager> m_ComponentManager;
-  std::unique_ptr<CEntityManager> m_EntityManager;
-  std::unique_ptr<CSystemManager> m_SystemManager;
+  std::unique_ptr<CEntityManager>    m_EntityManager;
+  std::unique_ptr<CSystemManager>    m_SystemManager;
 };

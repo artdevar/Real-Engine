@@ -5,10 +5,12 @@
 template <typename T>
 class CPasskey
 {
-    friend T;
-    CPasskey() = default;
-    explicit CPasskey(const T *) noexcept {}
-    DISABLE_CLASS_COPY(CPasskey);
+  friend T;
+  CPasskey() = default;
+  explicit CPasskey(const T *) noexcept
+  {
+  }
+  DISABLE_CLASS_COPY(CPasskey);
 };
 
 template <typename T>

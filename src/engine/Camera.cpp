@@ -5,11 +5,7 @@
 #include "Engine.h"
 #include "GLFW/glfw3.h"
 
-CCamera::CCamera() : m_Position(0.0f, 0.0f, 8.0f),
-                     m_Forward(0.0f, 0.0f, -1.0f),
-                     m_Up(0.0f, 1.0f, 0.0f),
-                     m_Yaw(-90.0f),
-                     m_Pitch(0.0f)
+CCamera::CCamera() : m_Position(0.0f, 0.0f, 8.0f), m_Forward(0.0f, 0.0f, -1.0f), m_Up(0.0f, 1.0f, 0.0f), m_Yaw(-90.0f), m_Pitch(0.0f)
 {
 }
 
@@ -29,20 +25,18 @@ void CCamera::UpdateInternal(float _TimeDelta)
   if (glm::length(movementDirection) > 0.0f)
   {
     const float CameraSpeedMult = 0.005f * _TimeDelta * m_SpeedMultiplier;
-    m_Position += glm::normalize(movementDirection) * CameraSpeedMult;
+    m_Position                 += glm::normalize(movementDirection) * CameraSpeedMult;
   }
 
   if (m_MouseDelta.x != 0.0f || m_MouseDelta.y != 0.0f)
   {
     const float Sensitivity = 0.1f;
 
-    m_Yaw += m_MouseDelta.x * Sensitivity;
+    m_Yaw  += m_MouseDelta.x * Sensitivity;
     m_Pitch = std::max(-89.0f, std::min(89.0f, m_Pitch + m_MouseDelta.y * Sensitivity));
 
-    const glm::vec3 Direction(
-        cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)),
-        sin(glm::radians(m_Pitch)),
-        sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
+    const glm::vec3 Direction(cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)), sin(glm::radians(m_Pitch)),
+                              sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch)));
 
     m_Forward = glm::normalize(Direction);
   }
@@ -78,11 +72,8 @@ glm::mat4 CCamera::GetView() const
 glm::mat4 CCamera::GetProjection() const
 {
   const TVector2i WindowSize = CEngine::Instance().GetWindowSize();
-  return glm::perspective(
-      glm::radians(CConfig::Instance().GetCameraFOV()),
-      WindowSize.X / float(WindowSize.Y),
-      CConfig::Instance().GetCameraZNear(),
-      CConfig::Instance().GetCameraZFar());
+  return glm::perspective(glm::radians(CConfig::Instance().GetCameraFOV()), WindowSize.X / float(WindowSize.Y), CConfig::Instance().GetCameraZNear(),
+                          CConfig::Instance().GetCameraZFar());
 }
 
 bool CCamera::OnMousePressed(int _Button, int _Action, int _Mods)
@@ -151,12 +142,12 @@ bool CCamera::ProcessMouseMove(float _X, float _Y)
 
 void CCamera::ResetInputState()
 {
-  m_MoveForward = false;
-  m_MoveBackward = false;
-  m_MoveLeft = false;
-  m_MoveRight = false;
+  m_MoveForward     = false;
+  m_MoveBackward    = false;
+  m_MoveLeft        = false;
+  m_MoveRight       = false;
   m_SpeedMultiplier = 1.0f;
-  m_MouseDelta = glm::vec2(0.0f, 0.0f);
+  m_MouseDelta      = glm::vec2(0.0f, 0.0f);
 }
 
 bool CCamera::ShouldBeUpdated() const

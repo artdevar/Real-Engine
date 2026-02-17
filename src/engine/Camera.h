@@ -1,7 +1,7 @@
 #pragma once
 
-#include "interfaces/Updateable.h"
 #include "interfaces/InputHandler.h"
+#include "interfaces/Updateable.h"
 
 class CCamera final : public IUpdateable,
                       public IInputHandler
@@ -43,10 +43,10 @@ private:
   float m_Pitch;
 
   // Input state
-  bool m_MoveForward{false};
-  bool m_MoveBackward{false};
-  bool m_MoveLeft{false};
-  bool m_MoveRight{false};
-  float m_SpeedMultiplier{1.0f};
+  bool      m_MoveForward{false};
+  bool      m_MoveBackward{false};
+  bool      m_MoveLeft{false};
+  bool      m_MoveRight{false};
+  float     m_SpeedMultiplier{1.0f};
   glm::vec2 m_MouseDelta{0.0f, 0.0f};
 };

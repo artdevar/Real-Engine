@@ -1,21 +1,21 @@
 #pragma once
 
+#include "Common.h"
+#include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
 #include <ranges>
-#include <algorithm>
-#include "Common.h"
 
 template <typename T, std::size_t Capacity>
 class CStaticArray final
 {
 public:
-  constexpr CStaticArray(const CStaticArray &) = default;
+  constexpr CStaticArray(const CStaticArray &)            = default;
   constexpr CStaticArray &operator=(const CStaticArray &) = default;
 
-  constexpr CStaticArray(CStaticArray &&) = default;
+  constexpr CStaticArray(CStaticArray &&)            = default;
   constexpr CStaticArray &operator=(CStaticArray &&) = default;
 
   class CIterator;
@@ -99,7 +99,7 @@ public:
   }
 
   template <std::ranges::input_range R>
-    requires std::convertible_to<std::ranges::range_value_t<R>, T>
+  requires std::convertible_to<std::ranges::range_value_t<R>, T>
   constexpr void Assign(R &&_Range)
   {
     assert(_Range.size() <= GetCapacity() && "Initializer list too large");
@@ -155,7 +155,7 @@ public:
   }
 
 private:
-  T m_Data[Capacity];
+  T           m_Data[Capacity];
   std::size_t m_ActualSize = 0;
 };
 
@@ -163,7 +163,9 @@ template <typename T, std::size_t N>
 class CStaticArray<T, N>::CIterator final
 {
 public:
-  explicit constexpr CIterator(T *_Item) : m_Item(_Item) {}
+  explicit constexpr CIterator(T *_Item) : m_Item(_Item)
+  {
+  }
 
   constexpr T &operator*()
   {

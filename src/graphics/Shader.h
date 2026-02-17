@@ -37,11 +37,11 @@ private:
 private:
   static constexpr inline GLuint INVALID_VALUE = 0u;
 
-  GLuint m_ID;
+  GLuint                                     m_ID;
   std::map<std::string, GLuint, std::less<>> m_UniformsCache;
 
 #if SHADERS_HOT_RELOAD
-  std::filesystem::path m_BasePath;
+  std::filesystem::path           m_BasePath;
   std::filesystem::file_time_type m_VertexTimestamp{};
   std::filesystem::file_time_type m_FragmentTimestamp{};
 #endif

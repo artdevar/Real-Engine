@@ -9,17 +9,13 @@ namespace utils
 
 std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
 {
-  const _FILEOPENDIALOGOPTIONS Option = _Mode == EFileDialogMode::SelectFile ? FOS_FILEMUSTEXIST :
-    _Mode == EFileDialogMode::SelectFolder ? FOS_PICKFOLDERS : FOS_FILEMUSTEXIST;
+  const _FILEOPENDIALOGOPTIONS Option = _Mode == EFileDialogMode::SelectFile     ? FOS_FILEMUSTEXIST
+                                        : _Mode == EFileDialogMode::SelectFolder ? FOS_PICKFOLDERS
+                                                                                 : FOS_FILEMUSTEXIST;
 
-  IFileDialog * pfd = nullptr;
+  IFileDialog *pfd = nullptr;
 
-  HRESULT hr = CoCreateInstance(
-    CLSID_FileOpenDialog,
-    nullptr,
-    CLSCTX_ALL,
-    IID_PPV_ARGS(&pfd)
-  );
+  HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&pfd));
 
   if (FAILED(hr))
     return {};
@@ -35,8 +31,8 @@ std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
     return {};
   }
 
-  IShellItem * psi = nullptr;
-  hr = pfd->GetResult(&psi);
+  IShellItem *psi = nullptr;
+  hr              = pfd->GetResult(&psi);
   if (FAILED(hr))
   {
     pfd->Release();
@@ -55,5 +51,5 @@ std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
   return result;
 }
 
-}
+} // namespace utils
 #endif

@@ -1,22 +1,20 @@
 #include "Engine.h"
+#include "Camera.h"
 #include "Display.h"
 #include "InputManager.h"
-#include "Camera.h"
 #include "ResourceManager.h"
-#include "scenes/World.h"
-#include "graphics/GLRenderer.h"
 #include "editor/EditorUI.h"
+#include "graphics/GLRenderer.h"
+#include "graphics/RenderTypes.h"
+#include "scenes/World.h"
 #include <glm/glm.hpp>
 #include <string>
-#include "graphics/RenderTypes.h"
 
 CEngine *CEngine::Singleton = nullptr;
 
-CEngine::CEngine() : m_Display(std::make_unique<CDisplay>()),
-                     m_InputManager(std::make_shared<CInputManager>()),
-                     m_ResourceManager(std::make_shared<CResourceManager>()),
-                     m_World(std::make_shared<CWorld>()),
-                     m_Camera(std::make_shared<CCamera>())
+CEngine::CEngine()
+    : m_Display(std::make_unique<CDisplay>()), m_InputManager(std::make_shared<CInputManager>()),
+      m_ResourceManager(std::make_shared<CResourceManager>()), m_World(std::make_shared<CWorld>()), m_Camera(std::make_shared<CCamera>())
 {
 #if DEV_STAGE
   m_EditorUI = new CEditorUI;
@@ -62,25 +60,27 @@ int CEngine::Init(const std::string &_ConfigPath, const std::string &_GameTitle)
   if (DisplayInitCode != EXIT_SUCCESS)
     return DisplayInitCode;
 
-  m_Display->SetResizeCallback([this](int w, int h)
-                               { OnWindowResized(w, h); });
+  m_Display->SetResizeCallback([this](int w, int h) {
+    OnWindowResized(w, h);
+  });
 
-  m_Display->SetMouseButtonCallback([this](int b, int a, int m)
-                                    {
-                                      m_InputManager->OnMouseButton(b, a, m);
-                                      DispatchMouseButton(b, a, m); });
-  m_Display->SetMouseScrollCallback([this](float x, float y)
-                                    { m_InputManager->OnMouseScroll(x, y); });
+  m_Display->SetMouseButtonCallback([this](int b, int a, int m) {
+    m_InputManager->OnMouseButton(b, a, m);
+    DispatchMouseButton(b, a, m);
+  });
+  m_Display->SetMouseScrollCallback([this](float x, float y) {
+    m_InputManager->OnMouseScroll(x, y);
+  });
 
-  m_Display->SetMouseMoveCallback([this](float x, float y)
-                                  {
-                                    m_InputManager->OnMouseMove(x, y);
-                                    DispatchMouseMove(x, y); });
+  m_Display->SetMouseMoveCallback([this](float x, float y) {
+    m_InputManager->OnMouseMove(x, y);
+    DispatchMouseMove(x, y);
+  });
 
-  m_Display->SetKeyCallback([this](int k, int a, int m)
-                            {
-                              m_InputManager->OnKeyEvent(k, a, m);
-                              DispatchKeyInput(k, a, m); });
+  m_Display->SetKeyCallback([this](int k, int a, int m) {
+    m_InputManager->OnKeyEvent(k, a, m);
+    DispatchKeyInput(k, a, m);
+  });
 
 #if DEV_STAGE
   m_Display->SetCursorMode(GLFW_CURSOR_NORMAL);
@@ -115,8 +115,8 @@ int CEngine::Run()
     Renderer->BeginFrame(TColor{0.86f, 0.86f, 0.86f, 1.0f}, static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
 
     const double CurrentFrameTime = glfwGetTime();
-    const float FrameDelta = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
-    LastFrameTime = CurrentFrameTime;
+    const float  FrameDelta       = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
+    LastFrameTime                 = CurrentFrameTime;
 
     // const int FPS = std::lround(1000.0f / FrameDelta);
     // const std::string Title = std::format("FPS={}", FPS);
@@ -257,9 +257,9 @@ void CEngine::DispatchMouseButton(int _Button, int _Action, int _Mods)
 
 void CEngine::DispatchMouseMove(float _X, float _Y)
 {
-  static bool firstMouse = true;
-  static float lastX = 0.0f;
-  static float lastY = 0.0f;
+  static bool  firstMouse = true;
+  static float lastX      = 0.0f;
+  static float lastY      = 0.0f;
 
 #if DEV_STAGE
   if (!m_CameraDragActive)
@@ -271,16 +271,16 @@ void CEngine::DispatchMouseMove(float _X, float _Y)
 
   if (firstMouse)
   {
-    lastX = _X;
-    lastY = _Y;
+    lastX      = _X;
+    lastY      = _Y;
     firstMouse = false;
     return;
   }
 
   float deltaX = _X - lastX;
   float deltaY = lastY - _Y;
-  lastX = _X;
-  lastY = _Y;
+  lastX        = _X;
+  lastY        = _Y;
 
   if (m_Camera)
     m_Camera->ProcessMouseMove(deltaX, deltaY);

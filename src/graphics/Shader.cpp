@@ -2,9 +2,9 @@
 
 #include "Shader.h"
 #include "utils/Logger.h"
+#include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <fstream>
 #include <sstream>
 
 static inline bool operator<(const std::string &_L, const std::string_view &_R)
@@ -36,12 +36,12 @@ void CShader::Shutdown()
 bool CShader::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
   const std::filesystem::path VertexShaderPath = std::filesystem::path(_Path).replace_extension(".vs");
-  const GLuint VertexShader = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);
+  const GLuint                VertexShader     = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);
   if (VertexShader == INVALID_VALUE)
     return false;
 
   const std::filesystem::path FragmentShaderPath = std::filesystem::path(_Path).replace_extension(".fs");
-  const GLuint FragmentShader = LoadShader(FragmentShaderPath, GL_FRAGMENT_SHADER);
+  const GLuint                FragmentShader     = LoadShader(FragmentShaderPath, GL_FRAGMENT_SHADER);
   if (FragmentShader == INVALID_VALUE)
   {
     glDeleteShader(VertexShader);
@@ -114,28 +114,29 @@ void CShader::SetUniform(std::string_view _Name, const UniformType &_Value)
   if (UniformLocIter == m_UniformsCache.end())
     UniformLocIter = m_UniformsCache.emplace(_Name.data(), glGetUniformLocation(GetID(), _Name.data())).first;
 
-  std::visit([UniformLoc = UniformLocIter->second](auto &&_Arg)
-             {
-    using Type = std::decay_t<decltype(_Arg)>;
-    if constexpr (std::is_same_v<Type, GLint>)
-      glUniform1i(UniformLoc, _Arg);
-    else if constexpr (std::is_same_v<Type, GLuint>)
-      glUniform1ui(UniformLoc, _Arg);
-    else if constexpr (std::is_same_v<Type, GLfloat>)
-      glUniform1f(UniformLoc, _Arg);
-    else if constexpr (std::is_same_v<Type, glm::mat3>)
-      glUniformMatrix3fv(UniformLoc, 1, GL_FALSE, glm::value_ptr(_Arg));
-    else if constexpr (std::is_same_v<Type, glm::mat4>)
-      glUniformMatrix4fv(UniformLoc, 1, GL_FALSE, glm::value_ptr(_Arg));
-    else if constexpr (std::is_same_v<Type, glm::vec2>)
-      glUniform2fv(UniformLoc, 1, glm::value_ptr(_Arg));
-    else if constexpr (std::is_same_v<Type, glm::vec3>)
-      glUniform3fv(UniformLoc, 1, glm::value_ptr(_Arg));
-    else if constexpr (std::is_same_v<Type, glm::vec4>)
-      glUniform4fv(UniformLoc, 1, glm::value_ptr(_Arg));
-    else
-      static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor"); },
-             _Value);
+  std::visit(
+      [UniformLoc = UniformLocIter->second](auto &&_Arg) {
+        using Type = std::decay_t<decltype(_Arg)>;
+        if constexpr (std::is_same_v<Type, GLint>)
+          glUniform1i(UniformLoc, _Arg);
+        else if constexpr (std::is_same_v<Type, GLuint>)
+          glUniform1ui(UniformLoc, _Arg);
+        else if constexpr (std::is_same_v<Type, GLfloat>)
+          glUniform1f(UniformLoc, _Arg);
+        else if constexpr (std::is_same_v<Type, glm::mat3>)
+          glUniformMatrix3fv(UniformLoc, 1, GL_FALSE, glm::value_ptr(_Arg));
+        else if constexpr (std::is_same_v<Type, glm::mat4>)
+          glUniformMatrix4fv(UniformLoc, 1, GL_FALSE, glm::value_ptr(_Arg));
+        else if constexpr (std::is_same_v<Type, glm::vec2>)
+          glUniform2fv(UniformLoc, 1, glm::value_ptr(_Arg));
+        else if constexpr (std::is_same_v<Type, glm::vec3>)
+          glUniform3fv(UniformLoc, 1, glm::value_ptr(_Arg));
+        else if constexpr (std::is_same_v<Type, glm::vec4>)
+          glUniform4fv(UniformLoc, 1, glm::value_ptr(_Arg));
+        else
+          static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor");
+      },
+      _Value);
 }
 
 void CShader::Validate()
@@ -144,11 +145,10 @@ void CShader::Validate()
   if (m_BasePath.empty())
     return;
 
-  const std::filesystem::path VertexShaderPath = std::filesystem::path(m_BasePath).replace_extension(".vs");
+  const std::filesystem::path VertexShaderPath   = std::filesystem::path(m_BasePath).replace_extension(".vs");
   const std::filesystem::path FragmentShaderPath = std::filesystem::path(m_BasePath).replace_extension(".fs");
 
-  auto GetWriteTime = [](const std::filesystem::path &_Path, std::filesystem::file_time_type &_Out)
-  {
+  auto GetWriteTime = [](const std::filesystem::path &_Path, std::filesystem::file_time_type &_Out) {
     std::error_code Error;
     _Out = std::filesystem::last_write_time(_Path, Error);
     return !Error;
@@ -193,9 +193,9 @@ void CShader::Validate()
   }
 
   const GLuint OldProgram = m_ID;
-  m_ID = NewProgram;
+  m_ID                    = NewProgram;
   m_UniformsCache.clear();
-  m_VertexTimestamp = NewVertexTimestamp;
+  m_VertexTimestamp   = NewVertexTimestamp;
   m_FragmentTimestamp = NewFragmentTimestamp;
   glUseProgram(m_ID);
 
@@ -252,8 +252,8 @@ void CShader::UnloadShader(GLuint _ShaderID)
 {
   constexpr GLsizei MaxCount = 10;
 
-  GLsizei Count = 0;
-  GLuint Shaders[MaxCount] = {0};
+  GLsizei Count             = 0;
+  GLuint  Shaders[MaxCount] = {0};
 
   glGetAttachedShaders(_ShaderID, MaxCount, &Count, Shaders);
 

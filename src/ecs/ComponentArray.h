@@ -2,8 +2,8 @@
 
 #include "CommonECS.h"
 #include "utils/StaticArray.h"
-#include <unordered_map>
 #include <cassert>
+#include <unordered_map>
 
 // The one instance of virtual inheritance in the entire implementation.
 // An interface is needed so that the ComponentManager (seen later)
@@ -12,17 +12,15 @@
 class IComponentArray
 {
 public:
-  virtual ~IComponentArray() = default;
+  virtual ~IComponentArray()                         = default;
   virtual void EntityDestroyed(ecs::TEntity _Entity) = 0;
 };
 
-template<typename T>
-class CComponentArray :
-  public IComponentArray
+template <typename T>
+class CComponentArray : public IComponentArray
 {
 public:
-
-  void InsertData(ecs::TEntity _Entity, T && _Component)
+  void InsertData(ecs::TEntity _Entity, T &&_Component)
   {
     assert(!IsDataExist(_Entity) && "Component added to same entity more than once.");
 
@@ -43,22 +41,22 @@ public:
     m_ComponentArray[IndexOfRemovedEntity] = std::move(m_ComponentArray[IndexOfLastElement]);
     m_ComponentArray.PopBack();
 
-    const ecs::TEntity EntityOfLastElement = m_IndexToEntityMap[IndexOfLastElement];
-    m_EntityToIndexMap[EntityOfLastElement] = IndexOfRemovedEntity;
+    const ecs::TEntity EntityOfLastElement   = m_IndexToEntityMap[IndexOfLastElement];
+    m_EntityToIndexMap[EntityOfLastElement]  = IndexOfRemovedEntity;
     m_IndexToEntityMap[IndexOfRemovedEntity] = EntityOfLastElement;
 
     m_EntityToIndexMap.erase(_Entity);
     m_IndexToEntityMap.erase(IndexOfLastElement);
   }
 
-  T & GetData(ecs::TEntity _Entity)
+  T &GetData(ecs::TEntity _Entity)
   {
     assert(IsDataExist(_Entity) && "Retrieving non-existent component.");
 
     return m_ComponentArray[m_EntityToIndexMap[_Entity]];
   }
 
-  T * GetDataSafe(ecs::TEntity _Entity)
+  T *GetDataSafe(ecs::TEntity _Entity)
   {
     auto Iter = m_EntityToIndexMap.find(_Entity);
     if (Iter == m_EntityToIndexMap.end())
@@ -79,7 +77,6 @@ public:
   }
 
 private:
-
   CStaticArray<T, ecs::MAX_ENTITIES>       m_ComponentArray;
   std::unordered_map<ecs::TEntity, size_t> m_EntityToIndexMap;
   std::unordered_map<size_t, ecs::TEntity> m_IndexToEntityMap;

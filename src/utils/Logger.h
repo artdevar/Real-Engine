@@ -1,9 +1,9 @@
 #pragma once
 
-#include <string>
+#include "StaticArray.h"
 #include <format>
 #include <map>
-#include "StaticArray.h"
+#include <string>
 
 enum class ELogType
 {
@@ -19,8 +19,8 @@ class CLogger final
 public:
   enum ESinks : uint32_t
   {
-    None = 0x00,
-    File = 0x01,
+    None    = 0x00,
+    File    = 0x01,
     Console = 0x02
   };
 
@@ -56,10 +56,10 @@ private:
 private:
   using LogCallback = void (*)(const std::string &);
 
-  static constexpr std::size_t CallbacksAmount = 2;
+  static constexpr std::size_t                      CallbacksAmount = 2;
   static CStaticArray<LogCallback, CallbacksAmount> LogCallbacks;
 
-  static const std::string_view Filename;
+  static const std::string_view                     Filename;
   static const std::map<ELogType, std::string_view> MessageType;
 
   static ELogType Verbosity;
