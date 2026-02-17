@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25.0)
 
 set(TARGET mikktspace)
-project(${TARGET} NONE)
+project(${TARGET} C)
 
 file(GLOB MIKKTSRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/mikktspace.c

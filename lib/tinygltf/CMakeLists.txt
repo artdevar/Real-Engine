@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25.0)
 
 set(TARGET tinygltf)
-project(${TARGET} NONE)
+project(${TARGET} CXX)
 
 file(GLOB TINYGLTF_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/tiny_gltf.cc
