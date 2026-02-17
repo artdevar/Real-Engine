@@ -124,7 +124,7 @@ namespace ecs
 
                 PrimitiveData.VAO.Bind();
 
-                CVertexBuffer VBO(GL_STATIC_DRAW);
+                CVertexBuffer & VBO = PrimitiveData.VBOs.emplace_back(GL_STATIC_DRAW);
                 VBO.Bind();
                 VBO.Assign(Attribute.Data);
 
@@ -140,7 +140,7 @@ namespace ecs
 
                 PrimitiveData.VAO.Bind();
 
-                CElementBuffer EBO(GL_STATIC_DRAW);
+                CElementBuffer & EBO = PrimitiveData.EBO.emplace(GL_STATIC_DRAW);
                 EBO.Bind();
                 EBO.Assign(Primitive.Indices);
 

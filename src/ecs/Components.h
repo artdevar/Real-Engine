@@ -50,6 +50,8 @@ namespace ecs
     struct TPrimitiveData
     {
       CVertexArray VAO;
+      std::vector<CVertexBuffer> VBOs;
+      std::optional<CElementBuffer> EBO;
       EPrimitiveMode Mode = EPrimitiveMode::Triangles;
       std::variant<TIndicesData, TVerticesData> DrawData;
       glm::mat4 PrimitiveMatrix = glm::mat4(1.0f);
@@ -95,6 +97,7 @@ namespace ecs
   struct TSkyboxComponent
   {
     CVertexArray VAO;
+    CVertexBuffer VBO = GL_STATIC_DRAW;
     GLuint SkyboxTexture = 0;
     int VerticesCount = 0;
   };

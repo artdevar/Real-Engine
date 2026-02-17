@@ -55,9 +55,8 @@ namespace ecs
 
         _Component.VAO.Bind();
 
-        CVertexBuffer VBO(GL_STATIC_DRAW);
-        VBO.Bind();
-        VBO.Assign(SKYBOX_VERTICES, sizeof(SKYBOX_VERTICES));
+        _Component.VBO.Bind();
+        _Component.VBO.Assign(SKYBOX_VERTICES, sizeof(SKYBOX_VERTICES));
 
         _Component.VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 3 * sizeof(float));
         _Component.VAO.Unbind();
