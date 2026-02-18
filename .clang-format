@@ -8,6 +8,8 @@ BreakBeforeConceptDeclarations: Always
 BreakTemplateDeclarations: Yes
 BreakInheritanceList: AfterComma
 AllowShortLambdasOnASingleLine: Empty
+BreakConstructorInitializers: AfterColon
+PackConstructorInitializers: Never
 AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 0
