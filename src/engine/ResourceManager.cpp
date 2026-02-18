@@ -3,11 +3,11 @@
 #include "Passkey.h"
 #include "ResourceManager.h"
 #include "engine/Config.h"
-#include "graphics/Model.h"
-#include "graphics/Shader.h"
-#include "graphics/Texture.h"
-#include "graphics/TextureParams.h"
-#include "graphics/TinyGLTFParseStrategy.h"
+#include "assets/Model.h"
+#include "assets/Shader.h"
+#include "assets/Texture.h"
+#include "assets/TextureParams.h"
+#include "assets/TinyGLTFParseStrategy.h"
 #include "utils/Logger.h"
 
 static inline bool operator<(const std::string &_L, const std::filesystem::path &_R)

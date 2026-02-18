@@ -21,8 +21,7 @@ public:
   GLuint Get() const;
   bool IsValid() const;
 
-  static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
-  static void Unbind(GLenum _Target);
+  static constexpr inline GLuint INVALID_VALUE = 0u;
 
 protected:
   struct TImage
@@ -36,8 +35,10 @@ protected:
 
   CTextureBase(GLenum _Target);
 
-  static constexpr inline GLuint INVALID_VALUE = 0u;
-  static constexpr inline GLenum FORMATS[]     = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
+  static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
+  static void Unbind(GLenum _Target);
+
+  static constexpr inline GLenum FORMATS[] = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
 
   GLuint       m_ID;
   const GLenum m_Target;
@@ -54,6 +55,9 @@ public:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
+
+  static void Bind(GLenum _TextureUnit, GLuint _TextureID);
+  static void Unbind();
 
   static constexpr inline GLenum TARGET = GL_TEXTURE_2D;
 
@@ -74,6 +78,9 @@ public:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
+
+  static void Bind(GLenum _TextureUnit, GLuint _TextureID);
+  static void Unbind();
 
   static constexpr inline GLenum TARGET = GL_TEXTURE_CUBE_MAP;
 

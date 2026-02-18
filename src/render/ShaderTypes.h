@@ -14,9 +14,7 @@ constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_1 = 4;
 constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_2 = 5;
 constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_3 = 6;
 
-constexpr inline GLuint BINDING_DIFF_TEXTURE_BUFFER = 0;
-constexpr inline GLuint BINDING_SPEC_TEXTURE_BUFFER = 1;
-constexpr inline GLuint BINDING_LIGHTING_BUFFER     = 5;
+constexpr inline GLuint BINDING_LIGHTING_BUFFER = 0;
 
 constexpr inline GLenum TEXTURE_BASIC_COLOR_UNIT         = GL_TEXTURE1;
 constexpr inline GLint  TEXTURE_BASIC_COLOR_INDEX        = 1;
@@ -74,6 +72,29 @@ struct TShaderLighting
   // TLightSpot LightSpot;
   // TLightPoint LightPoints[MAX_POINT_LIGHTS];
   // alignas(4) int PointLightsCount;
+};
+
+struct TShaderMaterial
+{
+  alignas(4) int BaseColorTextureUnit;
+  alignas(4) int BaseColorTextureTexCoordIndex;
+
+  alignas(4) int MetallicRoughnessTextureUnit;
+  alignas(4) int MetallicRoughnessTextureTexCoordIndex;
+
+  alignas(4) int NormalTextureUnit;
+  alignas(4) int NormalTextureTexCoordIndex;
+
+  alignas(4) int EmissiveTextureUnit;
+  alignas(4) int EmissiveTextureTexCoordIndex;
+
+  alignas(16) glm::vec4 BaseColorFactor;
+  alignas(16) glm::vec3 EmissiveFactor;
+  alignas(4) float MetallicFactor;
+  alignas(4) float RoughnessFactor;
+  alignas(4) float AlphaCutoff;
+  alignas(4) int AlphaMode;
+  alignas(4) int IsDoubleSided;
 };
 
 //

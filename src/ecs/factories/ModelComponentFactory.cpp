@@ -1,9 +1,9 @@
 #include "../ComponentsFactory.h"
 
-#include "graphics/Buffer.h"
-#include "graphics/Model.h"
-#include "graphics/ShaderTypes.h"
-#include "graphics/Texture.h"
+#include "render/Buffer.h"
+#include "assets/Model.h"
+#include "render/ShaderTypes.h"
+#include "assets/Texture.h"
 #include "utils/Resource.h"
 #include "utils/Stopwatch.h"
 
@@ -81,7 +81,7 @@ static TModelComponent::TTexture LoadTexture(const TModelData &_ModelData, const
   assert(TexturePtr && "Failed to load texture");
 
   TModelComponent::TTexture Result;
-  Result.Texture       = TexturePtr ? TexturePtr->Get() : 0;
+  Result.Texture       = TexturePtr;
   Result.TexCoordIndex = _Texture.TexCoordIndex;
 
   return Result;
@@ -112,7 +112,7 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
   for (const TPrimitive &Primitive : _Mesh.Primitives)
   {
     TModelComponent::TPrimitiveData &PrimitiveData = _Component.Primitives.emplace_back();
-    PrimitiveData.MaterialIndex                    = Primitive.MaterialIndex;
+    PrimitiveData.MaterialIndex                    = std::max(Primitive.MaterialIndex, 0);
     PrimitiveData.Mode                             = Primitive.Mode;
     PrimitiveData.PrimitiveMatrix                  = _NodeTransform;
 
@@ -135,7 +135,8 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
 
     if (!Primitive.Indices.empty())
     {
-      PrimitiveData.DrawData = TModelComponent::TIndicesData{.Indices = Primitive.IndicesCount, .Type = Primitive.IndicesType};
+      PrimitiveData.IndicesCount = Primitive.IndicesCount;
+      PrimitiveData.Type         = Primitive.IndicesType;
 
       PrimitiveData.VAO.Bind();
 
@@ -147,7 +148,7 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
     }
     else
     {
-      PrimitiveData.DrawData = TModelComponent::TVerticesData{.Vertices = Primitive.VerticesCount};
+      PrimitiveData.VerticesCount = Primitive.VerticesCount;
     }
   }
 }
@@ -179,46 +180,39 @@ static void ParseNodes(const TModelData &_Model, const TNode &_Node, TModelCompo
   }
 }
 
-static void SortPrimitives(TModelComponent &_Component)
-{
-  std::stable_sort(_Component.Primitives.begin(), _Component.Primitives.end(),
-                   [&_Component](const TModelComponent::TPrimitiveData &A, const TModelComponent::TPrimitiveData &B) {
-                     auto getAlphaMode = [&_Component](int idx) -> EAlphaMode {
-                       if (idx >= 0 && idx < static_cast<int>(_Component.Materials.size()))
-                         return _Component.Materials[idx].AlphaMode;
-                       return EAlphaMode::Opaque;
-                     };
-
-                     const EAlphaMode AMode = getAlphaMode(A.MaterialIndex);
-                     const EAlphaMode BMode = getAlphaMode(B.MaterialIndex);
-
-                     // Only BLEND materials go to the back
-                     const bool AIsBlend = (AMode == EAlphaMode::Blend);
-                     const bool BIsBlend = (BMode == EAlphaMode::Blend);
-
-                     if (AIsBlend != BIsBlend)
-                       return !AIsBlend;
-
-                     return false;
-                   });
-}
-
 void CComponentsFactory::CreateModelComponent(const std::shared_ptr<CModel> &_Model, TModelComponent &_Component)
 {
   MEASURE_ZONE("CreateModelComponent");
 
   const TModelData &ModelData = _Model->GetModelData();
 
-  assert(!ModelData.Materials.empty() && "Model should have at least one material. Handle this case by adding a default material if needed.");
-  ParseMaterials(ModelData, _Component);
+  if (ModelData.Materials.empty())
+  {
+    CLogger::Log(ELogType::Warning, "[CreateModelComponent] Model has no materials; creating a default material");
+
+    TModelComponent::TMaterialData &Material  = _Component.Materials.emplace_back();
+    Material.BaseColorFactor                  = glm::vec4(1.0f);
+    Material.EmissiveFactor                   = glm::vec3(0.0f);
+    Material.MetallicFactor                   = 1.0f;
+    Material.RoughnessFactor                  = 1.0f;
+    Material.IsDoubleSided                    = false;
+    Material.AlphaCutoff                      = 0.5f;
+    Material.AlphaMode                        = EAlphaMode::Opaque;
+    Material.BaseColorTexture.Texture         = resource::GetDefaultTexture(ETextureType::BasicColor);
+    Material.MetallicRoughnessTexture.Texture = resource::GetDefaultTexture(ETextureType::Roughness);
+    Material.NormalTexture.Texture            = resource::GetDefaultTexture(ETextureType::Normal);
+    Material.EmissiveTexture.Texture          = resource::GetDefaultTexture(ETextureType::Emissive);
+  }
+  else
+  {
+    ParseMaterials(ModelData, _Component);
+  }
 
   for (int NodeIndex : ModelData.RootNodes)
   {
     assert(NodeIndex >= 0 && NodeIndex < ModelData.Nodes.size());
     ParseNodes(ModelData, ModelData.Nodes[NodeIndex], _Component, glm::mat4(1.0f));
   }
-
-  SortPrimitives(_Component);
 }
 
 } // namespace ecs

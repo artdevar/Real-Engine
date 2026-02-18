@@ -1,8 +1,8 @@
 #pragma once
 
 #include "engine/MathCore.h"
-#include "graphics/RenderTypes.h"
-#include "graphics/ShaderTypes.h"
+#include "render/RenderTypes.h"
+#include "render/ShaderTypes.h"
 #include <memory>
 #include <string_view>
 
@@ -34,12 +34,6 @@ public:
 
   virtual void DrawElements(EPrimitiveMode _Mode, int _Count, EIndexType _IndexType, const void *_Offset = nullptr) = 0;
   virtual void DrawArrays(EPrimitiveMode _Mode, int _Count)                                                         = 0;
-
-  virtual void SetShadowMap(const std::shared_ptr<CTextureBase> &_ShadowMap) = 0;
-  virtual const std::shared_ptr<CTextureBase> &GetShadowMap() const          = 0;
-
-  virtual void SetLightingData(TShaderLighting &&_Data) = 0;
-  virtual glm::mat4 GetLightSpaceMatrix() const         = 0;
 
   virtual void SetBlending(EAlphaMode _Mode) = 0;
   virtual void SetCullFace(ECullMode _Mode)  = 0;

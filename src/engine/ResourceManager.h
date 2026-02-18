@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/TextureParams.h"
+#include "assets/TextureParams.h"
 #include "interfaces/Shutdownable.h"
 #include "utils/Common.h"
 

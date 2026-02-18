@@ -180,6 +180,16 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   return true;
 }
 
+void CTexture::Bind(GLenum _TextureUnit, GLuint _TextureID)
+{
+  CTextureBase::Bind(TARGET, _TextureUnit, _TextureID);
+}
+
+void CTexture::Unbind()
+{
+  CTextureBase::Unbind(TARGET);
+}
+
 // CCubemap
 
 CCubemap::CCubemap() : CTextureBase(TARGET)
@@ -265,4 +275,14 @@ bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 #endif
 
   return Success;
+}
+
+void CCubemap::Bind(GLenum _TextureUnit, GLuint _TextureID)
+{
+  CTextureBase::Bind(TARGET, _TextureUnit, _TextureID);
+}
+
+void CCubemap::Unbind()
+{
+  CTextureBase::Unbind(TARGET);
 }

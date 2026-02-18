@@ -10,7 +10,8 @@ class CBuffer
   DISABLE_CLASS_COPY(CBuffer);
 
 public:
-  CBuffer(CBuffer &&_Other) noexcept : m_ID(_Other.m_ID)
+  CBuffer(CBuffer &&_Other) noexcept :
+      m_ID(_Other.m_ID)
   {
     _Other.m_ID = INVALID_BUFFER;
   }
@@ -53,7 +54,8 @@ public:
   }
 
 protected:
-  CBuffer() : m_ID(INVALID_BUFFER)
+  CBuffer() :
+      m_ID(INVALID_BUFFER)
   {
     Init();
   }
@@ -191,13 +193,20 @@ class CBufferObject : public CBuffer<CBufferObject>
   friend CBuffer;
 
 public:
-  CBufferObject(GLenum _Target, GLenum _Usage) : m_Target(_Target), m_Usage(_Usage), m_Capacity(0), m_ActualSize(0)
+  CBufferObject(GLenum _Target, GLenum _Usage) :
+      m_Target(_Target),
+      m_Usage(_Usage),
+      m_Capacity(0),
+      m_ActualSize(0)
   {
   }
 
-  CBufferObject(CBufferObject &&_Other) noexcept
-      : CBuffer<CBufferObject>(std::move(_Other)), m_Target(_Other.m_Target), m_Usage(_Other.m_Usage), m_Capacity(_Other.m_Capacity),
-        m_ActualSize(_Other.m_ActualSize)
+  CBufferObject(CBufferObject &&_Other) noexcept :
+      CBuffer<CBufferObject>(std::move(_Other)),
+      m_Target(_Other.m_Target),
+      m_Usage(_Other.m_Usage),
+      m_Capacity(_Other.m_Capacity),
+      m_ActualSize(_Other.m_ActualSize)
   {
     _Other.m_Target     = 0;
     _Other.m_Usage      = 0;
@@ -394,7 +403,8 @@ protected:
 class CVertexBuffer final : public CBufferObject // VBO
 {
 public:
-  CVertexBuffer(GLenum _Usage) : CBufferObject(GL_ARRAY_BUFFER, _Usage)
+  CVertexBuffer(GLenum _Usage) :
+      CBufferObject(GL_ARRAY_BUFFER, _Usage)
   {
   }
 };
@@ -404,7 +414,8 @@ public:
 class CElementBuffer final : public CBufferObject // EBO
 {
 public:
-  CElementBuffer(GLenum _Usage) : CBufferObject(GL_ELEMENT_ARRAY_BUFFER, _Usage)
+  CElementBuffer(GLenum _Usage) :
+      CBufferObject(GL_ELEMENT_ARRAY_BUFFER, _Usage)
   {
   }
 };
@@ -414,12 +425,8 @@ public:
 class CUniformBuffer final : public CBufferObject
 {
 public:
-  CUniformBuffer(GLenum _Usage) : CBufferObject(GL_UNIFORM_BUFFER, _Usage)
+  CUniformBuffer(GLenum _Usage) :
+      CBufferObject(GL_UNIFORM_BUFFER, _Usage)
   {
-  }
-
-  void BindToUniformBlock(GLuint _Program, GLuint _UniformBlockIndex, GLuint _UniformBlockBinding)
-  {
-    glUniformBlockBinding(_Program, _UniformBlockIndex, _UniformBlockBinding);
   }
 };

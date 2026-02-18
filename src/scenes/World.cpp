@@ -7,11 +7,12 @@
 #include "ecs/EntityBuilder.h"
 #include "ecs/systems/LightingSystem.h"
 #include "ecs/systems/PhysicsSystem.h"
-#include "ecs/systems/ShadowRenderSystem.h"
 #include "ecs/systems/SkyboxRenderSystem.h"
-#include "ecs/systems/WorldRenderSystem.h"
+#include "ecs/systems/ModelRenderSystem.h"
 #include "engine/Engine.h"
-#include "graphics/Shader.h"
+#include "assets/Shader.h"
+#include "render/RenderQueue.h"
+#include "render/RenderPipeline.h"
 
 CWorld::CWorld() = default;
 
@@ -20,11 +21,13 @@ CWorld::~CWorld() = default;
 void CWorld::Init()
 {
   InitECS();
+  InitRenderPipeline();
 }
 
 void CWorld::Shutdown()
 {
   m_EntitiesCoordinator.reset();
+  m_RenderPipeline.reset();
 }
 
 void CWorld::UpdateInternal(float _TimeDelta)
@@ -39,10 +42,13 @@ bool CWorld::ShouldBeUpdated() const
 
 void CWorld::RenderInternal(IRenderer &_Renderer)
 {
-  m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->ComposeLightingData(_Renderer);
-  m_EntitiesCoordinator->GetSystem<ecs::CShadowRenderSystem>()->Render(_Renderer);
-  m_EntitiesCoordinator->GetSystem<ecs::CWorldRenderSystem>()->Render(_Renderer);
-  m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Render(_Renderer);
+  const std::vector<TLight> LightingData = m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->GetherLightingData();
+  m_RenderPipeline->SetLightingData(LightingData);
+
+  CRenderQueue RenderQueue;
+  m_EntitiesCoordinator->GetSystem<ecs::CModelRenderSystem>()->Collect(RenderQueue);
+  m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(RenderQueue);
+  m_RenderPipeline->Render(RenderQueue, _Renderer);
 }
 
 bool CWorld::ShouldBeRendered() const
@@ -76,10 +82,9 @@ void CWorld::InitECS()
   m_EntitiesCoordinator->RegisterComponent<ecs::TSkyboxComponent>();
 
   m_EntitiesCoordinator->RegisterSystem<ecs::CLightingSystem>();
-  m_EntitiesCoordinator->RegisterSystem<ecs::CWorldRenderSystem>();
+  m_EntitiesCoordinator->RegisterSystem<ecs::CModelRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CSkyboxRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CPhysicsSystem>();
-  m_EntitiesCoordinator->RegisterSystem<ecs::CShadowRenderSystem>();
 
   {
     ecs::TSignature LightingSystemSignature;
@@ -91,14 +96,7 @@ void CWorld::InitECS()
     ecs::TSignature ModelRenderSystemSignature;
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TModelComponent>());
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
-    m_EntitiesCoordinator->SetSystemSignature<ecs::CWorldRenderSystem>(ModelRenderSystemSignature);
-  }
-
-  {
-    ecs::TSignature ShadowRenderSystemSignature;
-    ShadowRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TModelComponent>());
-    ShadowRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
-    m_EntitiesCoordinator->SetSystemSignature<ecs::CShadowRenderSystem>(ShadowRenderSystemSignature);
+    m_EntitiesCoordinator->SetSystemSignature<ecs::CModelRenderSystem>(ModelRenderSystemSignature);
   }
 
   {
@@ -112,4 +110,10 @@ void CWorld::InitECS()
     PhysicsSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CPhysicsSystem>(PhysicsSystemSignature);
   }
+}
+
+void CWorld::InitRenderPipeline()
+{
+  m_RenderPipeline = std::make_unique<CRenderPipeline>();
+  m_RenderPipeline->Init();
 }

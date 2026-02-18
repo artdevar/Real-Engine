@@ -15,7 +15,8 @@ static inline bool operator<(const std::string &_L, const std::string_view &_R)
 template <class>
 static constexpr bool AlwaysFalse = false;
 
-CShader::CShader() : m_ID(INVALID_VALUE)
+CShader::CShader() :
+    m_ID(INVALID_VALUE)
 {
 }
 
@@ -112,7 +113,13 @@ void CShader::SetUniform(std::string_view _Name, const UniformType &_Value)
 
   auto UniformLocIter = m_UniformsCache.find(_Name);
   if (UniformLocIter == m_UniformsCache.end())
-    UniformLocIter = m_UniformsCache.emplace(_Name.data(), glGetUniformLocation(GetID(), _Name.data())).first;
+  {
+    GLint UniformLoc = glGetUniformLocation(GetID(), _Name.data());
+    if (UniformLoc == INVALID_UNIFORM_LOCATION)
+      return;
+
+    UniformLocIter = m_UniformsCache.emplace(_Name.data(), UniformLoc).first;
+  }
 
   std::visit(
       [UniformLoc = UniformLocIter->second](auto &&_Arg) {
@@ -137,6 +144,24 @@ void CShader::SetUniform(std::string_view _Name, const UniformType &_Value)
           static_assert(AlwaysFalse<Type>, "Non-exhaustive visitor");
       },
       _Value);
+}
+
+void CShader::SetUniformBlockBinding(std::string_view _BlockName, GLuint _UniformBlockBinding)
+{
+  assert(IsValid());
+  assert(IsUsed());
+
+  auto UniformLocIter = m_UniformsCache.find(_BlockName);
+  if (UniformLocIter == m_UniformsCache.end())
+  {
+    GLint UniformBlockLoc = glGetUniformBlockIndex(GetID(), _BlockName.data());
+    if (UniformBlockLoc == GL_INVALID_INDEX)
+      return;
+
+    UniformLocIter = m_UniformsCache.emplace(_BlockName.data(), UniformBlockLoc).first;
+  }
+
+  glUniformBlockBinding(GetID(), UniformLocIter->second, _UniformBlockBinding);
 }
 
 void CShader::Validate()

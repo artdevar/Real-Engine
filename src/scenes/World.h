@@ -11,6 +11,7 @@
 class CEngine;
 class CCoordinator;
 class CEntityBuilder;
+class CRenderPipeline;
 
 class CWorld : public IIdentifiable,
                public IUpdateable,
@@ -41,8 +42,10 @@ public:
   CEntityBuilder CreateEntity();
 
 protected:
-  virtual void InitECS();
+  void InitECS();
+  void InitRenderPipeline();
 
 public:
-  std::unique_ptr<CCoordinator> m_EntitiesCoordinator;
+  std::unique_ptr<CCoordinator>    m_EntitiesCoordinator;
+  std::unique_ptr<CRenderPipeline> m_RenderPipeline;
 };

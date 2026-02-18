@@ -6,23 +6,17 @@
 #include <memory>
 #include <map>
 #include <variant>
-#include "graphics/Buffer.h"
-#include "graphics/ShaderTypes.h"
-#include "graphics/RenderTypes.h"
+#include "render/Buffer.h"
+#include "render/ShaderTypes.h"
+#include "render/RenderTypes.h"
 #include "utils/Common.h"
 
 class CModel;
 class CTextureBase;
 
-enum class ELightType
-{
-  Directional,
-  Point,
-  Spotlight
-};
-
 namespace ecs
 {
+
 struct TTransformComponent
 {
   glm::mat4x4 WorldMatrix = glm::mat4x4(1.0f);
@@ -30,32 +24,23 @@ struct TTransformComponent
 
 struct TModelComponent
 {
-  struct TIndicesData
-  {
-    uint32_t   Indices = 0;
-    EIndexType Type    = EIndexType::UnsignedInt;
-  };
-
-  struct TVerticesData
-  {
-    uint32_t Vertices = 0;
-  };
-
   struct TTexture
   {
-    GLuint Texture       = 0;
-    GLint  TexCoordIndex = 0;
+    std::shared_ptr<CTextureBase> Texture       = nullptr;
+    GLint                         TexCoordIndex = 0;
   };
 
   struct TPrimitiveData
   {
-    CVertexArray                              VAO;
-    std::vector<CVertexBuffer>                VBOs;
-    std::optional<CElementBuffer>             EBO;
-    EPrimitiveMode                            Mode = EPrimitiveMode::Triangles;
-    std::variant<TIndicesData, TVerticesData> DrawData;
-    glm::mat4                                 PrimitiveMatrix = glm::mat4(1.0f);
-    int                                       MaterialIndex   = -1;
+    CVertexArray                  VAO;
+    std::vector<CVertexBuffer>    VBOs;
+    std::optional<CElementBuffer> EBO;
+    EPrimitiveMode                Mode            = EPrimitiveMode::Triangles;
+    glm::mat4                     PrimitiveMatrix = glm::mat4(1.0f);
+    int                           MaterialIndex   = -1;
+    uint32_t                      VerticesCount   = 0;
+    uint32_t                      IndicesCount    = 0;
+    EIndexType                    Type            = EIndexType::None;
   };
 
   struct TMaterialData
@@ -98,8 +83,8 @@ struct TSkyboxComponent
 {
   CVertexArray  VAO;
   CVertexBuffer VBO           = GL_STATIC_DRAW;
-  GLuint        SkyboxTexture = 0;
-  int           VerticesCount = 0;
+  uint32_t      SkyboxTexture = 0;
+  uint32_t      VerticesCount = 0;
 };
 
 } // namespace ecs

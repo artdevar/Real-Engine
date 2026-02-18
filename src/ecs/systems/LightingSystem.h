@@ -1,9 +1,8 @@
 #pragma once
 
 #include "ecs/SystemManager.h"
-#include "graphics/ShaderTypes.h"
-
-class IRenderer;
+#include "render/RenderTypes.h"
+#include <vector>
 
 namespace ecs
 {
@@ -11,7 +10,7 @@ namespace ecs
 class CLightingSystem : public CSystem
 {
 public:
-  void ComposeLightingData(IRenderer &_Renderer) const;
+  std::vector<TLight> GetherLightingData() const;
 };
 
 } // namespace ecs

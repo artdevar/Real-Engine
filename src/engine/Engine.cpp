@@ -5,8 +5,8 @@
 #include "InputManager.h"
 #include "ResourceManager.h"
 #include "editor/EditorUI.h"
-#include "graphics/GLRenderer.h"
-#include "graphics/RenderTypes.h"
+#include "render/GLRenderer.h"
+#include "render/RenderTypes.h"
 #include "scenes/World.h"
 #include <glm/glm.hpp>
 #include <string>
@@ -105,8 +105,6 @@ int CEngine::Run()
 
   std::unique_ptr<IRenderer> Renderer = std::make_unique<COpenGLRenderer>();
   Renderer->SetCamera(m_Camera);
-  Renderer->SetCullFace(ECullMode::Back);
-  Renderer->SetBlending(EAlphaMode::Opaque);
 
   double LastFrameTime = 0.0;
   while (!m_Display->ShouldClose())

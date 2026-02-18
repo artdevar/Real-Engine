@@ -8,7 +8,8 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "RenderTypes.h"
+#include "render/RenderTypes.h"
+#include "assets/TextureParams.h"
 
 struct TImage
 {
@@ -60,7 +61,7 @@ struct TPrimitive
   std::map<EAttributeType, TAttribute> Attributes;
   std::vector<uint8_t>                 Indices;
   EPrimitiveMode                       Mode          = EPrimitiveMode::Triangles;
-  EIndexType                           IndicesType   = EIndexType::UnsignedInt;
+  EIndexType                           IndicesType   = EIndexType::None;
   uint32_t                             IndicesCount  = 0;
   int                                  MaterialIndex = -1;
   uint32_t                             VerticesCount = 0;

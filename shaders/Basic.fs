@@ -8,7 +8,7 @@ struct TLightDirectional
   vec3 Specular;
 };
 
-layout(std140) uniform u_Lighting
+layout(std140, binding = 0) uniform u_Lighting
 {
   TLightDirectional LightDirectional;
 };
@@ -18,11 +18,11 @@ struct TMaterial
   sampler2D BaseColorTexture;
   int       BaseColorTextureTexCoordIndex;
 
-  sampler2D MetallicRoughnessTexture;
-  int       MetallicRoughnessTextureTexCoordIndex;
-
   sampler2D NormalTexture;
   int       NormalTextureTexCoordIndex;
+
+  sampler2D MetallicRoughnessTexture;
+  int       MetallicRoughnessTextureTexCoordIndex;
 
   sampler2D EmissiveTexture;
   int       EmissiveTextureTexCoordIndex;

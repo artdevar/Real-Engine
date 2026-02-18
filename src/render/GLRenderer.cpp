@@ -1,22 +1,13 @@
 #include "GLRenderer.h"
-#include "Shader.h"
+#include "assets/Shader.h"
 #include "engine/Camera.h"
 #include "engine/Config.h"
-#include "graphics/Texture.h"
+#include "assets/Texture.h"
 #include "utils/Logger.h"
-
-COpenGLRenderer::COpenGLRenderer() : m_LightingUBO(GL_DYNAMIC_DRAW)
-{
-  m_LightingUBO.Bind();
-  m_LightingUBO.Reserve(sizeof(TShaderLighting));
-  m_LightingUBO.BindToBase(BINDING_LIGHTING_BUFFER);
-  m_LightingUBO.Unbind();
-
-  std::memset(&m_Lighting, 0, sizeof(m_Lighting));
-}
 
 void COpenGLRenderer::BeginFrame(const TColor &_ClearColor, EClearFlags _ClearFlags)
 {
+  m_CurrentShader.reset();
   ClearColor(_ClearColor);
   Clear(_ClearFlags);
 }
@@ -175,41 +166,17 @@ const std::shared_ptr<CCamera> &COpenGLRenderer::GetCamera() const
 
 void COpenGLRenderer::SetShader(const std::shared_ptr<CShader> &_Shader)
 {
-  m_CurrentShader = _Shader;
+  if (m_CurrentShader == _Shader)
+    return;
 
-  InitShaderValues();
+  m_CurrentShader = _Shader;
+  m_CurrentShader->Use();
+  m_CurrentShader->Validate();
 }
 
 const std::shared_ptr<CShader> &COpenGLRenderer::GetShader() const
 {
   return m_CurrentShader;
-}
-
-void COpenGLRenderer::SetLightingData(TShaderLighting &&_Data)
-{
-  IS_SAME_TYPE(m_Lighting, _Data);
-  std::memcpy(&m_Lighting, &_Data, sizeof(m_Lighting));
-  m_LightSpaceMatrixDirty = true;
-}
-
-glm::mat4 COpenGLRenderer::GetLightSpaceMatrix() const
-{
-  if (m_LightSpaceMatrixDirty)
-  {
-    const float NearPlane = CConfig::Instance().GetLightSpaceMatrixZNear();
-    const float FarPlane  = CConfig::Instance().GetLightSpaceMatrixZFar();
-    const float LeftBot   = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
-    const float RightTop  = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
-
-    const glm::vec3 LightDir        = m_Lighting.LightDirectional.Direction * -1.0f;
-    const glm::mat4 LightProjection = glm::ortho(LeftBot, RightTop, LeftBot, RightTop, NearPlane, FarPlane);
-    const glm::mat4 LightView       = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
-
-    m_LightSpaceMatrix      = LightProjection * LightView;
-    m_LightSpaceMatrixDirty = false;
-  }
-
-  return m_LightSpaceMatrix;
 }
 
 void COpenGLRenderer::SetBlending(EAlphaMode _Mode)
@@ -224,20 +191,17 @@ void COpenGLRenderer::SetBlending(EAlphaMode _Mode)
   case EAlphaMode::Opaque:
     glDisable(GL_BLEND);
     glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-    glDepthMask(GL_TRUE);
     break;
 
   case EAlphaMode::Mask:
     glDisable(GL_BLEND);
     glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE); // optional
-    glDepthMask(GL_TRUE);
     break;
 
   case EAlphaMode::Blend:
     glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
     break;
   }
 }
@@ -297,31 +261,6 @@ void COpenGLRenderer::SetUniform(std::string_view _Name, const UniformType &_Val
     return;
 
   m_CurrentShader->SetUniform(_Name, _Value);
-}
-
-void COpenGLRenderer::SetShadowMap(const std::shared_ptr<CTextureBase> &_ShadowMap)
-{
-  m_ShadowMap = _ShadowMap;
-}
-
-const std::shared_ptr<CTextureBase> &COpenGLRenderer::GetShadowMap() const
-{
-  return m_ShadowMap;
-}
-
-void COpenGLRenderer::InitShaderValues()
-{
-  m_CurrentShader->Use();
-  m_CurrentShader->Validate();
-
-  GLuint LightingDataLoc = glGetUniformBlockIndex(m_CurrentShader->GetID(), "u_Lighting");
-  if (LightingDataLoc != GL_INVALID_INDEX)
-  {
-    m_LightingUBO.Bind();
-    m_LightingUBO.BindToUniformBlock(m_CurrentShader->GetID(), LightingDataLoc, BINDING_LIGHTING_BUFFER);
-    m_LightingUBO.Assign(&m_Lighting, sizeof(m_Lighting));
-    m_LightingUBO.Unbind();
-  }
 }
 
 std::string COpenGLRenderer::GetGLErrorDescription(GLenum _Error)

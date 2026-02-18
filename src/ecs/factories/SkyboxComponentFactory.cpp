@@ -1,6 +1,6 @@
 #include "../ComponentsFactory.h"
-#include "graphics/Buffer.h"
-#include "graphics/Texture.h"
+#include "render/Buffer.h"
+#include "assets/Texture.h"
 #include "utils/Common.h"
 
 namespace ecs

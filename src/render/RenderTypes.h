@@ -1,6 +1,5 @@
 #pragma once
 
-#include "TextureParams.h"
 #include <cstdint>
 
 enum EClearFlags : uint8_t
@@ -46,6 +45,7 @@ enum class EPrimitiveMode : uint8_t
 
 enum class EIndexType : uint8_t
 {
+  None,
   Byte,
   UnsignedByte,
   Short,
@@ -76,4 +76,21 @@ struct TColor
   float G;
   float B;
   float A;
+};
+
+enum class ELightType : uint8_t
+{
+  Directional,
+  Point,
+  Spotlight
+};
+
+struct TLight
+{
+  ELightType Type;
+
+  glm::vec3 Direction = glm::vec3(0.0f);
+  glm::vec3 Ambient   = glm::vec3(0.0f);
+  glm::vec3 Diffuse   = glm::vec3(0.0f);
+  glm::vec3 Specular  = glm::vec3(0.0f);
 };

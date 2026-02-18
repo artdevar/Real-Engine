@@ -10,8 +10,8 @@
 #include "engine/Display.h"
 #include "engine/Engine.h"
 #include "engine/ResourceManager.h"
-#include "graphics/Model.h"
-#include "graphics/Shader.h"
+#include "assets/Model.h"
+#include "assets/Shader.h"
 #include "platform/SysUtils.h"
 #include "scenes/World.h"
 #include <imgui/backends/imgui_impl_glfw.h>

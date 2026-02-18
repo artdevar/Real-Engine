@@ -1,7 +1,7 @@
 #include "Resource.h"
 #include "engine/Engine.h"
 #include "engine/ResourceManager.h"
-#include "graphics/TextureParams.h"
+#include "assets/TextureParams.h"
 #include "pch.h"
 
 static CResourceManager *Get()

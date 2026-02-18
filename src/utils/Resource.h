@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/TextureParams.h"
+#include "assets/TextureParams.h"
 
 class CModel;
 class CShader;

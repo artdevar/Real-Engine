@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/ModelData.h"
+#include "assets/ModelData.h"
 #include <filesystem>
 
 class IModelParseStrategy

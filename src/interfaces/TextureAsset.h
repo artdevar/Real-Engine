@@ -1,5 +1,5 @@
 #include "Asset.h"
-#include "graphics/TextureParams.h"
+#include "assets/TextureParams.h"
 
 class ITextureAsset : public IAsset
 {
