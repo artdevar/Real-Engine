@@ -6,6 +6,7 @@
 #include "utils/Resource.h"
 #include "render/RenderCommand.h"
 #include "render/RenderQueue.h"
+#include "assets/Texture.h"
 
 namespace ecs
 {
@@ -21,7 +22,7 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
   TRenderCommand Command{
-      .Material      = TMaterialD{.SkyboxTexture = SkyboxComponent.SkyboxTexture},
+      .Material      = TMaterialD{.SkyboxTexture = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE},
       .VAO           = SkyboxComponent.VAO,
       .ModelMatrix   = glm::mat4(1.0f),
       .IndicesCount  = SkyboxComponent.VerticesCount,

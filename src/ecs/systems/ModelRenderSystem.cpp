@@ -13,7 +13,7 @@ namespace ecs
 void CModelRenderSystem::Collect(CRenderQueue &_Queue)
 {
   constexpr auto GetTextureID = [](const TModelComponent::TTexture &_Texture) -> uint32_t {
-    return _Texture.Texture ? _Texture.Texture->Get() : 0;
+    return _Texture.Texture ? _Texture.Texture->ID() : 0;
   };
 
   for (ecs::TEntity Entity : m_Entities)

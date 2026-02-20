@@ -81,10 +81,10 @@ struct TLightComponent
 
 struct TSkyboxComponent
 {
-  CVertexArray  VAO;
-  CVertexBuffer VBO           = GL_STATIC_DRAW;
-  uint32_t      SkyboxTexture = 0;
-  uint32_t      VerticesCount = 0;
+  std::shared_ptr<CTextureBase> SkyboxTexture;
+  CVertexArray                  VAO;
+  CVertexBuffer                 VBO           = GL_STATIC_DRAW;
+  uint32_t                      VerticesCount = 0;
 };
 
 } // namespace ecs

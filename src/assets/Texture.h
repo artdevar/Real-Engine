@@ -18,7 +18,7 @@ public:
   void Bind(GLenum _TextureUnit);
   void Unbind();
 
-  GLuint Get() const;
+  GLuint ID() const;
   bool IsValid() const;
 
   static constexpr inline GLuint INVALID_VALUE = 0u;

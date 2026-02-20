@@ -64,7 +64,7 @@ void CTextureBase::Shutdown()
 
 void CTextureBase::Bind(GLenum _TextureUnit)
 {
-  Bind(m_Target, _TextureUnit, Get());
+  Bind(m_Target, _TextureUnit, ID());
 }
 
 void CTextureBase::Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID)
@@ -84,7 +84,7 @@ void CTextureBase::Unbind(GLenum _Target)
   glBindTexture(_Target, INVALID_VALUE);
 }
 
-GLuint CTextureBase::Get() const
+GLuint CTextureBase::ID() const
 {
   return m_ID;
 }
@@ -94,13 +94,16 @@ bool CTextureBase::IsValid() const
   return m_ID != INVALID_VALUE;
 }
 
-CTextureBase::CTextureBase(GLenum _Target) : m_ID(INVALID_VALUE), m_Target(_Target)
+CTextureBase::CTextureBase(GLenum _Target) :
+    m_ID(INVALID_VALUE),
+    m_Target(_Target)
 {
 }
 
 // CTexture
 
-CTexture::CTexture() : CTextureBase(TARGET)
+CTexture::CTexture() :
+    CTextureBase(TARGET)
 {
 }
 
@@ -192,7 +195,8 @@ void CTexture::Unbind()
 
 // CCubemap
 
-CCubemap::CCubemap() : CTextureBase(TARGET)
+CCubemap::CCubemap() :
+    CTextureBase(TARGET)
 {
 }
 

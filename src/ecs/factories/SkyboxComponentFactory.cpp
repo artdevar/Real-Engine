@@ -51,7 +51,7 @@ static constexpr inline float SKYBOX_VERTICES[] = {
 
 void CComponentsFactory::CreateSkyboxComponent(const std::shared_ptr<CTextureBase> &_Skybox, TSkyboxComponent &_Component)
 {
-  _Component.SkyboxTexture = _Skybox->Get();
+  _Component.SkyboxTexture = _Skybox;
   _Component.VerticesCount = ARRAY_SIZE(SKYBOX_VERTICES) / 3;
 
   _Component.VAO.Bind();

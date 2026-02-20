@@ -15,7 +15,7 @@ ShadowRenderPass::ShadowRenderPass(std::shared_ptr<CShader> _Shader) :
 {
   assert(m_DepthMap);
   m_DepthMapFBO.Bind();
-  m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, m_DepthMap->Get());
+  m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, m_DepthMap->ID());
   m_DepthMapFBO.DisableColorBuffer();
   m_DepthMapFBO.Unbind();
 }
@@ -28,8 +28,8 @@ void ShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderC
   m_DepthMapFBO.Bind();
 
   _Renderer.Clear(EClearFlags::Depth);
-  _Renderer.SetViewport(NewViewport);
   _Renderer.SetCullFace(ECullMode::Front);
+  _Renderer.SetViewport(NewViewport);
   _Renderer.SetShader(m_Shader.lock());
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
 }
@@ -58,7 +58,7 @@ void ShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
 
 void ShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
-  _RenderContext.ShadowMap = m_DepthMap->Get();
+  _RenderContext.ShadowMap = m_DepthMap->ID();
   m_DepthMapFBO.Unbind();
 
   _Renderer.SetCullFace(ECullMode::Back);
