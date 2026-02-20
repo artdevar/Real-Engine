@@ -40,20 +40,15 @@ bool CWorld::ShouldBeUpdated() const
   return m_EntitiesCoordinator != nullptr;
 }
 
-void CWorld::RenderInternal(IRenderer &_Renderer)
+void CWorld::Collect(TFrameData &_FrameData)
 {
-  const std::vector<TLight> LightingData = m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->GetherLightingData();
-  m_RenderPipeline->SetLightingData(LightingData);
-
-  CRenderQueue RenderQueue;
-  m_EntitiesCoordinator->GetSystem<ecs::CModelRenderSystem>()->Collect(RenderQueue);
-  m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(RenderQueue);
-  m_RenderPipeline->Render(RenderQueue, _Renderer);
+  m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->Collect(_FrameData);
 }
 
-bool CWorld::ShouldBeRendered() const
+void CWorld::Collect(CRenderQueue &_Queue)
 {
-  return m_EntitiesCoordinator != nullptr;
+  m_EntitiesCoordinator->GetSystem<ecs::CModelRenderSystem>()->Collect(_Queue);
+  m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(_Queue);
 }
 
 void CWorld::RemoveEntity(ecs::TEntity _Entity)
@@ -114,6 +109,6 @@ void CWorld::InitECS()
 
 void CWorld::InitRenderPipeline()
 {
-  m_RenderPipeline = std::make_unique<CRenderPipeline>();
-  m_RenderPipeline->Init();
+  //m_RenderPipeline = std::make_unique<CRenderPipeline>();
+  //m_RenderPipeline->Init();
 }

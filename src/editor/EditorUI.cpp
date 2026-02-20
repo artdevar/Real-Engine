@@ -45,32 +45,16 @@ void CEditorUI::Shutdown()
   ImGui::DestroyContext();
 }
 
-void CEditorUI::Init(CEngine *_Engine)
+void CEditorUI::Init()
 {
-  m_Engine = _Engine;
-
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
-  ImGui_ImplGlfw_InitForOpenGL(m_Engine->GetDisplay()->GetWindow(), true);
+  ImGui_ImplGlfw_InitForOpenGL(CEngine::Instance().GetDisplay()->GetWindow(), true);
   ImGui_ImplOpenGL3_Init("#version 460");
   ImGui::StyleColorsDark();
 }
 
-void CEditorUI::UpdateInternal(float _TimeDelta)
-{
-}
-
-bool CEditorUI::ShouldBeUpdated() const
-{
-  return m_Engine != nullptr;
-}
-
-bool CEditorUI::ShouldBeRendered() const
-{
-  return m_Engine != nullptr;
-}
-
-void CEditorUI::RenderInternal(IRenderer &_Renderer)
+void CEditorUI::RenderFrame()
 {
   RenderBegin();
 
@@ -149,7 +133,7 @@ void CEditorUI::RenderGlobalParams()
 
 void CEditorUI::RenderEntities()
 {
-  CWorld &World = *m_Engine->GetWorld();
+  std::shared_ptr<CWorld> World = CEngine::Instance().GetWorld();
 
   if (ImGui::CollapsingHeader("Entities##EntitiesWindow"))
   {
@@ -203,12 +187,12 @@ void CEditorUI::RenderEntities()
       ImGui::SameLine();
       if (ImGui::Button("Delete##DelEntity"))
       {
-        World.RemoveEntity(m_SelectedEntity.value());
+        World->RemoveEntity(m_SelectedEntity.value());
         m_SelectedEntity.reset();
       }
     }
 
-    const CUnorderedVector<ecs::TEntity> &Entities = World.GetAllEntities();
+    const CUnorderedVector<ecs::TEntity> &Entities = World->GetAllEntities();
 
     std::vector<std::string> EntitiesNames;
     for (auto Entity : Entities)
@@ -247,19 +231,19 @@ void CEditorUI::RenderLightDebugLines()
   if (!m_SelectedEntity.has_value())
     return;
 
-  CWorld    &World  = *m_Engine->GetWorld();
-  const auto Camera = m_Engine->GetCamera();
+  std::shared_ptr<CWorld> World  = CEngine::Instance().GetWorld();
+  const auto              Camera = CEngine::Instance().GetCamera();
   if (!Camera)
     return;
 
   const glm::mat4  View     = Camera->GetView();
   const glm::mat4  Proj     = Camera->GetProjection();
-  const TVector2i  Viewport = m_Engine->GetWindowSize();
+  const TVector2i  Viewport = CEngine::Instance().GetWindowSize();
   const glm::ivec2 GlmViewport{Viewport.X, Viewport.Y};
 
   ImDrawList *DrawList = ImGui::GetForegroundDrawList();
 
-  auto *Light = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TLightComponent>(m_SelectedEntity.value());
+  auto *Light = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TLightComponent>(m_SelectedEntity.value());
   if (!Light)
     return;
 
@@ -270,7 +254,7 @@ void CEditorUI::RenderLightDebugLines()
     Direction = glm::normalize(Direction);
 
   glm::vec3 StartWorld = Light->Position;
-  if (auto *Transform = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(m_SelectedEntity.value()); Transform)
+  if (auto *Transform = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(m_SelectedEntity.value()); Transform)
     StartWorld = glm::vec3(Transform->WorldMatrix[3]);
   const glm::vec3 EndWorld = StartWorld + Direction * 1.0f;
 
@@ -291,15 +275,15 @@ void CEditorUI::RenderLightDebugLines()
 
 void CEditorUI::RenderEntityData(ecs::TEntity _Entity)
 {
-  CWorld &World = *m_Engine->GetWorld();
+  std::shared_ptr<CWorld> World = CEngine::Instance().GetWorld();
 
-  if (auto *Component = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TModelComponent>(_Entity); Component)
+  if (auto *Component = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TModelComponent>(_Entity); Component)
     RenderEntityData(*Component);
 
-  if (auto *Component = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(_Entity); Component)
+  if (auto *Component = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(_Entity); Component)
     RenderEntityData(*Component);
 
-  if (auto *Component = World.m_EntitiesCoordinator->GetComponentSafe<ecs::TLightComponent>(_Entity); Component)
+  if (auto *Component = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TLightComponent>(_Entity); Component)
     RenderEntityData(*Component);
 }
 
@@ -449,6 +433,8 @@ int CEditorUI::GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Ent
 
 void CEditorUI::SpawnEntity(TEntityType _Type)
 {
+  CEngine &Engine = CEngine::Instance();
+
   switch (_Type)
   {
   case TEntityType::StaticMesh: {
@@ -456,11 +442,11 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     if (ModelPathToLoad.empty())
       return;
 
-    std::shared_ptr<CModel> Model = m_Engine->GetResourceManager()->LoadModel(ModelPathToLoad);
+    std::shared_ptr<CModel> Model = Engine.GetResourceManager()->LoadModel(ModelPathToLoad);
     if (!Model)
       return;
 
-    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
+    CEntityBuilder Builder = Engine.GetWorld()->CreateEntity();
 
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TTransformComponent>(glm::mat4x4(1.0f)));
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TModelComponent>(Model));
@@ -474,11 +460,11 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
     if (ModelPathToLoad.empty())
       return;
 
-    std::shared_ptr<CTextureBase> Cubemap = m_Engine->GetResourceManager()->LoadCubemap(ModelPathToLoad);
+    std::shared_ptr<CTextureBase> Cubemap = Engine.GetResourceManager()->LoadCubemap(ModelPathToLoad);
     if (!Cubemap)
       return;
 
-    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
+    CEntityBuilder Builder = Engine.GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TSkyboxComponent>(Cubemap));
     m_SelectedEntity = Builder.GetEntity();
 
@@ -486,21 +472,21 @@ void CEditorUI::SpawnEntity(TEntityType _Type)
   }
 
   case TEntityType::PointLight: {
-    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
+    CEntityBuilder Builder = Engine.GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Point));
     m_SelectedEntity = Builder.GetEntity();
     break;
   }
 
   case TEntityType::DirectionalLight: {
-    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
+    CEntityBuilder Builder = Engine.GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Directional));
     m_SelectedEntity = Builder.GetEntity();
     break;
   }
 
   case TEntityType::Spotlight: {
-    CEntityBuilder Builder = m_Engine->GetWorld()->CreateEntity();
+    CEntityBuilder Builder = Engine.GetWorld()->CreateEntity();
     Builder.AddComponent(ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Spotlight));
     m_SelectedEntity = Builder.GetEntity();
     break;

@@ -2,7 +2,6 @@
 
 #include "Defines.h"
 #include "MathCore.h"
-#include "interfaces/Renderable.h"
 #include "interfaces/Renderer.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
@@ -19,10 +18,10 @@ class CResourceManager;
 class CModel;
 class CDisplay;
 class CInputManager;
+class CRenderPipeline;
 
 class CEngine final : public IShutdownable,
-                      private IUpdateable,
-                      private IRenderable
+                      private IUpdateable
 {
   DISABLE_CLASS_COPY(CEngine);
 
@@ -52,10 +51,10 @@ public:
   std::shared_ptr<CInputManager> GetInputManager() const;
 
 private:
+  void Render(IRenderer &_Renderer);
+
   void UpdateInternal(float _TimeDelta) override;
   bool ShouldBeUpdated() const override;
-  void RenderInternal(IRenderer &_Renderer) override;
-  bool ShouldBeRendered() const override;
 
   void OnWindowResized(int _Width, int _Height);
   void ProcessInput(float _TimeDelta);
@@ -76,6 +75,7 @@ private:
   std::shared_ptr<CCamera>          m_Camera;
   std::shared_ptr<CWorld>           m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
+  std::unique_ptr<CRenderPipeline>  m_RenderPipeline;
 
 #if DEV_STAGE
   CEditorUI *m_EditorUI;

@@ -1,24 +1,23 @@
 #include "RenderPipeline.h"
 #include "RenderQueue.h"
+#include "FrameData.h"
 #include "passes/OpaqueRenderPass.h"
 #include "passes/SkyboxRenderPass.h"
 #include "passes/TransparentRenderPass.h"
 #include "passes/ShadowRenderPass.h"
-#include "FrameContext.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
 #include "engine/Config.h"
+#include "engine/Engine.h"
 #include "interfaces/Renderer.h"
-#include "render/FrameContext.h"
+#include "render/RenderContext.h"
 #include "utils/Resource.h"
 #include <glm/gtx/norm.hpp>
 
 CRenderPipeline::CRenderPipeline() :
     m_Lighting({}),
-    m_LightingUBO(GL_DYNAMIC_DRAW),
-    m_LightSpaceMatrix(1.0f),
-    m_LightSpaceMatrixDirty(true)
+    m_LightingUBO(GL_DYNAMIC_DRAW)
 {
 }
 
@@ -27,9 +26,9 @@ CRenderPipeline::~CRenderPipeline() = default;
 void CRenderPipeline::Init()
 {
   m_RenderPasses.push_back(std::make_unique<ShadowRenderPass>(resource::LoadShader("Depth")));
-  m_RenderPasses.push_back(std::make_unique<OpaqueRenderPass>(resource::LoadShader("Basic")));
+  m_RenderPasses.push_back(std::make_unique<OpaqueRenderPass>(resource::LoadShader("PBR")));
   m_RenderPasses.push_back(std::make_unique<SkyboxRenderPass>(resource::LoadShader("Skybox")));
-  m_RenderPasses.push_back(std::make_unique<TransparentRenderPass>(resource::LoadShader("Basic")));
+  m_RenderPasses.push_back(std::make_unique<TransparentRenderPass>(resource::LoadShader("PBR")));
 
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
@@ -37,37 +36,54 @@ void CRenderPipeline::Init()
   m_LightingUBO.Unbind();
 }
 
-void CRenderPipeline::Render(CRenderQueue &_Queue, IRenderer &_Renderer)
+void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer)
 {
-  std::vector<TRenderCommand> Commands = _Queue.StealCommands();
-  if (Commands.empty())
-    return;
+  BeginFrame(_Renderer);
 
-  TFrameContext FrameContext = CreateFrameContext(_Renderer);
-  SortCommands(Commands, FrameContext);
-
-  for (const std::unique_ptr<IRenderPass> &RenderPass : m_RenderPasses)
+  if (std::vector<TRenderCommand> Commands = _Queue.StealCommands(); !Commands.empty())
   {
-    if (!RenderPass->IsAvailable())
-      continue;
+    SetLightingData(FrameData.Lights);
 
-    std::span<TRenderCommand> CommandsSpan = FilterCommands(RenderPass, Commands);
-    if (CommandsSpan.empty())
-      continue;
+    TRenderContext FrameContext = CreateRenderContext(_Renderer);
+    SortCommands(Commands, FrameContext);
 
-    RenderPass->PreExecute(_Renderer, FrameContext, CommandsSpan);
-    RenderPass->Execute(_Renderer, FrameContext, CommandsSpan);
-    RenderPass->PostExecute(_Renderer, FrameContext, CommandsSpan);
+    for (const std::unique_ptr<IRenderPass> &RenderPass : m_RenderPasses)
+    {
+      if (!RenderPass->IsAvailable())
+        continue;
+
+      std::span<TRenderCommand> CommandsSpan = FilterCommands(RenderPass, Commands);
+      if (CommandsSpan.empty())
+        continue;
+
+      RenderPass->PreExecute(_Renderer, FrameContext, CommandsSpan);
+      RenderPass->Execute(_Renderer, FrameContext, CommandsSpan);
+      RenderPass->PostExecute(_Renderer, FrameContext, CommandsSpan);
+    }
   }
+
+  EndFrame(_Renderer);
 }
 
-void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const TFrameContext &_FrameContext)
+void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
+{
+  _Renderer.SetViewport(CEngine::Instance().GetWindowSize());
+  _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
+  _Renderer.ClearColor({0.86f, 0.86f, 0.86f, 1.0f});
+}
+
+void CRenderPipeline::EndFrame(IRenderer &_Renderer)
+{
+  _Renderer.CheckErrors();
+}
+
+void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext)
 {
   auto It = std::stable_partition(_Commands.begin(), _Commands.end(), [](const TRenderCommand &Command) {
     return Command.Material.AlphaMode != EAlphaMode::Blend;
   });
 
-  const glm::vec3 CamPos = _FrameContext.CameraPosition;
+  const glm::vec3 CamPos = _RenderContext.CameraPosition;
 
   std::stable_sort(It, _Commands.end(), [&CamPos](const TRenderCommand &A, const TRenderCommand &B) {
     const glm::vec3 PosA = glm::vec3(A.ModelMatrix[3]);
@@ -113,34 +129,30 @@ void CRenderPipeline::SetLightingData(const std::vector<TLight> &_Lighting)
   m_LightingUBO.Bind();
   m_LightingUBO.Assign(&m_Lighting, sizeof(TShaderLighting));
   m_LightingUBO.Unbind();
-  m_LightSpaceMatrixDirty = true;
 }
 
 glm::mat4 CRenderPipeline::CalculateLightSpaceMatrix() const
 {
-  if (m_LightSpaceMatrixDirty)
-  {
-    const float NearPlane = CConfig::Instance().GetLightSpaceMatrixZNear();
-    const float FarPlane  = CConfig::Instance().GetLightSpaceMatrixZFar();
-    const float LeftBot   = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
-    const float RightTop  = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
+  const float NearPlane = CConfig::Instance().GetLightSpaceMatrixZNear();
+  const float FarPlane  = CConfig::Instance().GetLightSpaceMatrixZFar();
+  const float LeftBot   = CConfig::Instance().GetLightSpaceMatrixOrthLeftBot();
+  const float RightTop  = CConfig::Instance().GetLightSpaceMatrixOrthRightTop();
 
-    const glm::vec3 LightDir        = m_Lighting.LightDirectional.Direction * -1.0f;
-    const glm::mat4 LightProjection = glm::ortho(LeftBot, RightTop, LeftBot, RightTop, NearPlane, FarPlane);
-    const glm::mat4 LightView       = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+  const glm::vec3 LightDir        = m_Lighting.LightDirectional.Direction * -1.0f;
+  const glm::mat4 LightProjection = glm::ortho(LeftBot, RightTop, LeftBot, RightTop, NearPlane, FarPlane);
+  const glm::mat4 LightView       = glm::lookAt(LightDir, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 
-    m_LightSpaceMatrix      = LightProjection * LightView;
-    m_LightSpaceMatrixDirty = false;
-  }
-  return m_LightSpaceMatrix;
+  return LightProjection * LightView;
 }
 
-TFrameContext CRenderPipeline::CreateFrameContext(IRenderer &_Renderer)
+TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
 {
-  TFrameContext FrameContext;
-  FrameContext.CameraPosition       = _Renderer.GetCamera()->GetPosition();
-  FrameContext.ProjectionMatrix     = _Renderer.GetCamera()->GetProjection();
-  FrameContext.ViewMatrix           = _Renderer.GetCamera()->GetView();
+  const auto &Camera = _Renderer.GetCamera();
+
+  TRenderContext FrameContext;
+  FrameContext.CameraPosition       = Camera->GetPosition();
+  FrameContext.ProjectionMatrix     = Camera->GetProjection();
+  FrameContext.ViewMatrix           = Camera->GetView();
   FrameContext.ViewProjectionMatrix = FrameContext.ProjectionMatrix * FrameContext.ViewMatrix;
   FrameContext.LightSpaceMatrix     = CalculateLightSpaceMatrix();
   return FrameContext;

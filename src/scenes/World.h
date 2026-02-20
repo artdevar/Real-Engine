@@ -3,6 +3,8 @@
 #include "ecs/CommonECS.h"
 #include "interfaces/Identifiable.h"
 #include "interfaces/Renderable.h"
+#include "interfaces/RenderCollector.h"
+#include "interfaces/FrameDataCollector.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
 #include "utils/Common.h"
@@ -15,7 +17,8 @@ class CRenderPipeline;
 
 class CWorld : public IIdentifiable,
                public IUpdateable,
-               public IRenderable,
+               public IRenderCollector,
+               public IFrameDataCollector,
                public IShutdownable
 {
   DISABLE_CLASS_COPY(CWorld);
@@ -28,11 +31,12 @@ public:
   void Init();
   void Shutdown() override;
 
+  void Collect(TFrameData &_FrameData) override;
+  void Collect(CRenderQueue &_Queue) override;
+
 private:
   void UpdateInternal(float _TimeDelta) override;
   bool ShouldBeUpdated() const override;
-  void RenderInternal(IRenderer &_Renderer) override;
-  bool ShouldBeRendered() const override;
 
 public:
   void RemoveEntity(ecs::TEntity _Entity);

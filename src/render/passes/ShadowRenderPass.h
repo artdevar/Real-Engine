@@ -1,6 +1,6 @@
 #pragma once
+
 #include "interfaces/Renderer.h"
-#include "render/FrameContext.h"
 #include "render/RenderCommand.h"
 #include "interfaces/RenderPass.h"
 #include <vector>
@@ -14,9 +14,9 @@ public:
   explicit ShadowRenderPass(std::shared_ptr<CShader> shader);
 
   bool Accepts(const TRenderCommand &command) const override;
-  void PreExecute(IRenderer &renderer, TFrameContext &frameContext, std::span<TRenderCommand> commands) override;
-  void Execute(IRenderer &renderer, TFrameContext &frameContext, std::span<TRenderCommand> commands) override;
-  void PostExecute(IRenderer &renderer, TFrameContext &frameContext, std::span<TRenderCommand> commands) override;
+  void PreExecute(IRenderer &renderer, TRenderContext &renderContext, std::span<TRenderCommand> commands) override;
+  void Execute(IRenderer &renderer, TRenderContext &renderContext, std::span<TRenderCommand> commands) override;
+  void PostExecute(IRenderer &renderer, TRenderContext &renderContext, std::span<TRenderCommand> commands) override;
   bool IsAvailable() const override;
 
 private:

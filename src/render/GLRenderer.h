@@ -9,8 +9,6 @@
 class COpenGLRenderer final : public IRenderer
 {
 public:
-  void BeginFrame(const TColor &_ClearColor, EClearFlags _ClearFlags) override;
-  void EndFrame() override;
   void CheckErrors() override;
 
   void Clear(EClearFlags _ClearFlags) override;

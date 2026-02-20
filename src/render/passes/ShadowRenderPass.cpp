@@ -1,6 +1,6 @@
 #include "ShadowRenderPass.h"
 #include "interfaces/Renderer.h"
-#include "render/FrameContext.h"
+#include "render/RenderContext.h"
 #include "render/RenderCommand.h"
 #include "interfaces/Renderer.h"
 #include "assets/Texture.h"
@@ -20,7 +20,7 @@ ShadowRenderPass::ShadowRenderPass(std::shared_ptr<CShader> _Shader) :
   m_DepthMapFBO.Unbind();
 }
 
-void ShadowRenderPass::PreExecute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void ShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   m_OldViewport = _Renderer.GetViewport();
   TVector2i NewViewport(m_ShadowMapSize, m_ShadowMapSize);
@@ -31,10 +31,10 @@ void ShadowRenderPass::PreExecute(IRenderer &_Renderer, TFrameContext &_FrameCon
   _Renderer.SetViewport(NewViewport);
   _Renderer.SetCullFace(ECullMode::Front);
   _Renderer.SetShader(m_Shader.lock());
-  _Renderer.SetUniform("u_LightSpaceMatrix", _FrameContext.LightSpaceMatrix);
+  _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
 }
 
-void ShadowRenderPass::Execute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void ShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
@@ -56,9 +56,9 @@ void ShadowRenderPass::Execute(IRenderer &_Renderer, TFrameContext &_FrameContex
   }
 }
 
-void ShadowRenderPass::PostExecute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void ShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
-  _FrameContext.ShadowMap = m_DepthMap->Get();
+  _RenderContext.ShadowMap = m_DepthMap->Get();
   m_DepthMapFBO.Unbind();
 
   _Renderer.SetCullFace(ECullMode::Back);

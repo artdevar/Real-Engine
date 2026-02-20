@@ -3,6 +3,9 @@
 #include "MathTypes.h"
 #include <limits>
 
+namespace math
+{
+
 constexpr inline bool AreEqual(float _Lhs, float _Rhs)
 {
   const float Diff = _Lhs > _Rhs ? _Lhs - _Rhs : _Rhs - _Lhs;
@@ -67,3 +70,5 @@ constexpr inline void Normalize(T &Vec) noexcept
   if (!IsZero(Len))
     Vec /= Len;
 }
+
+} // namespace math

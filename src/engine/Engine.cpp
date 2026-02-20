@@ -7,15 +7,21 @@
 #include "editor/EditorUI.h"
 #include "render/GLRenderer.h"
 #include "render/RenderTypes.h"
+#include "render/FrameData.h"
+#include "render/RenderPipeline.h"
+#include "render/RenderQueue.h"
 #include "scenes/World.h"
 #include <glm/glm.hpp>
 #include <string>
 
 CEngine *CEngine::Singleton = nullptr;
 
-CEngine::CEngine()
-    : m_Display(std::make_unique<CDisplay>()), m_InputManager(std::make_shared<CInputManager>()),
-      m_ResourceManager(std::make_shared<CResourceManager>()), m_World(std::make_shared<CWorld>()), m_Camera(std::make_shared<CCamera>())
+CEngine::CEngine() :
+    m_Display(std::make_unique<CDisplay>()),
+    m_InputManager(std::make_shared<CInputManager>()),
+    m_Camera(std::make_shared<CCamera>()),
+    m_World(std::make_shared<CWorld>()),
+    m_ResourceManager(std::make_shared<CResourceManager>())
 {
 #if DEV_STAGE
   m_EditorUI = new CEditorUI;
@@ -53,6 +59,7 @@ void CEngine::Shutdown()
   m_Display.reset();
 
   delete Singleton;
+  Singleton = nullptr;
 }
 
 int CEngine::Init()
@@ -91,29 +98,28 @@ int CEngine::Init()
 #endif
 
   m_ResourceManager->Init();
+
+  m_RenderPipeline = std::make_unique<CRenderPipeline>();
+  m_RenderPipeline->Init();
+
   m_World->Init();
 #if DEV_STAGE
-  m_EditorUI->Init(this);
+  m_EditorUI->Init();
 #endif
+
+  m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
 
   return EXIT_SUCCESS;
 }
 
 int CEngine::Run()
 {
-  m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
-
   std::unique_ptr<IRenderer> Renderer = std::make_unique<COpenGLRenderer>();
   Renderer->SetCamera(m_Camera);
 
   double LastFrameTime = 0.0;
   while (!m_Display->ShouldClose())
   {
-    const TVector2i WindowSize = GetWindowSize();
-
-    Renderer->SetViewport(WindowSize);
-    Renderer->BeginFrame(TColor{0.86f, 0.86f, 0.86f, 1.0f}, static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
-
     const double CurrentFrameTime = glfwGetTime();
     const float  FrameDelta       = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
     LastFrameTime                 = CurrentFrameTime;
@@ -125,7 +131,6 @@ int CEngine::Run()
     Update(FrameDelta);
     Render(*Renderer);
 
-    Renderer->EndFrame();
     m_Display->SwapBuffers();
     m_Display->PollEvents();
   }
@@ -140,9 +145,6 @@ void CEngine::UpdateInternal(float _TimeDelta)
 
   m_Camera->Update(_TimeDelta);
   m_World->Update(_TimeDelta);
-#if DEV_STAGE
-  m_EditorUI->Update(_TimeDelta);
-#endif
 }
 
 bool CEngine::ShouldBeUpdated() const
@@ -150,17 +152,19 @@ bool CEngine::ShouldBeUpdated() const
   return true;
 }
 
-void CEngine::RenderInternal(IRenderer &_Renderer)
+void CEngine::Render(IRenderer &_Renderer)
 {
-  m_World->Render(_Renderer);
-#if DEV_STAGE
-  m_EditorUI->Render(_Renderer);
-#endif
-}
+  CRenderQueue RenderQueue;
+  TFrameData   FrameData;
 
-bool CEngine::ShouldBeRendered() const
-{
-  return true;
+  m_World->Collect(FrameData);
+  m_World->Collect(RenderQueue);
+
+  m_RenderPipeline->Render(FrameData, RenderQueue, _Renderer);
+
+#if DEV_STAGE
+  m_EditorUI->RenderFrame();
+#endif
 }
 
 void CEngine::LoadConfig()

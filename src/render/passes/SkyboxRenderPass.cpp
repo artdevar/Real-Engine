@@ -1,6 +1,6 @@
 #include "SkyboxRenderPass.h"
 #include "interfaces/Renderer.h"
-#include "render/FrameContext.h"
+#include "render/RenderContext.h"
 #include "render/RenderCommand.h"
 #include "render/ShaderTypes.h"
 #include "assets/Texture.h"
@@ -10,7 +10,7 @@ SkyboxRenderPass::SkyboxRenderPass(std::shared_ptr<CShader> _Shader) :
 {
 }
 
-void SkyboxRenderPass::PreExecute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void SkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LEQUAL);
@@ -18,11 +18,11 @@ void SkyboxRenderPass::PreExecute(IRenderer &_Renderer, TFrameContext &_FrameCon
   _Renderer.SetCullFace(ECullMode::None);
 
   _Renderer.SetShader(m_Shader.lock());
-  _Renderer.SetUniform("u_View", glm::mat4(glm::mat3(_FrameContext.ViewMatrix)));
-  _Renderer.SetUniform("u_Projection", _FrameContext.ProjectionMatrix);
+  _Renderer.SetUniform("u_View", glm::mat4(glm::mat3(_RenderContext.ViewMatrix)));
+  _Renderer.SetUniform("u_Projection", _RenderContext.ProjectionMatrix);
 }
 
-void SkyboxRenderPass::Execute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void SkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
@@ -40,7 +40,7 @@ void SkyboxRenderPass::Execute(IRenderer &_Renderer, TFrameContext &_FrameContex
   }
 }
 
-void SkyboxRenderPass::PostExecute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void SkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthMask(true);
   _Renderer.SetDepthFunc(GL_LESS);

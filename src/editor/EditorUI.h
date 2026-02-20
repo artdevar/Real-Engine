@@ -3,18 +3,10 @@
 #if DEV_STAGE
 #include "ecs/CommonECS.h"
 #include "ecs/Components.h"
-#include "interfaces/Renderable.h"
 #include "interfaces/Shutdownable.h"
-#include "interfaces/Updateable.h"
 #include "utils/UnorderedVector.h"
 
-class CEngine;
-class CObject;
-class CShader;
-
-class CEditorUI : public IUpdateable,
-                  public IRenderable,
-                  public IShutdownable
+class CEditorUI : public IShutdownable
 {
   enum TEntityType
   {
@@ -28,17 +20,12 @@ class CEditorUI : public IUpdateable,
 public:
   void Shutdown() override;
 
-  void Init(CEngine *_Engine);
+  void Init();
 
-private:
-  void UpdateInternal(float _TimeDelta) override;
-  bool ShouldBeUpdated() const override;
-  void RenderInternal(IRenderer &_Renderer) override;
-  bool ShouldBeRendered() const override;
+  void RenderFrame();
 
 private:
   void RenderBegin();
-
   void RenderEnd();
 
   void RenderEntities();
@@ -56,8 +43,6 @@ private:
   int GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const;
 
 private:
-  CEngine *m_Engine;
-
   std::optional<ecs::TEntity> m_SelectedEntity;
 };
 

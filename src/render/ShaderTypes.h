@@ -14,7 +14,8 @@ constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_1 = 4;
 constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_2 = 5;
 constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_3 = 6;
 
-constexpr inline GLuint BINDING_LIGHTING_BUFFER = 0;
+constexpr inline GLuint BINDING_TRANSFORM_BUFFER = 0;
+constexpr inline GLuint BINDING_LIGHTING_BUFFER  = 1;
 
 constexpr inline GLenum TEXTURE_BASIC_COLOR_UNIT         = GL_TEXTURE1;
 constexpr inline GLint  TEXTURE_BASIC_COLOR_INDEX        = 1;

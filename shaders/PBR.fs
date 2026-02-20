@@ -8,7 +8,7 @@ struct TLightDirectional
   vec3 Specular;
 };
 
-layout(std140) uniform u_Lighting
+layout(std140, binding = 1) uniform u_Lighting
 {
   TLightDirectional LightDirectional;
 };

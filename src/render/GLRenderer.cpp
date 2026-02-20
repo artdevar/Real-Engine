@@ -5,18 +5,6 @@
 #include "assets/Texture.h"
 #include "utils/Logger.h"
 
-void COpenGLRenderer::BeginFrame(const TColor &_ClearColor, EClearFlags _ClearFlags)
-{
-  m_CurrentShader.reset();
-  ClearColor(_ClearColor);
-  Clear(_ClearFlags);
-}
-
-void COpenGLRenderer::EndFrame()
-{
-  CheckErrors();
-}
-
 void COpenGLRenderer::CheckErrors()
 {
   while (true)
@@ -276,6 +264,9 @@ std::string COpenGLRenderer::GetGLErrorDescription(GLenum _Error)
   case GL_INVALID_OPERATION:
     return "GL_INVALID_OPERATION";
 
+  case GL_INVALID_FRAMEBUFFER_OPERATION:
+    return "GL_INVALID_FRAMEBUFFER_OPERATION";
+
   case GL_STACK_OVERFLOW:
     return "GL_STACK_OVERFLOW";
 
@@ -284,9 +275,6 @@ std::string COpenGLRenderer::GetGLErrorDescription(GLenum _Error)
 
   case GL_OUT_OF_MEMORY:
     return "GL_OUT_OF_MEMORY";
-
-  case GL_INVALID_FRAMEBUFFER_OPERATION:
-    return "GL_INVALID_FRAMEBUFFER_OPERATION";
 
   default:
     return "UNDEFINED";

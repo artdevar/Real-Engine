@@ -1,5 +1,5 @@
 #include "OpaqueRenderPass.h"
-#include "render/FrameContext.h"
+#include "render/RenderContext.h"
 #include "render/RenderCommand.h"
 #include "interfaces/Renderer.h"
 #include "assets/Texture.h"
@@ -9,7 +9,7 @@ OpaqueRenderPass::OpaqueRenderPass(std::shared_ptr<CShader> _Shader) :
 {
 }
 
-void OpaqueRenderPass::PreExecute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void OpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LESS);
@@ -18,18 +18,18 @@ void OpaqueRenderPass::PreExecute(IRenderer &_Renderer, TFrameContext &_FrameCon
   _Renderer.SetBlending(EAlphaMode::Opaque);
 
   _Renderer.SetShader(m_Shader.lock());
-  _Renderer.SetUniform("u_ViewPos", _FrameContext.CameraPosition);
-  _Renderer.SetUniform("u_LightSpaceMatrix", _FrameContext.LightSpaceMatrix);
+  _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
+  _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
-  CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _FrameContext.ShadowMap);
+  CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
 }
 
-void OpaqueRenderPass::Execute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void OpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
     _Renderer.SetUniform("u_Model", Command.ModelMatrix);
-    _Renderer.SetUniform("u_MVP", _FrameContext.ViewProjectionMatrix * Command.ModelMatrix);
+    _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command.ModelMatrix);
 
     CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command.Material.BaseColorTexture);
     CTexture::Bind(TEXTURE_NORMAL_UNIT, Command.Material.NormalTexture);
@@ -65,7 +65,7 @@ void OpaqueRenderPass::Execute(IRenderer &_Renderer, TFrameContext &_FrameContex
   }
 }
 
-void OpaqueRenderPass::PostExecute(IRenderer &_Renderer, TFrameContext &_FrameContext, std::span<TRenderCommand> _Commands)
+void OpaqueRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
 }
 

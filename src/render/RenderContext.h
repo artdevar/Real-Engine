@@ -1,9 +1,8 @@
 #pragma once
 
-#include "ShaderTypes.h"
 #include <glm/mat4x4.hpp>
 
-struct TFrameContext
+struct TRenderContext
 {
   glm::vec3 CameraPosition;
   glm::mat4 ViewProjectionMatrix;
