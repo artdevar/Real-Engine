@@ -51,7 +51,7 @@ private:
   void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
   std::span<TRenderCommand> FilterCommands(const std::unique_ptr<IRenderPass> &_RenderPass, std::vector<TRenderCommand> &_Commands);
 
-  std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, int _MultisampleCount, TVector2i _Size) const;
+  std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size) const;
 
 private:
   std::vector<std::unique_ptr<IRenderPass>> m_ShadowPasses;

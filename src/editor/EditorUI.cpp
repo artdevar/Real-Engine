@@ -94,6 +94,18 @@ void CEditorUI::RenderGlobalParams()
     bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
     if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
       CConfig::Instance().SetShadowsEnabled(ShadowsEnabled, CPasskey(this));
+
+    bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
+    if (ImGui::Checkbox("FXAA enabled", &FXAAEnabled))
+      CConfig::Instance().SetFXAAEnabled(FXAAEnabled, CPasskey(this));
+
+    bool HDREnabled = CConfig::Instance().GetHDREnabled();
+    if (ImGui::Checkbox("HDR enabled", &HDREnabled))
+      CConfig::Instance().SetHDREnabled(HDREnabled, CPasskey(this));
+
+    float HDRExposure = CConfig::Instance().GetHDRExposure();
+    if (ImGui::DragFloat("HDR exposure", &HDRExposure, 0.1f, 0.0f, 10.0f))
+      CConfig::Instance().SetHDRExposure(HDRExposure, CPasskey(this));
   }
 
   if (ImGui::CollapsingHeader("Camera"))
@@ -366,13 +378,16 @@ void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
     ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.25f);
     ImGui::Separator();
 
-    ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
+    ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient),
+                      ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
     ImGui::Separator();
 
-    ImGui::ColorEdit3("Diffuse color##LightDiffColor", glm::value_ptr(_Light.Diffuse), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
+    ImGui::ColorEdit3("Diffuse color##LightDiffColor", glm::value_ptr(_Light.Diffuse),
+                      ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
     ImGui::Separator();
 
-    ImGui::ColorEdit3("Specular color##LightSpecColor", glm::value_ptr(_Light.Specular), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
+    ImGui::ColorEdit3("Specular color##LightSpecColor", glm::value_ptr(_Light.Specular),
+                      ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
     break;
   }
 

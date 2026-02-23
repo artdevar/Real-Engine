@@ -21,6 +21,18 @@ public:
   {
     AreShadowsEnabled = _Enabled;
   }
+  void SetFXAAEnabled(bool _Enabled, CPasskey<CEditorUI>)
+  {
+    IsFXAAEnabled = _Enabled;
+  }
+  void SetHDREnabled(bool _Enabled, CPasskey<CEditorUI>)
+  {
+    IsHDREnabled = _Enabled;
+  }
+  void SetHDRExposure(float _Exposure, CPasskey<CEditorUI>)
+  {
+    HDRExposure = _Exposure;
+  }
 
   void SetCameraZNear(float _ZNear, CPasskey<CEditorUI>)
   {
@@ -65,9 +77,17 @@ public:
   {
     return AreShadowsEnabled;
   }
-  int GetMultisampleCount() const
+  bool GetFXAAEnabled() const
   {
-    return MultisampleCount;
+    return IsFXAAEnabled;
+  }
+  bool GetHDREnabled() const
+  {
+    return IsHDREnabled;
+  }
+  float GetHDRExposure() const
+  {
+    return HDRExposure;
   }
 
   float GetCameraZNear() const
@@ -115,9 +135,11 @@ public:
 
 private:
   // Render
-  int  ShadowMapSize     = 2048;
-  bool AreShadowsEnabled = true;
-  int  MultisampleCount  = 4;
+  int   ShadowMapSize     = 2048;
+  bool  AreShadowsEnabled = true;
+  bool  IsFXAAEnabled     = true;
+  bool  IsHDREnabled      = true;
+  float HDRExposure       = 1.0f;
 
   // Camera parameters
   float Camera_ZNear = 0.1f;

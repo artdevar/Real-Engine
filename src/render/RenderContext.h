@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/mat4x4.hpp>
+#include "engine/MathTypes.h"
 #include "Buffer.h"
 
 struct TRenderContext

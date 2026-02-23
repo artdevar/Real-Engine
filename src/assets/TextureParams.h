@@ -41,8 +41,6 @@ struct TTextureParams
   int Format         = 0;
   int Type           = 0;
 
-  std::optional<int> Samples;
-
   std::optional<CStaticArray<float, BordersCount>> BorderColors;
   ETextureWrap                                     WrapS     = ETextureWrap::Repeat;
   ETextureWrap                                     WrapT     = ETextureWrap::Repeat;

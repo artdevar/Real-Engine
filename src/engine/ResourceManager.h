@@ -29,6 +29,8 @@ public:
   std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path);
   std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params);
 
+  void MarkUnused(const std::string &_Name);
+
 private:
   static std::filesystem::path GetDefaultTexturePath(ETextureType _TextureType);
 

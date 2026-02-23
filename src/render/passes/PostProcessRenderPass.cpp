@@ -4,6 +4,7 @@
 #include "interfaces/Renderer.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
+#include "engine/Config.h"
 
 static constexpr float QUAD_VERTICES[] = {
     // positions        // texcoords
@@ -40,6 +41,10 @@ void PostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rende
 {
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.RenderTexture);
   _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
+  _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
+  _Renderer.SetUniform("IsFXAAEnabled", CConfig::Instance().GetFXAAEnabled());
+  _Renderer.SetUniform("IsHDR", CConfig::Instance().GetHDREnabled());
+  _Renderer.SetUniform("Exposure", CConfig::Instance().GetHDRExposure());
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }
 

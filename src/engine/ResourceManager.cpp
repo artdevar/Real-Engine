@@ -159,3 +159,13 @@ std::filesystem::path CResourceManager::GetDefaultTexturePath(ETextureType _Text
     return CConfig::Instance().GetTexturesDir() / "missing.jpg";
   }
 }
+
+void CResourceManager::MarkUnused(const std::string &_Name)
+{
+  const auto It = m_Assets.find(_Name);
+  if (It == m_Assets.end())
+    return;
+
+  It->second->Shutdown();
+  m_Assets.erase(It);
+}

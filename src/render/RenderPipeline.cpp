@@ -33,10 +33,9 @@ void CRenderPipeline::Init()
   m_GeometryPasses.push_back(std::make_unique<TransparentRenderPass>(resource::LoadShader("PBR")));
   m_PostProcessPasses.push_back(std::make_unique<PostProcessRenderPass>(resource::LoadShader("PostProcess")));
 
-  const TVector2i WindowSize       = CEngine::Instance().GetWindowSize();
-  const int       MultisampleCount = CConfig::Instance().GetMultisampleCount();
+  const TVector2i WindowSize = CEngine::Instance().GetWindowSize();
 
-  m_SceneFBO.Texture = CreateRenderTexture("Scene", MultisampleCount, WindowSize);
+  m_SceneFBO.Texture = CreateRenderTexture("Scene", WindowSize);
 
   m_SceneFBO.RenderBuffer.Bind();
   m_SceneFBO.RenderBuffer.AllocateStorage(GL_DEPTH_COMPONENT, WindowSize.X, WindowSize.Y);
@@ -95,7 +94,7 @@ void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderCo
 void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   _RenderContext.SceneFrameBuffer.get().Bind();
-  BeginFrame(_Renderer);
+  _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
 
   for (const std::unique_ptr<IRenderPass> &RenderPass : m_GeometryPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -106,7 +105,6 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   _RenderContext.SceneFrameBuffer.get().Unbind();
-  BeginFrame(_Renderer);
 
   for (const std::unique_ptr<IRenderPass> &RenderPass : m_PostProcessPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -213,7 +211,7 @@ TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
   };
 }
 
-std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::string &_Name, int _MultisampleCount, TVector2i _Size) const
+std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size) const
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
@@ -221,7 +219,6 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TextureParams.InternalFormat = GL_RGBA16F;
   TextureParams.Format         = GL_RGBA;
   TextureParams.Type           = GL_FLOAT;
-  TextureParams.Samples        = _MultisampleCount;
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
   return resource::CreateTexture(_Name, TextureParams);

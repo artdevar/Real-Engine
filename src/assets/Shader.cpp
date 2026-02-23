@@ -115,10 +115,7 @@ void CShader::SetUniform(std::string_view _Name, const UniformType &_Value)
   if (UniformLocIter == m_UniformsCache.end())
   {
     GLint UniformLoc = glGetUniformLocation(GetID(), _Name.data());
-    if (UniformLoc == INVALID_UNIFORM_LOCATION)
-      return;
-
-    UniformLocIter = m_UniformsCache.emplace(_Name.data(), UniformLoc).first;
+    UniformLocIter   = m_UniformsCache.emplace(_Name.data(), UniformLoc).first;
   }
 
   std::visit(
@@ -155,10 +152,7 @@ void CShader::SetUniformBlockBinding(std::string_view _BlockName, GLuint _Unifor
   if (UniformLocIter == m_UniformsCache.end())
   {
     GLint UniformBlockLoc = glGetUniformBlockIndex(GetID(), _BlockName.data());
-    if (UniformBlockLoc == GL_INVALID_INDEX)
-      return;
-
-    UniformLocIter = m_UniformsCache.emplace(_BlockName.data(), UniformBlockLoc).first;
+    UniformLocIter        = m_UniformsCache.emplace(_BlockName.data(), UniformBlockLoc).first;
   }
 
   glUniformBlockBinding(GetID(), UniformLocIter->second, _UniformBlockBinding);
@@ -219,9 +213,9 @@ void CShader::Validate()
 
   const GLuint OldProgram = m_ID;
   m_ID                    = NewProgram;
+  m_VertexTimestamp       = NewVertexTimestamp;
+  m_FragmentTimestamp     = NewFragmentTimestamp;
   m_UniformsCache.clear();
-  m_VertexTimestamp   = NewVertexTimestamp;
-  m_FragmentTimestamp = NewFragmentTimestamp;
   glUseProgram(m_ID);
 
   if (OldProgram != INVALID_VALUE)
