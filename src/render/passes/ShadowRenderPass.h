@@ -11,12 +11,12 @@ class CShader;
 class ShadowRenderPass : public IRenderPass
 {
 public:
-  explicit ShadowRenderPass(std::shared_ptr<CShader> shader);
+  explicit ShadowRenderPass(std::shared_ptr<CShader> _Shader);
 
-  bool Accepts(const TRenderCommand &command) const override;
-  void PreExecute(IRenderer &renderer, TRenderContext &renderContext, std::span<TRenderCommand> commands) override;
-  void Execute(IRenderer &renderer, TRenderContext &renderContext, std::span<TRenderCommand> commands) override;
-  void PostExecute(IRenderer &renderer, TRenderContext &renderContext, std::span<TRenderCommand> commands) override;
+  bool Accepts(const TRenderCommand &_Command) const override;
+  void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
+  void Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
+  void PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
   bool IsAvailable() const override;
 
 private:

@@ -5,6 +5,7 @@
 #include "passes/SkyboxRenderPass.h"
 #include "passes/TransparentRenderPass.h"
 #include "passes/ShadowRenderPass.h"
+#include "passes/PostProcessRenderPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -13,6 +14,7 @@
 #include "interfaces/Renderer.h"
 #include "render/RenderContext.h"
 #include "utils/Resource.h"
+#include "utils/Logger.h"
 #include <glm/gtx/norm.hpp>
 
 CRenderPipeline::CRenderPipeline() :
@@ -25,10 +27,25 @@ CRenderPipeline::~CRenderPipeline() = default;
 
 void CRenderPipeline::Init()
 {
-  m_RenderPasses.push_back(std::make_unique<ShadowRenderPass>(resource::LoadShader("Depth")));
-  m_RenderPasses.push_back(std::make_unique<OpaqueRenderPass>(resource::LoadShader("PBR")));
-  m_RenderPasses.push_back(std::make_unique<SkyboxRenderPass>(resource::LoadShader("Skybox")));
-  m_RenderPasses.push_back(std::make_unique<TransparentRenderPass>(resource::LoadShader("PBR")));
+  m_ShadowPasses.push_back(std::make_unique<ShadowRenderPass>(resource::LoadShader("Depth")));
+  m_GeometryPasses.push_back(std::make_unique<OpaqueRenderPass>(resource::LoadShader("PBR")));
+  m_GeometryPasses.push_back(std::make_unique<SkyboxRenderPass>(resource::LoadShader("Skybox")));
+  m_GeometryPasses.push_back(std::make_unique<TransparentRenderPass>(resource::LoadShader("PBR")));
+  m_PostProcessPasses.push_back(std::make_unique<PostProcessRenderPass>(resource::LoadShader("PostProcess")));
+
+  const TVector2i WindowSize       = CEngine::Instance().GetWindowSize();
+  const int       MultisampleCount = CConfig::Instance().GetMultisampleCount();
+
+  m_SceneFBO.Texture = CreateRenderTexture("Scene", MultisampleCount, WindowSize);
+
+  m_SceneFBO.RenderBuffer.Bind();
+  m_SceneFBO.RenderBuffer.AllocateStorage(GL_DEPTH_COMPONENT, WindowSize.X, WindowSize.Y);
+  m_SceneFBO.RenderBuffer.Unbind();
+
+  m_SceneFBO.FrameBuffer.Bind();
+  m_SceneFBO.FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_SceneFBO.Texture->ID());
+  m_SceneFBO.FrameBuffer.AttachRenderbuffer(GL_DEPTH_ATTACHMENT, m_SceneFBO.RenderBuffer.ID());
+  m_SceneFBO.FrameBuffer.Unbind();
 
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
@@ -44,22 +61,12 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
   {
     SetLightingData(FrameData.Lights);
 
-    TRenderContext FrameContext = CreateRenderContext(_Renderer);
-    SortCommands(Commands, FrameContext);
+    TRenderContext RenderContext = CreateRenderContext(_Renderer);
+    SortCommands(Commands, RenderContext);
 
-    for (const std::unique_ptr<IRenderPass> &RenderPass : m_RenderPasses)
-    {
-      if (!RenderPass->IsAvailable())
-        continue;
-
-      std::span<TRenderCommand> CommandsSpan = FilterCommands(RenderPass, Commands);
-      if (CommandsSpan.empty())
-        continue;
-
-      RenderPass->PreExecute(_Renderer, FrameContext, CommandsSpan);
-      RenderPass->Execute(_Renderer, FrameContext, CommandsSpan);
-      RenderPass->PostExecute(_Renderer, FrameContext, CommandsSpan);
-    }
+    ShadowPass(_Renderer, RenderContext, Commands);
+    GeometryPass(_Renderer, RenderContext, Commands);
+    PostProcessPass(_Renderer, RenderContext, Commands);
   }
 
   EndFrame(_Renderer);
@@ -75,6 +82,52 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
 void CRenderPipeline::EndFrame(IRenderer &_Renderer)
 {
   _Renderer.CheckErrors();
+}
+
+void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  _RenderContext.SceneFrameBuffer.get().Unbind();
+
+  for (const std::unique_ptr<IRenderPass> &RenderPass : m_ShadowPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+}
+
+void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  _RenderContext.SceneFrameBuffer.get().Bind();
+  BeginFrame(_Renderer);
+
+  for (const std::unique_ptr<IRenderPass> &RenderPass : m_GeometryPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+
+  _RenderContext.SceneFrameBuffer.get().Unbind();
+}
+
+void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  _RenderContext.SceneFrameBuffer.get().Unbind();
+  BeginFrame(_Renderer);
+
+  for (const std::unique_ptr<IRenderPass> &RenderPass : m_PostProcessPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+}
+
+void CRenderPipeline::DoRenderPass(const std::unique_ptr<IRenderPass> &_RenderPass,
+                                   IRenderer                          &_Renderer,
+                                   TRenderContext                     &_RenderContext,
+                                   std::vector<TRenderCommand>        &_Commands)
+{
+
+  if (!_RenderPass->IsAvailable())
+    return;
+
+  std::span<TRenderCommand> CommandsSpan = FilterCommands(_RenderPass, _Commands);
+  if (CommandsSpan.empty())
+    return;
+
+  _RenderPass->PreExecute(_Renderer, _RenderContext, CommandsSpan);
+  _RenderPass->Execute(_Renderer, _RenderContext, CommandsSpan);
+  _RenderPass->PostExecute(_Renderer, _RenderContext, CommandsSpan);
 }
 
 void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext)
@@ -149,11 +202,27 @@ TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
 {
   const auto &Camera = _Renderer.GetCamera();
 
-  TRenderContext FrameContext;
-  FrameContext.CameraPosition       = Camera->GetPosition();
-  FrameContext.ProjectionMatrix     = Camera->GetProjection();
-  FrameContext.ViewMatrix           = Camera->GetView();
-  FrameContext.ViewProjectionMatrix = FrameContext.ProjectionMatrix * FrameContext.ViewMatrix;
-  FrameContext.LightSpaceMatrix     = CalculateLightSpaceMatrix();
-  return FrameContext;
+  return TRenderContext{
+      .SceneFrameBuffer     = m_SceneFBO.FrameBuffer,
+      .RenderTexture        = m_SceneFBO.Texture->ID(),
+      .CameraPosition       = Camera->GetPosition(),
+      .ProjectionMatrix     = Camera->GetProjection(),
+      .ViewMatrix           = Camera->GetView(),
+      .ViewProjectionMatrix = Camera->GetProjection() * Camera->GetView(),
+      .LightSpaceMatrix     = CalculateLightSpaceMatrix(),
+  };
+}
+
+std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::string &_Name, int _MultisampleCount, TVector2i _Size) const
+{
+  TTextureParams TextureParams;
+  TextureParams.Width          = _Size.X;
+  TextureParams.Height         = _Size.Y;
+  TextureParams.InternalFormat = GL_RGBA16F;
+  TextureParams.Format         = GL_RGBA;
+  TextureParams.Type           = GL_FLOAT;
+  TextureParams.Samples        = _MultisampleCount;
+  TextureParams.MinFilter      = ETextureFilter::Linear;
+  TextureParams.MagFilter      = ETextureFilter::Linear;
+  return resource::CreateTexture(_Name, TextureParams);
 }

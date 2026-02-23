@@ -2,7 +2,6 @@
 
 #include "ecs/CommonECS.h"
 #include "interfaces/Identifiable.h"
-#include "interfaces/Renderable.h"
 #include "interfaces/RenderCollector.h"
 #include "interfaces/FrameDataCollector.h"
 #include "interfaces/Shutdownable.h"
@@ -13,7 +12,6 @@
 class CEngine;
 class CCoordinator;
 class CEntityBuilder;
-class CRenderPipeline;
 
 class CWorld : public IIdentifiable,
                public IUpdateable,
@@ -47,9 +45,7 @@ public:
 
 protected:
   void InitECS();
-  void InitRenderPipeline();
 
 public:
-  std::unique_ptr<CCoordinator>    m_EntitiesCoordinator;
-  std::unique_ptr<CRenderPipeline> m_RenderPipeline;
+  std::unique_ptr<CCoordinator> m_EntitiesCoordinator;
 };

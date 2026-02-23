@@ -12,7 +12,6 @@
 #include "engine/Engine.h"
 #include "assets/Shader.h"
 #include "render/RenderQueue.h"
-#include "render/RenderPipeline.h"
 
 CWorld::CWorld() = default;
 
@@ -21,13 +20,11 @@ CWorld::~CWorld() = default;
 void CWorld::Init()
 {
   InitECS();
-  InitRenderPipeline();
 }
 
 void CWorld::Shutdown()
 {
   m_EntitiesCoordinator.reset();
-  m_RenderPipeline.reset();
 }
 
 void CWorld::UpdateInternal(float _TimeDelta)
@@ -105,10 +102,4 @@ void CWorld::InitECS()
     PhysicsSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CPhysicsSystem>(PhysicsSystemSignature);
   }
-}
-
-void CWorld::InitRenderPipeline()
-{
-  //m_RenderPipeline = std::make_unique<CRenderPipeline>();
-  //m_RenderPipeline->Init();
 }

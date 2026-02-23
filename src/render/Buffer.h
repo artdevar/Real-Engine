@@ -188,6 +188,45 @@ protected:
 
 // ------------------------------------------------
 
+class CRenderBuffer final : public CBuffer<CRenderBuffer>
+{
+  friend CBuffer;
+
+public:
+  void AllocateStorage(GLenum _InternalFormat, GLsizei _Width, GLsizei _Height)
+  {
+    glRenderbufferStorage(GL_RENDERBUFFER, _InternalFormat, _Width, _Height);
+  }
+
+  void AllocateStorage(GLenum _InternalFormat, GLsizei _Samples, GLsizei _Width, GLsizei _Height)
+  {
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, _Samples, _InternalFormat, _Width, _Height);
+  }
+
+protected:
+  void GenerateBuffer()
+  {
+    glGenRenderbuffers(1, &m_ID);
+  }
+
+  void BindBuffer()
+  {
+    glBindRenderbuffer(GL_RENDERBUFFER, m_ID);
+  }
+
+  void UnbindBuffer()
+  {
+    glBindRenderbuffer(GL_RENDERBUFFER, INVALID_BUFFER);
+  }
+
+  void DeleteBuffer()
+  {
+    glDeleteRenderbuffers(1, &m_ID);
+  }
+};
+
+// ------------------------------------------------
+
 class CBufferObject : public CBuffer<CBufferObject>
 {
   friend CBuffer;

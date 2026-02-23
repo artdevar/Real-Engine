@@ -65,6 +65,10 @@ public:
   {
     return AreShadowsEnabled;
   }
+  int GetMultisampleCount() const
+  {
+    return MultisampleCount;
+  }
 
   float GetCameraZNear() const
   {
@@ -113,6 +117,7 @@ private:
   // Render
   int  ShadowMapSize     = 2048;
   bool AreShadowsEnabled = true;
+  int  MultisampleCount  = 4;
 
   // Camera parameters
   float Camera_ZNear = 0.1f;
