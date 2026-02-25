@@ -5,12 +5,12 @@
 #include "assets/Texture.h"
 #include "engine/Camera.h"
 
-TransparentRenderPass::TransparentRenderPass(std::shared_ptr<CShader> _Shader) :
+CTransparentRenderPass::CTransparentRenderPass(std::shared_ptr<CShader> _Shader) :
     m_Shader(std::move(_Shader))
 {
 }
 
-void TransparentRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CTransparentRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LESS);
@@ -18,14 +18,14 @@ void TransparentRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Re
   _Renderer.SetCullFace(ECullMode::Back);
   _Renderer.SetBlending(EAlphaMode::Blend);
 
-  _Renderer.SetShader(m_Shader.lock());
+  _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
 }
 
-void TransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CTransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
@@ -65,17 +65,17 @@ void TransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rende
   }
 }
 
-void TransparentRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CTransparentRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthMask(true); // Required for clearing the depth buffer
 }
 
-bool TransparentRenderPass::Accepts(const TRenderCommand &_Command) const
+bool CTransparentRenderPass::Accepts(const TRenderCommand &_Command) const
 {
   return _Command.Material.AlphaMode == EAlphaMode::Blend;
 }
 
-bool TransparentRenderPass::IsAvailable() const
+bool CTransparentRenderPass::IsAvailable() const
 {
-  return !m_Shader.expired();
+  return m_Shader != nullptr;
 }

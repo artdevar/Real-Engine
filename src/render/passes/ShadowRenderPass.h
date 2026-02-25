@@ -3,15 +3,29 @@
 #include "interfaces/Renderer.h"
 #include "render/RenderCommand.h"
 #include "interfaces/RenderPass.h"
+#include "interfaces/Sharable.h"
+#include "interfaces/EventsListener.h"
 #include <vector>
 
 class CTextureBase;
 class CShader;
 
-class ShadowRenderPass : public IRenderPass
+class CShadowRenderPass : public CSharable<CShadowRenderPass>,
+                          public IRenderPass,
+                          public IEventsListener
 {
 public:
-  explicit ShadowRenderPass(std::shared_ptr<CShader> _Shader);
+  template <typename... Args>
+  static SharedPtr Create(Args &&..._Args)
+  {
+    SharedPtr Instance = CSharable::Create(std::forward<Args>(_Args)...);
+    Instance->SubscribeToEvents();
+    return Instance;
+  }
+
+public:
+  explicit CShadowRenderPass(std::shared_ptr<CShader> _Shader);
+  ~CShadowRenderPass();
 
   bool Accepts(const TRenderCommand &_Command) const override;
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
@@ -19,12 +33,21 @@ public:
   void PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
   bool IsAvailable() const override;
 
-private:
-  static std::shared_ptr<CTextureBase> CreateDepthMap(TVector2i _Size);
+  void OnEvent(const TEvent &_Event) override;
 
 private:
-  const int                     m_ShadowMapSize;
-  std::weak_ptr<CShader>        m_Shader;
+  using CSharable<CShadowRenderPass>::Create;
+
+  void SubscribeToEvents();
+
+  static std::shared_ptr<CTextureBase> CreateDepthMap(TVector2i _Size);
+  void DestroyDepthMap();
+
+private:
+  static const std::string SHADOW_MAP_NAME;
+
+  int                           m_ShadowMapSize;
+  std::shared_ptr<CShader>      m_Shader;
   std::shared_ptr<CTextureBase> m_DepthMap;
   CFrameBuffer                  m_DepthMapFBO;
   TVector2i                     m_OldViewport;

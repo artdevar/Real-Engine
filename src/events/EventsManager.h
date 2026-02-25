@@ -26,7 +26,7 @@ private:
   void UpdateInternal(float _TimeDelta) override;
 
 private:
-  using ListenersContainer = CUnorderedVector<std::weak_ptr<IEventsListener>>;
+  using ListenersContainer = std::vector<std::weak_ptr<IEventsListener>>;
 
   std::unordered_map<TEventType, ListenersContainer> m_Listeners;
   CUnorderedVector<TEvent>                           m_PendingEvents;

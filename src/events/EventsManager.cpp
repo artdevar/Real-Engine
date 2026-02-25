@@ -16,16 +16,23 @@ bool CEventsManager::ShouldBeUpdated() const
 
 void CEventsManager::UpdateInternal(float _TimeDelta)
 {
-  for (const TEvent Event : m_PendingEvents)
+  for (const TEvent &Event : m_PendingEvents)
   {
-    auto Iter = m_Listeners.find(Event.Type);
-    if (Iter == m_Listeners.end())
+    auto ItListeners = m_Listeners.find(Event.Type);
+    if (ItListeners == m_Listeners.end())
       continue;
 
-    for (const std::weak_ptr<IEventsListener> &Listener : Iter->second)
+    for (auto ItListener = ItListeners->second.begin(); ItListener != ItListeners->second.end();)
     {
-      if (const std::shared_ptr<IEventsListener> LockedListener = Listener.lock())
+      if (std::shared_ptr<IEventsListener> LockedListener = ItListener->lock())
+      {
         LockedListener->OnEvent(Event);
+        ++ItListener;
+      }
+      else
+      {
+        ItListener = ItListeners->second.erase(ItListener);
+      }
     }
   }
 
@@ -35,25 +42,25 @@ void CEventsManager::UpdateInternal(float _TimeDelta)
 void CEventsManager::Subscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener)
 {
   auto      &Listeners           = m_Listeners[_Event];
-  const bool IsAlreadySubscribed = Listeners.Contains(_Listener, [&_Listener](const std::weak_ptr<IEventsListener> &L) {
-    return !L.owner_before(_Listener) && !_Listener.owner_before(L);
-  });
+  const bool IsAlreadySubscribed = std::find_if(Listeners.begin(), Listeners.end(), [&_Listener](const std::weak_ptr<IEventsListener> &L) {
+                                     return !L.owner_before(_Listener) && !_Listener.owner_before(L);
+                                   }) != Listeners.end();
 
   if (IsAlreadySubscribed)
     return;
 
-  Listeners.Push(std::move(_Listener));
+  Listeners.push_back(std::move(_Listener));
 }
 
 void CEventsManager::Unsubscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener)
 {
   auto      &Listeners = m_Listeners[_Event];
-  const auto Iter      = Listeners.Find(_Listener, [&_Listener](const std::weak_ptr<IEventsListener> &L) {
+  const auto Iter      = std::find_if(Listeners.begin(), Listeners.end(), [&_Listener](const std::weak_ptr<IEventsListener> &L) {
     return !L.owner_before(_Listener) && !_Listener.owner_before(L);
   });
 
   if (Iter != Listeners.end())
-    Listeners.Erase(Iter);
+    Listeners.erase(Iter);
 }
 
 void CEventsManager::Notify(TEvent _Event)

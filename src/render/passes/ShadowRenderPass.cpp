@@ -7,7 +7,9 @@
 #include "engine/Config.h"
 #include "utils/Resource.h"
 
-ShadowRenderPass::ShadowRenderPass(std::shared_ptr<CShader> _Shader) :
+const std::string CShadowRenderPass::SHADOW_MAP_NAME = "ShadowDepthMap";
+
+CShadowRenderPass::CShadowRenderPass(std::shared_ptr<CShader> _Shader) :
     m_ShadowMapSize(CConfig::Instance().GetShadowMapSize()),
     m_Shader(std::move(_Shader)),
     m_DepthMap(CreateDepthMap(TVector2i(m_ShadowMapSize, m_ShadowMapSize))),
@@ -20,7 +22,12 @@ ShadowRenderPass::ShadowRenderPass(std::shared_ptr<CShader> _Shader) :
   m_DepthMapFBO.Unbind();
 }
 
-void ShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+CShadowRenderPass::~CShadowRenderPass()
+{
+  DestroyDepthMap();
+}
+
+void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   m_OldViewport = _Renderer.GetViewport();
   TVector2i NewViewport(m_ShadowMapSize, m_ShadowMapSize);
@@ -31,11 +38,11 @@ void ShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderC
   _Renderer.Clear(EClearFlags::Depth);
   _Renderer.SetCullFace(ECullMode::Front);
   _Renderer.SetViewport(NewViewport);
-  _Renderer.SetShader(m_Shader.lock());
+  _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
 }
 
-void ShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
@@ -57,7 +64,7 @@ void ShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
   }
 }
 
-void ShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _RenderContext.ShadowMap = m_DepthMap->ID();
 
@@ -68,17 +75,17 @@ void ShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetViewport(m_OldViewport);
 }
 
-bool ShadowRenderPass::Accepts(const TRenderCommand &_Command) const
+bool CShadowRenderPass::Accepts(const TRenderCommand &_Command) const
 {
   return _Command.Material.SkyboxTexture == CCubemap::INVALID_VALUE && _Command.Material.BaseColorTexture != CTexture::INVALID_VALUE;
 }
 
-bool ShadowRenderPass::IsAvailable() const
+bool CShadowRenderPass::IsAvailable() const
 {
-  return !m_Shader.expired() && m_DepthMap && m_DepthMap->IsValid();
+  return m_Shader != nullptr && m_DepthMap && m_DepthMap->IsValid();
 }
 
-std::shared_ptr<CTextureBase> ShadowRenderPass::CreateDepthMap(TVector2i _Size)
+std::shared_ptr<CTextureBase> CShadowRenderPass::CreateDepthMap(TVector2i _Size)
 {
   TTextureParams DepthMapParams;
   DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});
@@ -91,11 +98,46 @@ std::shared_ptr<CTextureBase> ShadowRenderPass::CreateDepthMap(TVector2i _Size)
   DepthMapParams.WrapT          = ETextureWrap::ClampToBorder;
   DepthMapParams.MinFilter      = ETextureFilter::Nearest;
   DepthMapParams.MagFilter      = ETextureFilter::Nearest;
-  return resource::CreateTexture("ShadowDepthMap", DepthMapParams);
+  return resource::CreateTexture(SHADOW_MAP_NAME, DepthMapParams, true);
+}
+
+void CShadowRenderPass::DestroyDepthMap()
+{
+  m_DepthMap.reset();
+
+  m_DepthMapFBO.Bind();
+  m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, CTexture::INVALID_VALUE);
+  m_DepthMapFBO.Unbind();
+}
+
+void CShadowRenderPass::SubscribeToEvents()
+{
+  event::Subscribe(TEventType::Config_ShadowsMapSizeChanged, GetWeakPtr());
+}
+
+void CShadowRenderPass::OnEvent(const TEvent &_Event)
+{
+  switch (_Event.Type)
+  {
+  case TEventType::Config_ShadowsMapSizeChanged: {
+    const int NewSize = _Event.GetValue<int>();
+    if (NewSize != m_ShadowMapSize)
+    {
+      DestroyDepthMap();
+      m_ShadowMapSize = NewSize;
+
+      m_DepthMap = CreateDepthMap(TVector2i(m_ShadowMapSize, m_ShadowMapSize));
+      m_DepthMapFBO.Bind();
+      m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, m_DepthMap->ID());
+      m_DepthMapFBO.Unbind();
+    }
+    break;
+  }
+  }
 }
 
 #if 0
-void ShadowRenderPass::RenderDebugQuad(IRenderer &_Renderer)
+void CShadowRenderPass::RenderDebugQuad(IRenderer &_Renderer)
 {
   static CVertexArray VAO = [this]() {
     constexpr float QuadVertices[] = {// positions     // texcoords

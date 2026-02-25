@@ -2,6 +2,8 @@
 
 #include "assets/TextureParams.h"
 #include "interfaces/Shutdownable.h"
+#include "interfaces/EventsListener.h"
+#include "interfaces/Sharable.h"
 #include "utils/Common.h"
 
 class CModel;
@@ -9,7 +11,9 @@ class CShader;
 class CTextureBase;
 class IAsset;
 
-class CResourceManager final : public IShutdownable
+class CResourceManager final : public CSharable<CResourceManager>,
+                               public IEventsListener,
+                               public IShutdownable
 {
   DISABLE_CLASS_COPY(CResourceManager);
 
@@ -19,6 +23,8 @@ public:
   void Init();
 
   void Shutdown() override;
+
+  void OnEvent(const TEvent &_Event) override;
 
   std::shared_ptr<CShader> LoadShader(const std::string &_Name);
   std::shared_ptr<CModel> LoadModel(const std::filesystem::path &_Path);

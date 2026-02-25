@@ -5,24 +5,24 @@
 #include "render/ShaderTypes.h"
 #include "assets/Texture.h"
 
-SkyboxRenderPass::SkyboxRenderPass(std::shared_ptr<CShader> _Shader) :
+CSkyboxRenderPass::CSkyboxRenderPass(std::shared_ptr<CShader> _Shader) :
     m_Shader(std::move(_Shader))
 {
 }
 
-void SkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LEQUAL);
   _Renderer.SetDepthMask(false);
   _Renderer.SetCullFace(ECullMode::None);
 
-  _Renderer.SetShader(m_Shader.lock());
+  _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_View", glm::mat4(glm::mat3(_RenderContext.ViewMatrix)));
   _Renderer.SetUniform("u_Projection", _RenderContext.ProjectionMatrix);
 }
 
-void SkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CSkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
@@ -40,18 +40,18 @@ void SkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
   }
 }
 
-void SkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CSkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthMask(true);
   _Renderer.SetDepthFunc(GL_LESS);
 }
 
-bool SkyboxRenderPass::Accepts(const TRenderCommand &_Command) const
+bool CSkyboxRenderPass::Accepts(const TRenderCommand &_Command) const
 {
   return _Command.Material.SkyboxTexture != CCubemap::INVALID_VALUE;
 }
 
-bool SkyboxRenderPass::IsAvailable() const
+bool CSkyboxRenderPass::IsAvailable() const
 {
-  return !m_Shader.expired();
+  return m_Shader != nullptr;
 }

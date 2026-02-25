@@ -2,6 +2,7 @@
 #include "render/RenderCommand.h"
 #include "render/RenderContext.h"
 #include "interfaces/Renderer.h"
+#include "utils/Event.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Config.h"
@@ -18,10 +19,13 @@ static constexpr float QUAD_VERTICES[] = {
     1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
 };
 
-PostProcessRenderPass::PostProcessRenderPass(std::shared_ptr<CShader> _Shader) :
+CPostProcessRenderPass::CPostProcessRenderPass(std::shared_ptr<CShader> _Shader) :
     m_Shader(std::move(_Shader)),
     m_VAO(),
-    m_VBO(GL_STATIC_DRAW)
+    m_VBO(GL_STATIC_DRAW),
+    m_IsFxaaEnabled(CConfig::Instance().GetFXAAEnabled()),
+    m_IsHDREnabled(CConfig::Instance().GetHDREnabled()),
+    m_HDRExposure(CConfig::Instance().GetHDRExposure())
 {
   m_VAO.Bind();
   m_VBO.Bind();
@@ -31,34 +35,60 @@ PostProcessRenderPass::PostProcessRenderPass(std::shared_ptr<CShader> _Shader) :
   m_VAO.Unbind();
 }
 
-void PostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
-  _Renderer.SetShader(m_Shader.lock());
+  _Renderer.SetShader(m_Shader);
   m_VAO.Bind();
 }
 
-void PostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.RenderTexture);
   _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
-  _Renderer.SetUniform("IsFXAAEnabled", CConfig::Instance().GetFXAAEnabled());
-  _Renderer.SetUniform("IsHDR", CConfig::Instance().GetHDREnabled());
-  _Renderer.SetUniform("Exposure", CConfig::Instance().GetHDRExposure());
+  _Renderer.SetUniform("IsFXAAEnabled", m_IsFxaaEnabled);
+  _Renderer.SetUniform("IsHDR", m_IsHDREnabled);
+  _Renderer.SetUniform("Exposure", m_HDRExposure);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }
 
-void PostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CPostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   m_VAO.Unbind();
 }
 
-bool PostProcessRenderPass::Accepts(const TRenderCommand &_Command) const
+bool CPostProcessRenderPass::Accepts(const TRenderCommand &_Command) const
 {
   return true;
 }
 
-bool PostProcessRenderPass::IsAvailable() const
+bool CPostProcessRenderPass::IsAvailable() const
 {
-  return !m_Shader.expired();
+  return m_Shader != nullptr;
+}
+
+void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
+{
+  switch (_Event.Type)
+  {
+  case TEventType::Config_FXAAEnabledChanged:
+    m_IsFxaaEnabled = _Event.GetValue<bool>();
+    break;
+  case TEventType::Config_HDREnabledChanged:
+    m_IsHDREnabled = _Event.GetValue<bool>();
+    break;
+  case TEventType::Config_HDRExposureChanged:
+    m_HDRExposure = _Event.GetValue<float>();
+    break;
+
+  default:
+    break;
+  }
+}
+
+void CPostProcessRenderPass::SubscribeToEvents()
+{
+  event::Subscribe(TEventType::Config_FXAAEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_HDREnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_HDRExposureChanged, GetWeakPtr());
 }

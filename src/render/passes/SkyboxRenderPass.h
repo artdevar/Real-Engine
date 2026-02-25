@@ -1,14 +1,16 @@
 #pragma once
 
 #include "interfaces/RenderPass.h"
+#include "interfaces/Sharable.h"
 #include "render/RenderContext.h"
 
 class CShader;
 
-class SkyboxRenderPass : public IRenderPass
+class CSkyboxRenderPass : public CSharable<CSkyboxRenderPass>,
+                          public IRenderPass
 {
 public:
-  explicit SkyboxRenderPass(std::shared_ptr<CShader> _Shader);
+  explicit CSkyboxRenderPass(std::shared_ptr<CShader> _Shader);
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_FrameContext, std::span<TRenderCommand> _Commands) override;
   void Execute(IRenderer &_Renderer, TRenderContext &_FrameContext, std::span<TRenderCommand> _Commands) override;
@@ -17,5 +19,5 @@ public:
   bool IsAvailable() const override;
 
 private:
-  std::weak_ptr<CShader> m_Shader;
+  std::shared_ptr<CShader> m_Shader;
 };

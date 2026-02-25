@@ -95,6 +95,10 @@ void CEditorUI::RenderGlobalParams()
     if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
       CConfig::Instance().SetShadowsEnabled(ShadowsEnabled, CPasskey(this));
 
+    int ShadowMapSize = CConfig::Instance().GetShadowMapSize();
+    if (ImGui::DragInt("Shadow map size", &ShadowMapSize, 256, 512, 4096))
+      CConfig::Instance().SetShadowsMapSize(ShadowMapSize, CPasskey(this));
+
     bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
     if (ImGui::Checkbox("FXAA enabled", &FXAAEnabled))
       CConfig::Instance().SetFXAAEnabled(FXAAEnabled, CPasskey(this));

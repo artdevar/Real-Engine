@@ -37,6 +37,10 @@ void CResourceManager::Shutdown()
   m_Assets.clear();
 }
 
+void CResourceManager::OnEvent(const TEvent &_Event)
+{
+}
+
 std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path &_Path)
 {
   if (!IsFormatSupported(_Path))

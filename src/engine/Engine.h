@@ -78,7 +78,7 @@ private:
   std::shared_ptr<CCamera>          m_Camera;
   std::shared_ptr<CWorld>           m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
-  std::unique_ptr<CRenderPipeline>  m_RenderPipeline;
+  std::shared_ptr<CRenderPipeline>  m_RenderPipeline;
 
 #if DEV_STAGE
   std::unique_ptr<CEditorUI> m_EditorUI;

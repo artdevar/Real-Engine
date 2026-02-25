@@ -4,12 +4,12 @@
 #include "interfaces/Renderer.h"
 #include "assets/Texture.h"
 
-OpaqueRenderPass::OpaqueRenderPass(std::shared_ptr<CShader> _Shader) :
+COpaqueRenderPass::COpaqueRenderPass(std::shared_ptr<CShader> _Shader) :
     m_Shader(std::move(_Shader))
 {
 }
 
-void OpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LESS);
@@ -17,14 +17,14 @@ void OpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderC
   _Renderer.SetCullFace(ECullMode::Back);
   _Renderer.SetBlending(EAlphaMode::Opaque);
 
-  _Renderer.SetShader(m_Shader.lock());
+  _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
 }
 
-void OpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void COpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   for (const TRenderCommand &Command : _Commands)
   {
@@ -65,16 +65,16 @@ void OpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
   }
 }
 
-void OpaqueRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void COpaqueRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
 }
 
-bool OpaqueRenderPass::Accepts(const TRenderCommand &_Command) const
+bool COpaqueRenderPass::Accepts(const TRenderCommand &_Command) const
 {
   return _Command.Material.SkyboxTexture == CCubemap::INVALID_VALUE && _Command.Material.AlphaMode != EAlphaMode::Blend;
 }
 
-bool OpaqueRenderPass::IsAvailable() const
+bool COpaqueRenderPass::IsAvailable() const
 {
-  return !m_Shader.expired();
+  return m_Shader != nullptr;
 }

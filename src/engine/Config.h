@@ -27,6 +27,14 @@ public:
       event::Notify(TEventType::Config_ShadowsEnabledChanged, _Enabled);
     }
   }
+  void SetShadowsMapSize(int _Size, CPasskey<CEditorUI>)
+  {
+    if (ShadowMapSize != _Size)
+    {
+      ShadowMapSize = _Size;
+      event::Notify(TEventType::Config_ShadowsMapSizeChanged, _Size);
+    }
+  }
   void SetFXAAEnabled(bool _Enabled, CPasskey<CEditorUI>)
   {
     if (IsFXAAEnabled != _Enabled)
@@ -184,7 +192,7 @@ private:
   int   ShadowMapSize     = 2048;
   bool  AreShadowsEnabled = true;
   bool  IsFXAAEnabled     = true;
-  bool  IsHDREnabled      = true;
+  bool  IsHDREnabled      = false;
   float HDRExposure       = 1.0f;
 
   // Camera parameters

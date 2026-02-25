@@ -37,14 +37,22 @@ std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path)
   return Get()->LoadCubemap(_Path);
 }
 
-std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params)
+std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params, bool _RecreateIfExists)
 {
+  if (_RecreateIfExists)
+    MarkUnused(_Name);
+
   return Get()->CreateTexture(_Name, _Params);
 }
 
 std::shared_ptr<CTextureBase> GetDefaultTexture(ETextureType _TextureType)
 {
   return Get()->GetDefaultTexture(_TextureType);
+}
+
+void MarkUnused(const std::string &_Name)
+{
+  Get()->MarkUnused(_Name);
 }
 
 } // namespace resource

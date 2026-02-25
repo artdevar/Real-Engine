@@ -10,11 +10,10 @@ namespace impl
 {
 
 template <typename T>
-requires std::is_arithmetic_v<T>
-TEvent ConstructEvent(TEventType _EventType, T _Value)
+TEvent ConstructEvent(TEventType _EventType, T &&_Value)
 {
   return TEvent{
-      .Value = _Value,
+      .Value = std::forward<T>(_Value),
       .Type  = _EventType,
   };
 }

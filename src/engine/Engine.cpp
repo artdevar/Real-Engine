@@ -7,6 +7,7 @@
 #include "events/EventsManager.h"
 #include "events/Event.h"
 #include "editor/EditorUI.h"
+#include "utils/Event.h"
 #include "render/GLRenderer.h"
 #include "render/RenderTypes.h"
 #include "render/FrameData.h"
@@ -42,13 +43,16 @@ void CEngine::Shutdown()
   m_Camera->Shutdown();
   m_Camera.reset();
 
-  m_ResourceManager->Shutdown();
-  m_ResourceManager.reset();
-
   m_InputManager.reset();
+
+  m_RenderPipeline->Shutdown();
+  m_RenderPipeline.reset();
 
   m_EventsManager->Shutdown();
   m_EventsManager.reset();
+
+  m_ResourceManager->Shutdown();
+  m_ResourceManager.reset();
 
   m_Display->Shutdown();
   m_Display.reset();
@@ -104,7 +108,7 @@ int CEngine::Init()
 
   m_ResourceManager->Init();
 
-  m_RenderPipeline = std::make_unique<CRenderPipeline>();
+  m_RenderPipeline = CRenderPipeline::Create();
   m_RenderPipeline->Init();
 
   m_Camera->Init();
@@ -235,6 +239,8 @@ std::shared_ptr<CEventsManager> CEngine::GetEventsManager() const
 
 void CEngine::OnWindowResized(int _Width, int _Height)
 {
+  TVector2i NewSize{_Width, _Height};
+  event::Notify(TEventType::WindowResized, NewSize);
 }
 
 void CEngine::ProcessInput(float _TimeDelta)
