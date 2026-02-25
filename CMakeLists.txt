@@ -104,3 +104,8 @@ endif()
 target_precompile_headers(Real_Engine PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/src/pch.h>
 )
+
+target_compile_options(Real_Engine PRIVATE
+  $<$<CXX_COMPILER_ID:MSVC>:/GR->
+  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-rtti>
+)
