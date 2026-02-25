@@ -2,12 +2,21 @@
 
 #include "interfaces/InputHandler.h"
 #include "interfaces/Updateable.h"
+#include "interfaces/Sharable.h"
+#include "interfaces/EventsListener.h"
+#include "interfaces/Shutdownable.h"
 
 class CCamera final : public IUpdateable,
-                      public IInputHandler
+                      public IInputHandler,
+                      public IEventsListener,
+                      public IShutdownable,
+                      public CSharable<CCamera>
 {
 public:
   CCamera();
+
+  void Init();
+  void Shutdown() override;
 
   void SetPosition(const glm::vec3 &_Pos);
 
@@ -20,6 +29,8 @@ public:
   glm::mat4 GetView() const;
 
   glm::mat4 GetProjection() const;
+
+  void OnEvent(const TEvent &_Event) override;
 
 public: // Input
   bool OnMousePressed(int _Button, int _Action, int _Mods) override;
@@ -41,6 +52,10 @@ private:
 
   float m_Yaw;
   float m_Pitch;
+
+  float m_FOV;
+  float m_ZNear;
+  float m_ZFar;
 
   // Input state
   bool      m_MoveForward{false};

@@ -4,6 +4,8 @@
 #include "Display.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
+#include "events/EventsManager.h"
+#include "events/Event.h"
 #include "editor/EditorUI.h"
 #include "render/GLRenderer.h"
 #include "render/RenderTypes.h"
@@ -16,18 +18,7 @@
 
 CEngine *CEngine::Singleton = nullptr;
 
-CEngine::CEngine() :
-    m_Display(std::make_unique<CDisplay>()),
-    m_InputManager(std::make_shared<CInputManager>()),
-    m_Camera(std::make_shared<CCamera>()),
-    m_World(std::make_shared<CWorld>()),
-    m_ResourceManager(std::make_shared<CResourceManager>())
-{
-#if DEV_STAGE
-  m_EditorUI = new CEditorUI;
-#endif
-}
-
+CEngine::CEngine()  = default;
 CEngine::~CEngine() = default;
 
 CEngine &CEngine::Instance()
@@ -42,18 +33,22 @@ void CEngine::Shutdown()
 {
 #if DEV_STAGE
   m_EditorUI->Shutdown();
-  delete m_EditorUI;
+  m_EditorUI.reset();
 #endif
 
   m_World->Shutdown();
   m_World.reset();
 
+  m_Camera->Shutdown();
   m_Camera.reset();
 
   m_ResourceManager->Shutdown();
   m_ResourceManager.reset();
 
   m_InputManager.reset();
+
+  m_EventsManager->Shutdown();
+  m_EventsManager.reset();
 
   m_Display->Shutdown();
   m_Display.reset();
@@ -64,6 +59,16 @@ void CEngine::Shutdown()
 
 int CEngine::Init()
 {
+  m_Display         = std::make_unique<CDisplay>();
+  m_InputManager    = std::make_shared<CInputManager>();
+  m_EventsManager   = std::make_shared<CEventsManager>();
+  m_Camera          = CCamera::Create();
+  m_World           = std::make_shared<CWorld>();
+  m_ResourceManager = std::make_shared<CResourceManager>();
+#if DEV_STAGE
+  m_EditorUI = std::make_unique<CEditorUI>();
+#endif
+
   const std::string GameTitle       = CConfig::Instance().GetAppTitle();
   const int         DisplayInitCode = m_Display->Init(GameTitle);
   if (DisplayInitCode != EXIT_SUCCESS)
@@ -102,6 +107,7 @@ int CEngine::Init()
   m_RenderPipeline = std::make_unique<CRenderPipeline>();
   m_RenderPipeline->Init();
 
+  m_Camera->Init();
   m_World->Init();
 #if DEV_STAGE
   m_EditorUI->Init();
@@ -140,6 +146,8 @@ int CEngine::Run()
 
 void CEngine::UpdateInternal(float _TimeDelta)
 {
+  m_EventsManager->Update(_TimeDelta);
+
   m_InputManager->Update();
   ProcessInput(_TimeDelta);
 
@@ -216,6 +224,11 @@ std::shared_ptr<CResourceManager> CEngine::GetResourceManager() const
 std::shared_ptr<CInputManager> CEngine::GetInputManager() const
 {
   return m_InputManager;
+}
+
+std::shared_ptr<CEventsManager> CEngine::GetEventsManager() const
+{
+  return m_EventsManager;
 }
 
 // Callbacks

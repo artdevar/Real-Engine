@@ -18,6 +18,7 @@ class CResourceManager;
 class CModel;
 class CDisplay;
 class CInputManager;
+class CEventsManager;
 class CRenderPipeline;
 
 class CEngine final : public IShutdownable,
@@ -49,6 +50,7 @@ public:
   std::shared_ptr<CCamera> GetCamera() const;
   std::shared_ptr<CResourceManager> GetResourceManager() const;
   std::shared_ptr<CInputManager> GetInputManager() const;
+  std::shared_ptr<CEventsManager> GetEventsManager() const;
 
 private:
   void Render(IRenderer &_Renderer);
@@ -72,12 +74,13 @@ private:
 private:
   std::unique_ptr<CDisplay>         m_Display;
   std::shared_ptr<CInputManager>    m_InputManager;
+  std::shared_ptr<CEventsManager>   m_EventsManager;
   std::shared_ptr<CCamera>          m_Camera;
   std::shared_ptr<CWorld>           m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
   std::unique_ptr<CRenderPipeline>  m_RenderPipeline;
 
 #if DEV_STAGE
-  CEditorUI *m_EditorUI;
+  std::unique_ptr<CEditorUI> m_EditorUI;
 #endif
 };

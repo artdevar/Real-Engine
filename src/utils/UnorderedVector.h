@@ -8,6 +8,8 @@
 template <typename T>
 class CUnorderedVector
 {
+  using Predicate = std::function<bool(const T &)>;
+
 public:
   using IteratorType      = std::vector<T>::iterator;
   using ConstIteratorType = std::vector<T>::const_iterator;
@@ -91,9 +93,24 @@ public:
     return std::find(begin(), end(), _Value);
   }
 
+  constexpr IteratorType Find(const T &_Value, Predicate _Predicate)
+  {
+    return std::find_if(begin(), end(), _Predicate);
+  }
+
+  constexpr ConstIteratorType Find(const T &_Value, Predicate _Predicate) const
+  {
+    return std::find_if(begin(), end(), _Predicate);
+  }
+
   constexpr bool Contains(const T &_Value) const
   {
     return Find(_Value) != end();
+  }
+
+  constexpr bool Contains(const T &_Value, Predicate _Predicate) const
+  {
+    return Find(_Value, _Predicate) != end();
   }
 
   template <std::convertible_to<T> U>
@@ -111,6 +128,11 @@ public:
       Push(std::forward<U>(_Value));
 
     return NeedPush;
+  }
+
+  constexpr void Clear()
+  {
+    m_Data.clear();
   }
 
   friend std::ostream &operator<<(std::ostream &_Stream, const CUnorderedVector &_Vector)

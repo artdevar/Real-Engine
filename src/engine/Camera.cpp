@@ -3,10 +3,38 @@
 #include "Camera.h"
 #include "Config.h"
 #include "Engine.h"
-#include "GLFW/glfw3.h"
+#include "events/Event.h"
+#include "utils/Event.h"
+#include <GLFW/glfw3.h>
 
-CCamera::CCamera() : m_Position(0.0f, 0.0f, 8.0f), m_Forward(0.0f, 0.0f, -1.0f), m_Up(0.0f, 1.0f, 0.0f), m_Yaw(-90.0f), m_Pitch(0.0f)
+CCamera::CCamera() :
+    m_Position(0.0f, 0.0f, 8.0f),
+    m_Forward(0.0f, 0.0f, -1.0f),
+    m_Up(0.0f, 1.0f, 0.0f),
+    m_Yaw(-90.0f),
+    m_Pitch(0.0f),
+    m_FOV(60.0f),
+    m_ZNear(0.1f),
+    m_ZFar(100.0f)
 {
+}
+
+void CCamera::Init()
+{
+  m_FOV   = CConfig::Instance().GetCameraFOV();
+  m_ZNear = CConfig::Instance().GetCameraZNear();
+  m_ZFar  = CConfig::Instance().GetCameraZFar();
+
+  event::Subscribe(TEventType::Config_CameraFOVChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_CameraZNearChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_CameraZFarChanged, GetWeakPtr());
+}
+
+void CCamera::Shutdown()
+{
+  event::Unsubscribe(TEventType::Config_CameraFOVChanged, GetWeakPtr());
+  event::Unsubscribe(TEventType::Config_CameraZNearChanged, GetWeakPtr());
+  event::Unsubscribe(TEventType::Config_CameraZFarChanged, GetWeakPtr());
 }
 
 void CCamera::UpdateInternal(float _TimeDelta)
@@ -72,8 +100,26 @@ glm::mat4 CCamera::GetView() const
 glm::mat4 CCamera::GetProjection() const
 {
   const TVector2i WindowSize = CEngine::Instance().GetWindowSize();
-  return glm::perspective(glm::radians(CConfig::Instance().GetCameraFOV()), WindowSize.X / float(WindowSize.Y), CConfig::Instance().GetCameraZNear(),
-                          CConfig::Instance().GetCameraZFar());
+  return glm::perspective(glm::radians(m_FOV), WindowSize.X / float(WindowSize.Y), m_ZNear, m_ZFar);
+}
+
+void CCamera::OnEvent(const TEvent &_Event)
+{
+  switch (_Event.Type)
+  {
+  case TEventType::Config_CameraFOVChanged:
+    m_FOV = _Event.GetValue<float>();
+    break;
+  case TEventType::Config_CameraZNearChanged:
+    m_ZNear = _Event.GetValue<float>();
+    break;
+  case TEventType::Config_CameraZFarChanged:
+    m_ZFar = _Event.GetValue<float>();
+    break;
+
+  default:
+    break;
+  }
 }
 
 bool CCamera::OnMousePressed(int _Button, int _Action, int _Mods)
