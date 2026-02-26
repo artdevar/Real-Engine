@@ -7,7 +7,7 @@
 #include "engine/Config.h"
 #include "utils/Resource.h"
 
-const std::string CShadowRenderPass::SHADOW_MAP_NAME = "ShadowDepthMap";
+const std::string CShadowRenderPass::SHADOW_MAP_NAME = "SHADOW_PASS_DEPTH_MAP";
 
 CShadowRenderPass::CShadowRenderPass(std::shared_ptr<CShader> _Shader) :
     m_ShadowMapSize(CConfig::Instance().GetShadowMapSize()),
@@ -98,7 +98,7 @@ std::shared_ptr<CTextureBase> CShadowRenderPass::CreateDepthMap(TVector2i _Size)
   DepthMapParams.WrapT          = ETextureWrap::ClampToBorder;
   DepthMapParams.MinFilter      = ETextureFilter::Nearest;
   DepthMapParams.MagFilter      = ETextureFilter::Nearest;
-  return resource::CreateTexture(SHADOW_MAP_NAME, DepthMapParams, true);
+  return resource::RecreateTexture(SHADOW_MAP_NAME, DepthMapParams);
 }
 
 void CShadowRenderPass::DestroyDepthMap()

@@ -12,6 +12,7 @@
 #include "engine/Engine.h"
 #include "assets/Shader.h"
 #include "render/RenderQueue.h"
+#include "utils/Event.h"
 
 CWorld::CWorld() = default;
 
@@ -50,7 +51,12 @@ void CWorld::Collect(CRenderQueue &_Queue)
 
 void CWorld::RemoveEntity(ecs::TEntity _Entity)
 {
+  const int OldCount = m_EntitiesCoordinator->GetExistingEntities().Size();
   m_EntitiesCoordinator->DestroyEntity(_Entity);
+  const int NewCount = m_EntitiesCoordinator->GetExistingEntities().Size();
+
+  if (OldCount != NewCount)
+    event::Notify(TEventType::EntityRemoved);
 }
 
 const CUnorderedVector<ecs::TEntity> &CWorld::GetAllEntities() const

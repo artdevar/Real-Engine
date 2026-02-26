@@ -37,6 +37,7 @@ private:
   bool ShouldBeUpdated() const override;
 
 public:
+  void AddEntity(ecs::TEntity _Entity);
   void RemoveEntity(ecs::TEntity _Entity);
 
   const CUnorderedVector<ecs::TEntity> &GetAllEntities() const;

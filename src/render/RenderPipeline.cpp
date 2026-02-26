@@ -19,7 +19,7 @@
 #include "utils/Logger.h"
 #include <glm/gtx/norm.hpp>
 
-const std::string CRenderPipeline::RENDER_TEXTURE_NAME = "SceneTexture";
+const std::string CRenderPipeline::RENDER_TEXTURE_NAME = "PIPELINE_SCENE_RENDER_TEXTURE";
 
 CRenderPipeline::CRenderPipeline() :
     m_Lighting({}),
@@ -64,6 +64,7 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
     const bool ShadowsEnabled       = !m_ShadowPasses.empty();
     const bool NeedToEnableShadows  = _Event.GetValue<bool>() && !ShadowsEnabled;
     const bool NeedToDisableShadows = !_Event.GetValue<bool>() && ShadowsEnabled;
+
     if (NeedToEnableShadows)
       m_ShadowPasses.push_back(CShadowRenderPass::Create(resource::LoadShader("Depth")));
     else if (NeedToDisableShadows)
@@ -266,5 +267,5 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
-  return resource::CreateTexture(_Name, TextureParams, true);
+  return resource::RecreateTexture(_Name, TextureParams);
 }

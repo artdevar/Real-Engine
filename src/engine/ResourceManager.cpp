@@ -27,18 +27,27 @@ static bool IsFormatSupported(const std::filesystem::path &_Path)
 
 void CResourceManager::Init()
 {
+  event::Subscribe(TEventType::EntityRemoved, GetWeakPtr());
 }
 
 void CResourceManager::Shutdown()
 {
   for (auto &[Path, Asset] : m_Assets)
     Asset->Shutdown();
-
   m_Assets.clear();
 }
 
 void CResourceManager::OnEvent(const TEvent &_Event)
 {
+  switch (_Event.Type)
+  {
+  case TEventType::EntityRemoved:
+    RemoveUnusedAssets();
+    break;
+
+  default:
+    break;
+  }
 }
 
 std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path &_Path)
@@ -172,4 +181,20 @@ void CResourceManager::MarkUnused(const std::string &_Name)
 
   It->second->Shutdown();
   m_Assets.erase(It);
+}
+
+void CResourceManager::RemoveUnusedAssets()
+{
+  for (auto It = m_Assets.begin(); It != m_Assets.end();)
+  {
+    if (It->second.use_count() == 1)
+    {
+      It->second->Shutdown();
+      It = m_Assets.erase(It);
+    }
+    else
+    {
+      ++It;
+    }
+  }
 }
