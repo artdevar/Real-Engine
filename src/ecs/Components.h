@@ -6,10 +6,10 @@
 #include <memory>
 #include <map>
 #include <variant>
+#include <common/Common.h>
 #include "render/Buffer.h"
 #include "render/ShaderTypes.h"
 #include "render/RenderTypes.h"
-#include "utils/Common.h"
 
 class CModel;
 class CTextureBase;

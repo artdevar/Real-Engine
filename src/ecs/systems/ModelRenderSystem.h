@@ -1,5 +1,7 @@
-#include "ecs/SystemManager.h"
+#pragma once
+
 #include "interfaces/RenderCollector.h"
+#include <ecs/System.h>
 
 namespace ecs
 {

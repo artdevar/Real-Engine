@@ -1,6 +1,6 @@
 #pragma once
 
-#include "StaticArray.h"
+#include <common/StaticArray.h>
 #include <format>
 #include <map>
 #include <string>

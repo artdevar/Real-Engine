@@ -1,11 +1,14 @@
 #pragma once
 
-#include "CommonECS.h"
-#include "utils/Common.h"
-#include "utils/StaticArray.h"
-#include "utils/UnorderedVector.h"
+#include "Core.h"
+#include <common/Common.h>
+#include <common/StaticArray.h>
+#include <common/UnorderedVector.h>
 
-class CEntityManager
+namespace ecs
+{
+
+class CEntityManager final
 {
   DISABLE_CLASS_COPY(CEntityManager);
 
@@ -18,10 +21,15 @@ public:
   void SetSignature(ecs::TEntity _Entity, ecs::TSignature _Signature);
   ecs::TSignature GetSignature(ecs::TEntity _Entity) const;
 
-  const CUnorderedVector<ecs::TEntity> &GetExistingEntities() const;
+  const CUnorderedVector<ecs::TEntity> &GetAliveEntities() const;
 
 private:
+  bool IsEntityExist(ecs::TEntity _Entity) const;
+
+private:
+  CUnorderedVector<ecs::TEntity>                   m_AliveEntities;
   CStaticArray<ecs::TEntity, ecs::MAX_ENTITIES>    m_AvailableEntities;
   CStaticArray<ecs::TSignature, ecs::MAX_ENTITIES> m_Signatures;
-  CUnorderedVector<ecs::TEntity>                   m_ExistingEntities;
 };
+
+} // namespace ecs

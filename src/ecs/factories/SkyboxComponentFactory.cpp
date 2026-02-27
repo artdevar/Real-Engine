@@ -1,7 +1,7 @@
 #include "../ComponentsFactory.h"
 #include "render/Buffer.h"
 #include "assets/Texture.h"
-#include "utils/Common.h"
+#include <common/Common.h>
 
 namespace ecs
 {

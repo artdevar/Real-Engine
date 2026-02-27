@@ -1,23 +1,27 @@
 #pragma once
 
 #if DEV_STAGE
-#include "ecs/CommonECS.h"
-#include "ecs/Components.h"
 #include "interfaces/Shutdownable.h"
-#include "utils/UnorderedVector.h"
+#include "ecs/EntityType.h"
+#include <ecs/Core.h>
+#include <common/UnorderedVector.h>
+#include <optional>
+
+class IWorldEditor;
+
+namespace ecs
+{
+struct TModelComponent;
+struct TTransformComponent;
+struct TLightComponent;
+} // namespace ecs
 
 class CEditorUI : public IShutdownable
 {
-  enum TEntityType
-  {
-    StaticMesh,
-    PointLight,
-    DirectionalLight,
-    Spotlight,
-    Skybox
-  };
-
 public:
+  CEditorUI(IWorldEditor &_WorldEditor);
+  ~CEditorUI();
+
   void Shutdown() override;
 
   void Init();
@@ -30,9 +34,8 @@ private:
 
   void RenderEntities();
   void RenderGlobalParams();
-  void RenderLightDebugLines();
 
-  void SpawnEntity(TEntityType _Type);
+  void SpawnEntity(ecs::TEntityType _Type);
 
   void RenderEntityData(ecs::TEntity _Entity);
   void RenderEntityData(ecs::TModelComponent &_Mesh);
@@ -43,6 +46,7 @@ private:
   int GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const;
 
 private:
+  IWorldEditor               &m_WorldEditor;
   std::optional<ecs::TEntity> m_SelectedEntity;
 };
 

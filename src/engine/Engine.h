@@ -5,7 +5,7 @@
 #include "interfaces/Renderer.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
-#include "utils/Common.h"
+#include <common/Common.h>
 #include <memory>
 #include <string>
 #include <vector>

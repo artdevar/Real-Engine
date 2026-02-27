@@ -19,6 +19,7 @@ public:
   constexpr CStaticArray &operator=(CStaticArray &&) = default;
 
   class CIterator;
+  class CConstIterator;
 
   constexpr CStaticArray()
   {
@@ -53,6 +54,11 @@ public:
     return m_Data[_Index];
   }
 
+  constexpr bool Contains(const T &_Value) const
+  {
+    return std::find(begin(), end(), _Value) != end();
+  }
+
   constexpr std::size_t GetCapacity() const
   {
     return Capacity;
@@ -83,9 +89,9 @@ public:
     return CIterator(m_Data);
   }
 
-  constexpr CIterator begin() const
+  constexpr CConstIterator begin() const
   {
-    return CIterator(m_Data);
+    return CConstIterator(m_Data);
   }
 
   constexpr CIterator end()
@@ -93,9 +99,9 @@ public:
     return CIterator(m_Data + GetActualSize());
   }
 
-  constexpr CIterator end() const
+  constexpr CConstIterator end() const
   {
-    return CIterator(m_Data + GetActualSize());
+    return CConstIterator(m_Data + GetActualSize());
   }
 
   template <std::ranges::input_range R>
@@ -163,7 +169,8 @@ template <typename T, std::size_t N>
 class CStaticArray<T, N>::CIterator final
 {
 public:
-  explicit constexpr CIterator(T *_Item) : m_Item(_Item)
+  explicit constexpr CIterator(T *_Item) :
+      m_Item(_Item)
   {
   }
 
@@ -202,4 +209,50 @@ public:
 
 private:
   T *m_Item;
+};
+
+template <typename T, std::size_t N>
+class CStaticArray<T, N>::CConstIterator final
+{
+public:
+  explicit constexpr CConstIterator(const T *_Item) :
+      m_Item(_Item)
+  {
+  }
+
+  constexpr const T &operator*() const
+  {
+    return *m_Item;
+  }
+
+  constexpr const T *operator->() const
+  {
+    return m_Item;
+  }
+
+  constexpr CConstIterator &operator++()
+  {
+    ++m_Item;
+    return *this;
+  }
+
+  constexpr CConstIterator operator++(int)
+  {
+    CConstIterator Temp = *this;
+    ++(*this);
+    return Temp;
+  }
+
+  constexpr bool operator==(const CConstIterator &_Other) const
+  {
+    return m_Item == _Other.m_Item;
+  }
+
+  constexpr bool operator!=(const CConstIterator &_Other) const
+  {
+    return m_Item != _Other.m_Item;
+  }
+
+private:
+  const T *m_Item;
 };

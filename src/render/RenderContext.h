@@ -6,8 +6,8 @@
 
 struct TRenderContext
 {
-  std::reference_wrapper<CFrameBuffer> SceneFrameBuffer;
-  uint32_t                             RenderTexture;
+  CFrameBuffer &SceneFrameBuffer;
+  uint32_t      RenderTexture;
 
   glm::vec3 CameraPosition;
   glm::mat4 ProjectionMatrix;

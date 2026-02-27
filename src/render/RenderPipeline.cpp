@@ -129,7 +129,7 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer)
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneFrameBuffer.get().Unbind();
+  _RenderContext.SceneFrameBuffer.Unbind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_ShadowPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -137,18 +137,18 @@ void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderCo
 
 void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneFrameBuffer.get().Bind();
+  _RenderContext.SceneFrameBuffer.Bind();
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_GeometryPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
 
-  _RenderContext.SceneFrameBuffer.get().Unbind();
+  _RenderContext.SceneFrameBuffer.Unbind();
 }
 
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneFrameBuffer.get().Unbind();
+  _RenderContext.SceneFrameBuffer.Unbind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_PostProcessPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);

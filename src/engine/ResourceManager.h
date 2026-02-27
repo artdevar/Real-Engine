@@ -4,7 +4,6 @@
 #include "interfaces/Shutdownable.h"
 #include "interfaces/EventsListener.h"
 #include "interfaces/Sharable.h"
-#include "utils/Common.h"
 
 class CModel;
 class CShader;

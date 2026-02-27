@@ -1,50 +1,16 @@
 #pragma once
 
-#include "CommonECS.h"
-#include "utils/UnorderedVector.h"
+#include "Core.h"
+#include "System.h"
 #include <cassert>
 #include <ctti/type_id.hpp>
 #include <memory>
-#include <set>
 #include <unordered_map>
 
-class CCoordinator;
-
-class CSystem
+namespace ecs
 {
-public:
-  virtual void Init(CCoordinator *_Coordinator)
-  {
-    m_Coordinator = _Coordinator;
-  }
 
-  void AddEntity(ecs::TEntity _Entity)
-  {
-    if (m_Entities.PushUnique(_Entity))
-      OnEntityAdded(_Entity);
-  }
-
-  void DeleteEntity(ecs::TEntity _Entity)
-  {
-    if (m_Entities.SafeErase(_Entity))
-      OnEntityDeleted(_Entity);
-  }
-
-protected:
-  virtual void OnEntityAdded(ecs::TEntity _Entity)
-  {
-    // Empty
-  }
-
-  virtual void OnEntityDeleted(ecs::TEntity _Entity)
-  {
-    // Empty
-  }
-
-protected:
-  CCoordinator                  *m_Coordinator;
-  CUnorderedVector<ecs::TEntity> m_Entities;
-};
+class CSystem;
 
 class CSystemManager
 {
@@ -104,3 +70,5 @@ private:
   std::unordered_map<ctti::type_id_t, ecs::TSignature>          m_Signatures;
   std::unordered_map<ctti::type_id_t, std::shared_ptr<CSystem>> m_Systems;
 };
+
+} // namespace ecs

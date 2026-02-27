@@ -4,6 +4,7 @@
 #include <cassert>
 #include <iostream>
 #include <vector>
+#include <functional>
 
 template <typename T>
 class CUnorderedVector

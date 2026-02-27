@@ -1,10 +1,7 @@
 #include "pch.h"
 
 #include "World.h"
-#include "ecs/CommonECS.h"
 #include "ecs/Components.h"
-#include "ecs/Coordinator.h"
-#include "ecs/EntityBuilder.h"
 #include "ecs/systems/LightingSystem.h"
 #include "ecs/systems/PhysicsSystem.h"
 #include "ecs/systems/SkyboxRenderSystem.h"
@@ -13,6 +10,8 @@
 #include "assets/Shader.h"
 #include "render/RenderQueue.h"
 #include "utils/Event.h"
+#include <ecs/EntitySpawner.h>
+#include <ecs/Coordinator.h>
 
 CWorld::CWorld() = default;
 
@@ -49,29 +48,24 @@ void CWorld::Collect(CRenderQueue &_Queue)
   m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(_Queue);
 }
 
-void CWorld::RemoveEntity(ecs::TEntity _Entity)
+void CWorld::DestroyEntity(ecs::TEntity _Entity)
 {
-  const int OldCount = m_EntitiesCoordinator->GetExistingEntities().Size();
   m_EntitiesCoordinator->DestroyEntity(_Entity);
-  const int NewCount = m_EntitiesCoordinator->GetExistingEntities().Size();
-
-  if (OldCount != NewCount)
-    event::Notify(TEventType::EntityRemoved);
 }
 
-const CUnorderedVector<ecs::TEntity> &CWorld::GetAllEntities() const
+CUnorderedVector<ecs::TEntity> CWorld::GetEntities() const
 {
-  return m_EntitiesCoordinator->GetExistingEntities();
+  return m_EntitiesCoordinator->GetEntities();
 }
 
-CEntityBuilder CWorld::CreateEntity()
+ecs::CEntitySpawner CWorld::CreateEntitySpawner()
 {
-  return CEntityBuilder(m_EntitiesCoordinator.get());
+  return ecs::CEntitySpawner(*m_EntitiesCoordinator);
 }
 
 void CWorld::InitECS()
 {
-  m_EntitiesCoordinator = std::make_unique<CCoordinator>();
+  m_EntitiesCoordinator = std::make_unique<ecs::CCoordinator>();
 
   m_EntitiesCoordinator->Init();
   m_EntitiesCoordinator->RegisterComponent<ecs::TModelComponent>();

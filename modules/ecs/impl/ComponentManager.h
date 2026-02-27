@@ -1,10 +1,13 @@
 #pragma once
 
-#include "CommonECS.h"
-#include "ComponentArray.h"
+#include "Core.h"
+#include "impl/ComponentArray.h"
 #include <ctti/type_id.hpp>
 #include <memory>
 #include <unordered_map>
+
+namespace ecs
+{
 
 class CComponentManager
 {
@@ -49,13 +52,7 @@ public:
   }
 
   template <typename T>
-  T *GetComponentSafe(ecs::TEntity _Entity)
-  {
-    return GetComponentArray<T>()->GetDataSafe(_Entity);
-  }
-
-  template <typename T>
-  bool IsComponentExist(ecs::TEntity _Entity)
+  bool DoesComponentExist(ecs::TEntity _Entity)
   {
     return GetComponentArray<T>()->IsDataExist(_Entity);
   }
@@ -67,11 +64,6 @@ public:
   }
 
 private:
-  std::unordered_map<ctti::type_id_t, ecs::TComponentType>              m_ComponentTypes;
-  std::unordered_map<ctti::type_id_t, std::shared_ptr<IComponentArray>> m_ComponentArrays;
-
-  ecs::TComponentType m_NextComponentType{};
-
   template <typename T>
   std::shared_ptr<CComponentArray<T>> GetComponentArray()
   {
@@ -81,4 +73,12 @@ private:
 
     return std::static_pointer_cast<CComponentArray<T>>(m_ComponentArrays[TypeID]);
   }
+
+private:
+  std::unordered_map<ctti::type_id_t, ecs::TComponentType>              m_ComponentTypes;
+  std::unordered_map<ctti::type_id_t, std::shared_ptr<IComponentArray>> m_ComponentArrays;
+
+  ecs::TComponentType m_NextComponentType{};
 };
+
+} // namespace ecs

@@ -70,7 +70,7 @@ int CEngine::Init()
   m_World           = std::make_shared<CWorld>();
   m_ResourceManager = std::make_shared<CResourceManager>();
 #if DEV_STAGE
-  m_EditorUI = std::make_unique<CEditorUI>();
+  m_EditorUI = std::make_unique<CEditorUI>(*m_World);
 #endif
 
   const std::string GameTitle       = CConfig::Instance().GetAppTitle();

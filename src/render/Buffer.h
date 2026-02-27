@@ -2,7 +2,7 @@
 
 #include <glad/glad.h>
 #include <vector>
-#include "utils/Common.h"
+#include <common/Common.h>
 
 template <class Derived>
 class CBuffer

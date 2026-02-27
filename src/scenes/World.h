@@ -1,23 +1,26 @@
 #pragma once
 
-#include "ecs/CommonECS.h"
-#include "interfaces/Identifiable.h"
 #include "interfaces/RenderCollector.h"
 #include "interfaces/FrameDataCollector.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
-#include "utils/Common.h"
-#include "utils/UnorderedVector.h"
+#include "interfaces/Sharable.h"
+#include "interfaces/WorldEditor.h"
+#include <common/Common.h>
 
 class CEngine;
-class CCoordinator;
-class CEntityBuilder;
 
-class CWorld : public IIdentifiable,
+namespace ecs
+{
+class CCoordinator;
+} // namespace ecs
+
+class CWorld : public IWorldEditor,
                public IUpdateable,
                public IRenderCollector,
                public IFrameDataCollector,
-               public IShutdownable
+               public IShutdownable,
+               public CSharable<CWorld>
 {
   DISABLE_CLASS_COPY(CWorld);
 
@@ -32,21 +35,17 @@ public:
   void Collect(TFrameData &_FrameData) override;
   void Collect(CRenderQueue &_Queue) override;
 
+  void DestroyEntity(ecs::TEntity _Entity) override;
+  ecs::CEntitySpawner CreateEntitySpawner() override;
+  CUnorderedVector<ecs::TEntity> GetEntities() const override;
+
 private:
   void UpdateInternal(float _TimeDelta) override;
   bool ShouldBeUpdated() const override;
-
-public:
-  void AddEntity(ecs::TEntity _Entity);
-  void RemoveEntity(ecs::TEntity _Entity);
-
-  const CUnorderedVector<ecs::TEntity> &GetAllEntities() const;
-
-  CEntityBuilder CreateEntity();
 
 protected:
   void InitECS();
 
 public:
-  std::unique_ptr<CCoordinator> m_EntitiesCoordinator;
+  std::unique_ptr<ecs::CCoordinator> m_EntitiesCoordinator;
 };

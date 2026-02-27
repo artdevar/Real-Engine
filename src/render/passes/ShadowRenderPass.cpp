@@ -32,7 +32,7 @@ void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   m_OldViewport = _Renderer.GetViewport();
   TVector2i NewViewport(m_ShadowMapSize, m_ShadowMapSize);
 
-  _RenderContext.SceneFrameBuffer.get().Unbind();
+  _RenderContext.SceneFrameBuffer.Unbind();
   m_DepthMapFBO.Bind();
 
   _Renderer.Clear(EClearFlags::Depth);
@@ -69,7 +69,7 @@ void CShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_Rende
   _RenderContext.ShadowMap = m_DepthMap->ID();
 
   m_DepthMapFBO.Unbind();
-  _RenderContext.SceneFrameBuffer.get().Bind();
+  _RenderContext.SceneFrameBuffer.Bind();
 
   _Renderer.SetCullFace(ECullMode::Back);
   _Renderer.SetViewport(m_OldViewport);

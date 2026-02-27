@@ -1,5 +1,4 @@
 #include "Texture.h"
-#include "utils/Common.h"
 #include "utils/Logger.h"
 #include "utils/Path.h"
 #include <stb_image.h>

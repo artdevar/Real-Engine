@@ -52,12 +52,8 @@ target_compile_definitions(Real_Engine PRIVATE
 target_include_directories(Real_Engine PUBLIC
     src
     lib/
-    lib/ctti
-    lib/glad
     lib/glm
-    lib/tinygltf
-    lib/MikkTSpace
-    lib/imgui
+    modules/
 )
 
 # Dependencies
@@ -76,12 +72,15 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(glfw)
 
-link_directories(lib)
+#link_directories(lib)
+#link_directories(modules)
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glm)
 add_subdirectory(lib/tinygltf)
 add_subdirectory(lib/MikkTSpace)
 add_subdirectory(lib/imgui)
+add_subdirectory(modules/common)
+add_subdirectory(modules/ecs)
 
 # Linking
 
@@ -91,6 +90,7 @@ target_link_libraries(Real_Engine PRIVATE
     tinygltf
     mikktspace
     imgui
+    ecs
 )
 
 if (WIN32)

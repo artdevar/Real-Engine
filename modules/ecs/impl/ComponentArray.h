@@ -1,26 +1,18 @@
 #pragma once
 
-#include "CommonECS.h"
-#include "utils/StaticArray.h"
+#include "IComponentArray.h"
+#include <common/StaticArray.h>
 #include <cassert>
 #include <unordered_map>
 
-// The one instance of virtual inheritance in the entire implementation.
-// An interface is needed so that the ComponentManager (seen later)
-// can tell a generic ComponentArray that an entity has been destroyed
-// and that it needs to update its array mappings.
-class IComponentArray
+namespace ecs
 {
-public:
-  virtual ~IComponentArray()                         = default;
-  virtual void EntityDestroyed(ecs::TEntity _Entity) = 0;
-};
 
 template <typename T>
 class CComponentArray : public IComponentArray
 {
 public:
-  void InsertData(ecs::TEntity _Entity, T &&_Component)
+  void InsertData(TEntity _Entity, T &&_Component)
   {
     assert(!IsDataExist(_Entity) && "Component added to same entity more than once.");
 
@@ -31,7 +23,7 @@ public:
     m_IndexToEntityMap[NewIndex] = _Entity;
   }
 
-  void RemoveData(ecs::TEntity _Entity)
+  void RemoveData(TEntity _Entity)
   {
     assert(IsDataExist(_Entity) && "Removing non-existent component.");
 
@@ -49,35 +41,27 @@ public:
     m_IndexToEntityMap.erase(IndexOfLastElement);
   }
 
-  T &GetData(ecs::TEntity _Entity)
+  T &GetData(TEntity _Entity)
   {
     assert(IsDataExist(_Entity) && "Retrieving non-existent component.");
-
     return m_ComponentArray[m_EntityToIndexMap[_Entity]];
   }
 
-  T *GetDataSafe(ecs::TEntity _Entity)
-  {
-    auto Iter = m_EntityToIndexMap.find(_Entity);
-    if (Iter == m_EntityToIndexMap.end())
-      return nullptr;
-
-    return &(m_ComponentArray[Iter->second]);
-  }
-
-  bool IsDataExist(ecs::TEntity _Entity) const
+  bool IsDataExist(TEntity _Entity) const
   {
     return m_EntityToIndexMap.contains(_Entity);
   }
 
-  void EntityDestroyed(ecs::TEntity _Entity) override
+  void EntityDestroyed(TEntity _Entity) override
   {
     if (m_EntityToIndexMap.contains(_Entity))
       RemoveData(_Entity);
   }
 
 private:
-  CStaticArray<T, ecs::MAX_ENTITIES>       m_ComponentArray;
-  std::unordered_map<ecs::TEntity, size_t> m_EntityToIndexMap;
-  std::unordered_map<size_t, ecs::TEntity> m_IndexToEntityMap;
+  CStaticArray<T, MAX_ENTITIES>       m_ComponentArray;
+  std::unordered_map<TEntity, size_t> m_EntityToIndexMap;
+  std::unordered_map<size_t, TEntity> m_IndexToEntityMap;
 };
+
+} // namespace ecs
