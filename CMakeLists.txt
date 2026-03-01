@@ -40,6 +40,7 @@ target_sources(Real_Engine PRIVATE ${PROJECT_SOURCES})
 
 target_compile_definitions(Real_Engine PRIVATE
     GLM_ENABLE_EXPERIMENTAL
+    GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
     APP_NAME="${PROJECT_NAME}"
     DEV_STAGE=${DEV_STAGE_VAL}
     SHADERS_HOT_RELOAD=${SHADERS_HOT_RELOAD_VAL}
@@ -72,8 +73,6 @@ set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(glfw)
 
-#link_directories(lib)
-#link_directories(modules)
 add_subdirectory(lib/glad)
 add_subdirectory(lib/glm)
 add_subdirectory(lib/tinygltf)
