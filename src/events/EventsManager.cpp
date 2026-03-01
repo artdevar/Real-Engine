@@ -9,13 +9,11 @@ void CEventsManager::Shutdown()
   m_PendingEvents.Clear();
 }
 
-bool CEventsManager::ShouldBeUpdated() const
+void CEventsManager::Update(float _TimeDelta)
 {
-  return !m_PendingEvents.Empty();
-}
+  if (m_PendingEvents.Empty())
+    return;
 
-void CEventsManager::UpdateInternal(float _TimeDelta)
-{
   for (const TEvent &Event : m_PendingEvents)
   {
     auto ItListeners = m_Listeners.find(Event.Type);

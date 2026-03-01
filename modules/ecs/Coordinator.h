@@ -10,6 +10,7 @@ namespace ecs
 class CComponentManager;
 class CEntityManager;
 class CSystemManager;
+struct TComponentView;
 
 class CCoordinator final
 {
@@ -20,6 +21,7 @@ public:
   void DestroyEntity(TEntity _Entity);
 
   CUnorderedVector<TEntity> GetEntities() const;
+  CUnorderedVector<TComponentView> GetEntityComponents(TEntity _Entity) const;
 
   template <typename T>
   void RegisterComponent();

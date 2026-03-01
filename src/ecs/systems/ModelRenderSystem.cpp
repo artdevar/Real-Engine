@@ -56,36 +56,4 @@ void CModelRenderSystem::Collect(CRenderQueue &_Queue)
   }
 }
 
-void CModelRenderSystem::SetVisibility(ecs::TEntity _Entity, bool _IsVisible)
-{
-  if (_IsVisible)
-  {
-    assert(m_HiddenEntities.Contains(_Entity));
-    assert(!m_Entities.Contains(_Entity));
-
-    m_Entities.Push(_Entity);
-    m_HiddenEntities.Erase(_Entity);
-  }
-  else
-  {
-    assert(!m_HiddenEntities.Contains(_Entity));
-    assert(m_Entities.Contains(_Entity));
-
-    m_Entities.Erase(_Entity);
-    m_HiddenEntities.Push(_Entity);
-  }
-}
-
-void CModelRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
-{
-  CSystem::OnEntityAdded(_Entity);
-}
-
-void CModelRenderSystem::OnEntityDeleted(ecs::TEntity _Entity)
-{
-  CSystem::OnEntityDeleted(_Entity);
-
-  m_HiddenEntities.SafeErase(_Entity);
-}
-
 } // namespace ecs

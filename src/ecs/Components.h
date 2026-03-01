@@ -1,15 +1,13 @@
 #pragma once
 
+#include "render/Buffer.h"
+#include "render/ShaderTypes.h"
+#include "render/RenderTypes.h"
+#include <common/Common.h>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 #include <vector>
 #include <memory>
-#include <map>
-#include <variant>
-#include <common/Common.h>
-#include "render/Buffer.h"
-#include "render/ShaderTypes.h"
-#include "render/RenderTypes.h"
 
 class CModel;
 class CTextureBase;
@@ -21,6 +19,8 @@ struct TTransformComponent
 {
   glm::mat4x4 WorldMatrix = glm::mat4x4(1.0f);
 };
+
+////////////////////////////////////////////////////////////////////
 
 struct TModelComponent
 {
@@ -62,6 +62,8 @@ struct TModelComponent
   std::vector<TMaterialData>  Materials;
 };
 
+////////////////////////////////////////////////////////////////////
+
 struct TLightComponent
 {
   ELightType Type;
@@ -79,6 +81,8 @@ struct TLightComponent
   float OuterCutOff = 0.0f;
 };
 
+////////////////////////////////////////////////////////////////////
+
 struct TSkyboxComponent
 {
   std::shared_ptr<CTextureBase> SkyboxTexture;
@@ -86,5 +90,7 @@ struct TSkyboxComponent
   CVertexBuffer                 VBO           = GL_STATIC_DRAW;
   uint32_t                      VerticesCount = 0;
 };
+
+/////////////////////////////////////////////////////////////////
 
 } // namespace ecs

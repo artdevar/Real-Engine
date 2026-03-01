@@ -27,4 +27,9 @@ CUnorderedVector<TEntity> CCoordinator::GetEntities() const
   return m_EntityManager->GetAliveEntities();
 }
 
+CUnorderedVector<TComponentView> CCoordinator::GetEntityComponents(TEntity _Entity) const
+{
+  return m_ComponentManager->GetEntityComponents(_Entity);
+}
+
 } // namespace ecs

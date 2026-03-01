@@ -1,6 +1,7 @@
 #pragma once
 
 #if DEV_STAGE
+#include "renderer/ComponentRenderer.h"
 #include "interfaces/Shutdownable.h"
 #include "ecs/EntityType.h"
 #include <ecs/Core.h>
@@ -15,6 +16,9 @@ struct TModelComponent;
 struct TTransformComponent;
 struct TLightComponent;
 } // namespace ecs
+
+namespace editor
+{
 
 class CEditorUI : public IShutdownable
 {
@@ -33,21 +37,19 @@ private:
   void RenderEnd();
 
   void RenderEntities();
+  void RenderEntity(ecs::TEntity _Entity);
   void RenderGlobalParams();
 
   void SpawnEntity(ecs::TEntityType _Type);
-
-  void RenderEntityData(ecs::TEntity _Entity);
-  void RenderEntityData(ecs::TModelComponent &_Mesh);
-  void RenderEntityData(ecs::TTransformComponent &_Transform);
-  void RenderEntityData(ecs::TLightComponent &_Light);
 
 private:
   int GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const;
 
 private:
   IWorldEditor               &m_WorldEditor;
+  CComponentRenderer          m_ComponentRenderer;
   std::optional<ecs::TEntity> m_SelectedEntity;
 };
 
+} // namespace editor
 #endif

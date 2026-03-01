@@ -70,7 +70,7 @@ int CEngine::Init()
   m_World           = std::make_shared<CWorld>();
   m_ResourceManager = std::make_shared<CResourceManager>();
 #if DEV_STAGE
-  m_EditorUI = std::make_unique<CEditorUI>(*m_World);
+  m_EditorUI = std::make_unique<editor::CEditorUI>(*m_World);
 #endif
 
   const std::string GameTitle       = CConfig::Instance().GetAppTitle();
@@ -148,7 +148,7 @@ int CEngine::Run()
   return EXIT_SUCCESS;
 }
 
-void CEngine::UpdateInternal(float _TimeDelta)
+void CEngine::Update(float _TimeDelta)
 {
   m_EventsManager->Update(_TimeDelta);
 
@@ -157,11 +157,6 @@ void CEngine::UpdateInternal(float _TimeDelta)
 
   m_Camera->Update(_TimeDelta);
   m_World->Update(_TimeDelta);
-}
-
-bool CEngine::ShouldBeUpdated() const
-{
-  return true;
 }
 
 void CEngine::Render(IRenderer &_Renderer)
@@ -177,27 +172,6 @@ void CEngine::Render(IRenderer &_Renderer)
 #if DEV_STAGE
   m_EditorUI->RenderFrame();
 #endif
-}
-
-void CEngine::LoadConfig()
-{
-  // const nlohmann::json ConfigData = utils::ParseJson(ConfigPath);
-  // if (ConfigData.empty())
-  //   return;
-  //
-  // auto Iter = ConfigData.find(m_World->GetID());
-  // if (Iter == ConfigData.end())
-  //   return;
-  //
-  // m_World->ReadFromData(Iter.value());
-}
-
-void CEngine::SaveConfig()
-{
-  // nlohmann::json Data;
-  // Data[m_World->GetID()] = m_World->GetSaveData();
-  //
-  // utils::SaveJson(ConfigPath, Data);
 }
 
 TVector2i CEngine::GetWindowSize() const

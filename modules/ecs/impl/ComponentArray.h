@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IComponentArray.h"
+#include "Utils.h"
 #include <common/StaticArray.h>
 #include <cassert>
 #include <unordered_map>
@@ -56,6 +57,24 @@ public:
   {
     if (m_EntityToIndexMap.contains(_Entity))
       RemoveData(_Entity);
+  }
+
+  void *GetRawComponent(TEntity _Entity) override
+  {
+    if (!IsDataExist(_Entity))
+      return nullptr;
+
+    return static_cast<void *>(&GetData(_Entity));
+  }
+
+  TTypeID GetComponentTypeID() const override
+  {
+    return utils::GetComponentTypeID<T>();
+  }
+
+  TTypeName GetComponentName() const override
+  {
+    return utils::GetComponentName<T>();
   }
 
 private:

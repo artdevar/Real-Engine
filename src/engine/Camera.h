@@ -16,18 +16,16 @@ public:
   CCamera();
 
   void Init();
+
   void Shutdown() override;
 
+  void Update(float _TimeDelta) override;
+
   void SetPosition(const glm::vec3 &_Pos);
-
   glm::vec3 GetPosition() const;
-
   glm::vec3 GetForwardVector() const;
-
   glm::vec3 GetUpVector() const;
-
   glm::mat4 GetView() const;
-
   glm::mat4 GetProjection() const;
 
   void OnEvent(const TEvent &_Event) override;
@@ -40,10 +38,6 @@ public: // Input
   bool ProcessMouseMove(float _X, float _Y) override;
 
   void ResetInputState();
-
-private:
-  void UpdateInternal(float _TimeDelta) override;
-  bool ShouldBeUpdated() const override;
 
 private:
   glm::vec3 m_Position;

@@ -17,6 +17,9 @@
 #include <imgui/imgui.h>
 #include <imgui/misc/cpp/imgui_stdlib.h>
 
+namespace editor
+{
+
 CEditorUI::CEditorUI(IWorldEditor &_WorldEditor) :
     m_WorldEditor(_WorldEditor)
 {
@@ -128,8 +131,6 @@ void CEditorUI::RenderGlobalParams()
 
 void CEditorUI::RenderEntities()
 {
-  std::shared_ptr<CWorld> World = CEngine::Instance().GetWorld();
-
   if (ImGui::CollapsingHeader("Entities##EntitiesWindow"))
   {
     static bool IsPopupOpen = true;
@@ -213,7 +214,7 @@ void CEditorUI::RenderEntities()
     }
 
     if (m_SelectedEntity.has_value())
-      RenderEntityData(m_SelectedEntity.value());
+      RenderEntity(m_SelectedEntity.value());
   }
 
   if (ImGui::CollapsingHeader("Global parameters##GlobalParamsWindow"))
@@ -222,141 +223,13 @@ void CEditorUI::RenderEntities()
   }
 }
 
-void CEditorUI::RenderEntityData(ecs::TEntity _Entity)
+void CEditorUI::RenderEntity(ecs::TEntity _Entity)
 {
-  //if (auto *Component = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TModelComponent>(_Entity); Component)
-  //  RenderEntityData(*Component);
-  //
-  //if (auto *Component = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TTransformComponent>(_Entity); Component)
-  //  RenderEntityData(*Component);
-  //
-  //if (auto *Component = World->m_EntitiesCoordinator->GetComponentSafe<ecs::TLightComponent>(_Entity); Component)
-  //  RenderEntityData(*Component);
-}
-
-void CEditorUI::RenderEntityData(ecs::TModelComponent &_Mesh)
-{
-  if (ImGui::Button("Select file"))
-    SpawnEntity(ecs::TEntityType::StaticMesh);
-}
-
-void CEditorUI::RenderEntityData(ecs::TTransformComponent &_TransformComponent)
-{
-  glm::vec3 Scale;
-  glm::quat Rotation;
-  glm::vec3 Translation;
-  glm::vec3 Skew;
-  glm::vec4 Perspective;
-
-  const bool Decomposed = glm::decompose(_TransformComponent.WorldMatrix, Scale, Rotation, Translation, Skew, Perspective);
-  assert(Decomposed);
-
-  bool ValueChanged = false;
-
-  ImGui::SeparatorText("Position##ObjPos");
-  ValueChanged |= ImGui::DragFloat("X##ObjXPos", &Translation.x, 0.5f);
-  ValueChanged |= ImGui::DragFloat("Y##ObjYPos", &Translation.y, 0.5f);
-  ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z, 0.5f);
-
-  ImGui::SeparatorText("Scale##ObjScale");
-  const float kMinScale = 0.01f;
-  const float kMaxScale = 10000.0f;
-  ValueChanged         |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, kMinScale, kMaxScale);
-  ValueChanged         |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, kMinScale, kMaxScale);
-  ValueChanged         |= ImGui::DragFloat("Z##ObjZScale", &Scale.z, 0.1f, kMinScale, kMaxScale);
-
-  ImGui::SeparatorText("Rotation##ObjRotQuat");
-  float quat[4]     = {Rotation.x, Rotation.y, Rotation.z, Rotation.w};
-  bool  QuatChanged = false;
-  QuatChanged      |= ImGui::DragFloat("X##ObjQuatX", &quat[0], 0.01f, -1.0f, 1.0f);
-  QuatChanged      |= ImGui::DragFloat("Y##ObjQuatY", &quat[1], 0.01f, -1.0f, 1.0f);
-  QuatChanged      |= ImGui::DragFloat("Z##ObjQuatZ", &quat[2], 0.01f, -1.0f, 1.0f);
-  QuatChanged      |= ImGui::DragFloat("W##ObjQuatW", &quat[3], 0.01f, -1.0f, 1.0f);
-
-  if (QuatChanged)
+  const CUnorderedVector<ecs::TComponentView> EntityComponents = m_WorldEditor.GetEntityComponents(_Entity);
+  for (const ecs::TComponentView &ComponentView : EntityComponents)
   {
-    Rotation     = glm::quat(quat[3], quat[0], quat[1], quat[2]);
-    Rotation     = glm::normalize(Rotation);
-    ValueChanged = true;
-  }
-
-  if (ValueChanged)
-  {
-    Scale                           = glm::max(Scale, glm::vec3(kMinScale));
-    _TransformComponent.WorldMatrix = glm::recompose(Scale, Rotation, Translation, Skew, Perspective);
-  }
-
-  ImGui::Separator();
-}
-
-void CEditorUI::RenderEntityData(ecs::TLightComponent &_Light)
-{
-  int LightTypeVal = static_cast<int>(_Light.Type);
-
-  // ImGui::RadioButton("Directional", &LightTypeVal, static_cast<int>(ELightType::Directional));
-  // ImGui::SameLine();
-  // ImGui::RadioButton("Point", &LightTypeVal, static_cast<int>(ELightType::Point));
-  // ImGui::SameLine();
-  // ImGui::RadioButton("Spotlight", &LightTypeVal, static_cast<int>(ELightType::Spotlight));
-  // ImGui::Separator();
-
-  switch ((_Light.Type = static_cast<ELightType>(LightTypeVal)))
-  {
-  case ELightType::Directional: {
-    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.25f);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient),
-                      ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Diffuse color##LightDiffColor", glm::value_ptr(_Light.Diffuse),
-                      ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Specular color##LightSpecColor", glm::value_ptr(_Light.Specular),
-                      ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float | ImGuiColorEditFlags_HDR);
-    break;
-  }
-
-  case ELightType::Point: {
-    ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position), 0.25f);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Diffuse color##LightDiffColor", glm::value_ptr(_Light.Diffuse), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Specular color##LightSpecColor", glm::value_ptr(_Light.Specular), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
-    ImGui::Separator();
-
-    ImGui::DragFloat("LinearDrag", &_Light.Linear, 0.005f, 0.0f, 5.0f);
-    ImGui::DragFloat("Quadratic", &_Light.Quadratic, 0.005f, 0.0f, 5.0f);
-    break;
-  }
-
-  case ELightType::Spotlight: {
-    ImGui::DragFloat3("Position##LightPos", glm::value_ptr(_Light.Position), 0.25f);
-    ImGui::Separator();
-
-    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(_Light.Direction), 0.25f);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Ambient color##LightAmbColor", glm::value_ptr(_Light.Ambient), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Diffuse color##LightDiffColor", glm::value_ptr(_Light.Diffuse), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
-    ImGui::Separator();
-
-    ImGui::ColorEdit3("Specular color##LightSpecColor", glm::value_ptr(_Light.Specular), ImGuiColorEditFlags_InputRGB | ImGuiColorEditFlags_Float);
-    break;
-  }
-
-  default:
-    assert(false);
-    break;
+    if (ImGui::CollapsingHeader(ComponentView.Name.c_str()))
+      m_ComponentRenderer.Render(ComponentView);
   }
 }
 
@@ -438,5 +311,7 @@ void CEditorUI::SpawnEntity(ecs::TEntityType _Type)
     break;
   }
 }
+
+} // namespace editor
 
 #endif

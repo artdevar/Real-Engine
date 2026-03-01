@@ -32,16 +32,15 @@ public:
   void Init();
   void Shutdown() override;
 
+  void Update(float _TimeDelta) override;
+
   void Collect(TFrameData &_FrameData) override;
   void Collect(CRenderQueue &_Queue) override;
 
   void DestroyEntity(ecs::TEntity _Entity) override;
   ecs::CEntitySpawner CreateEntitySpawner() override;
   CUnorderedVector<ecs::TEntity> GetEntities() const override;
-
-private:
-  void UpdateInternal(float _TimeDelta) override;
-  bool ShouldBeUpdated() const override;
+  CUnorderedVector<ecs::TComponentView> GetEntityComponents(ecs::TEntity _Entity) const override;
 
 protected:
   void InitECS();

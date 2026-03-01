@@ -11,7 +11,6 @@
 #include <vector>
 
 class CWorld;
-class CEditorUI;
 class CShader;
 class CCamera;
 class CResourceManager;
@@ -20,6 +19,11 @@ class CDisplay;
 class CInputManager;
 class CEventsManager;
 class CRenderPipeline;
+
+namespace editor
+{
+class CEditorUI;
+}
 
 class CEngine final : public IShutdownable,
                       private IUpdateable
@@ -39,9 +43,6 @@ public:
   int Init();
   int Run();
 
-  void LoadConfig();
-  void SaveConfig();
-
 public:
   TVector2i GetWindowSize() const;
 
@@ -54,9 +55,7 @@ public:
 
 private:
   void Render(IRenderer &_Renderer);
-
-  void UpdateInternal(float _TimeDelta) override;
-  bool ShouldBeUpdated() const override;
+  void Update(float _TimeDelta) override;
 
   void OnWindowResized(int _Width, int _Height);
   void ProcessInput(float _TimeDelta);
@@ -81,6 +80,6 @@ private:
   std::shared_ptr<CRenderPipeline>  m_RenderPipeline;
 
 #if DEV_STAGE
-  std::unique_ptr<CEditorUI> m_EditorUI;
+  std::unique_ptr<editor::CEditorUI> m_EditorUI;
 #endif
 };

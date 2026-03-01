@@ -19,7 +19,7 @@ public:
   void DestroyEntity(ecs::TEntity _Entity);
 
   void SetSignature(ecs::TEntity _Entity, ecs::TSignature _Signature);
-  ecs::TSignature GetSignature(ecs::TEntity _Entity) const;
+  const ecs::TSignature &GetSignature(ecs::TEntity _Entity) const;
 
   const CUnorderedVector<ecs::TEntity> &GetAliveEntities() const;
 

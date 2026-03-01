@@ -13,7 +13,10 @@
 #include <ecs/EntitySpawner.h>
 #include <ecs/Coordinator.h>
 
-CWorld::CWorld() = default;
+CWorld::CWorld() :
+    m_EntitiesCoordinator(std::make_unique<ecs::CCoordinator>())
+{
+}
 
 CWorld::~CWorld() = default;
 
@@ -27,14 +30,9 @@ void CWorld::Shutdown()
   m_EntitiesCoordinator.reset();
 }
 
-void CWorld::UpdateInternal(float _TimeDelta)
+void CWorld::Update(float _TimeDelta)
 {
   m_EntitiesCoordinator->GetSystem<ecs::CPhysicsSystem>()->Update(_TimeDelta);
-}
-
-bool CWorld::ShouldBeUpdated() const
-{
-  return m_EntitiesCoordinator != nullptr;
 }
 
 void CWorld::Collect(TFrameData &_FrameData)
@@ -63,11 +61,15 @@ ecs::CEntitySpawner CWorld::CreateEntitySpawner()
   return ecs::CEntitySpawner(*m_EntitiesCoordinator);
 }
 
+CUnorderedVector<ecs::TComponentView> CWorld::GetEntityComponents(ecs::TEntity _Entity) const
+{
+  return m_EntitiesCoordinator->GetEntityComponents(_Entity);
+}
+
 void CWorld::InitECS()
 {
-  m_EntitiesCoordinator = std::make_unique<ecs::CCoordinator>();
-
   m_EntitiesCoordinator->Init();
+
   m_EntitiesCoordinator->RegisterComponent<ecs::TModelComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TTransformComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TLightComponent>();

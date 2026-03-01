@@ -37,7 +37,7 @@ void CCamera::Shutdown()
   event::Unsubscribe(TEventType::Config_CameraZFarChanged, GetWeakPtr());
 }
 
-void CCamera::UpdateInternal(float _TimeDelta)
+void CCamera::Update(float _TimeDelta)
 {
   glm::vec3 movementDirection(0.0f);
 
@@ -194,9 +194,4 @@ void CCamera::ResetInputState()
   m_MoveRight       = false;
   m_SpeedMultiplier = 1.0f;
   m_MouseDelta      = glm::vec2(0.0f, 0.0f);
-}
-
-bool CCamera::ShouldBeUpdated() const
-{
-  return true;
 }

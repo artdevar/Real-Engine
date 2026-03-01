@@ -1,8 +1,10 @@
 #pragma once
 
 #include "Core.h"
-#include "impl/ComponentArray.h"
-#include <ctti/type_id.hpp>
+#include "Utils.h"
+#include "ComponentArray.h"
+#include "ComponentView.h"
+#include <common/UnorderedVector.h>
 #include <memory>
 #include <unordered_map>
 
@@ -15,7 +17,7 @@ public:
   template <typename T>
   void RegisterComponent()
   {
-    const ctti::type_id_t TypeID = ctti::type_id<T>();
+    const TTypeID TypeID = utils::GetComponentTypeID<T>();
 
     assert(!m_ComponentTypes.contains(TypeID) && "Registering component type more than once.");
 
@@ -25,49 +27,62 @@ public:
   }
 
   template <typename T>
-  ecs::TComponentType GetComponentType()
+  TComponentType GetComponentType()
   {
-    const ctti::type_id_t TypeID = ctti::type_id<T>();
+    const TTypeID TypeID = utils::GetComponentTypeID<T>();
     assert(m_ComponentTypes.contains(TypeID) && "Component not registered before use.");
 
     return m_ComponentTypes[TypeID];
   }
 
   template <typename T>
-  void AddComponent(ecs::TEntity _Entity, T &&_Component)
+  void AddComponent(TEntity _Entity, T &&_Component)
   {
     GetComponentArray<T>()->InsertData(_Entity, std::forward<T>(_Component));
   }
 
   template <typename T>
-  void RemoveComponent(ecs::TEntity _Entity)
+  void RemoveComponent(TEntity _Entity)
   {
     GetComponentArray<T>()->RemoveData(_Entity);
   }
 
   template <typename T>
-  T &GetComponent(ecs::TEntity _Entity)
+  T &GetComponent(TEntity _Entity)
   {
     return GetComponentArray<T>()->GetData(_Entity);
   }
 
   template <typename T>
-  bool DoesComponentExist(ecs::TEntity _Entity)
+  bool DoesComponentExist(TEntity _Entity)
   {
     return GetComponentArray<T>()->IsDataExist(_Entity);
   }
 
-  void EntityDestroyed(ecs::TEntity _Entity)
+  void EntityDestroyed(TEntity _Entity)
   {
     for (const auto &[TypeID, Component] : m_ComponentArrays)
       Component->EntityDestroyed(_Entity);
+  }
+
+  CUnorderedVector<TComponentView> GetEntityComponents(TEntity _Entity) const
+  {
+    CUnorderedVector<TComponentView> Components;
+
+    for (const auto &[TypeID, Component] : m_ComponentArrays)
+    {
+      if (void *RawComponent = Component->GetRawComponent(_Entity); RawComponent != nullptr)
+        Components.Push(TComponentView{Component->GetComponentName(), TypeID, RawComponent});
+    }
+
+    return Components;
   }
 
 private:
   template <typename T>
   std::shared_ptr<CComponentArray<T>> GetComponentArray()
   {
-    const ctti::type_id_t TypeID = ctti::type_id<T>();
+    const TTypeID TypeID = utils::GetComponentTypeID<T>();
 
     assert(m_ComponentTypes.contains(TypeID) && "Component not registered before use.");
 
@@ -75,10 +90,10 @@ private:
   }
 
 private:
-  std::unordered_map<ctti::type_id_t, ecs::TComponentType>              m_ComponentTypes;
-  std::unordered_map<ctti::type_id_t, std::shared_ptr<IComponentArray>> m_ComponentArrays;
+  std::unordered_map<TTypeID, TComponentType>                   m_ComponentTypes;
+  std::unordered_map<TTypeID, std::shared_ptr<IComponentArray>> m_ComponentArrays;
 
-  ecs::TComponentType m_NextComponentType{};
+  TComponentType m_NextComponentType{};
 };
 
 } // namespace ecs

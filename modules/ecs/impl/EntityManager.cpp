@@ -35,7 +35,7 @@ void CEntityManager::SetSignature(ecs::TEntity _Entity, ecs::TSignature _Signatu
   m_Signatures[_Entity] = std::move(_Signature);
 }
 
-ecs::TSignature CEntityManager::GetSignature(ecs::TEntity _Entity) const
+const ecs::TSignature &CEntityManager::GetSignature(ecs::TEntity _Entity) const
 {
   assert(_Entity < ecs::MAX_ENTITIES && "Entity out of range.");
   return m_Signatures[_Entity];

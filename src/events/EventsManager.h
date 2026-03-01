@@ -15,15 +15,13 @@ class CEventsManager final : public IUpdateable,
 public:
   void Shutdown() override;
 
+  void Update(float _TimeDelta) override;
+
   void Subscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener);
   void Unsubscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener);
 
   void Notify(TEvent _Event);
   void Unnotify(const TEvent &_Event);
-
-private:
-  bool ShouldBeUpdated() const override;
-  void UpdateInternal(float _TimeDelta) override;
 
 private:
   using ListenersContainer = std::vector<std::weak_ptr<IEventsListener>>;
