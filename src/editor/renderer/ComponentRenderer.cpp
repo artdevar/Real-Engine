@@ -5,10 +5,7 @@
 #include "TransformComponentRenderer.h"
 #include "LightComponentRenderer.h"
 #include "SkyboxComponentRenderer.h"
-#include "ecs/Components.h"
 #include <ecs/ComponentView.h>
-#include <ecs/Utils.h>
-#include <imgui/imgui.h>
 
 namespace editor
 {

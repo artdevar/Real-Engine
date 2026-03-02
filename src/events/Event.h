@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Events.h"
-#include "engine/MathTypes.h"
+#include <common/MathTypes.h>
 #include <variant>
 
 struct TEvent

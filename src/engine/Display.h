@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <string>
-#include "engine/MathCore.h"
+#include <common/MathTypes.h>
 
 class CDisplay
 {

@@ -113,11 +113,12 @@ int CEngine::Init()
 
   m_Camera->Init();
   m_World->Init();
-#if DEV_STAGE
-  m_EditorUI->Init();
-#endif
 
   m_Camera->SetPosition(glm::vec3(0.0f, 5.0f, 20.0f));
+
+#if DEV_STAGE
+  m_EditorUI->Init(GetDisplay()->GetWindow());
+#endif
 
   return EXIT_SUCCESS;
 }
@@ -179,6 +180,21 @@ TVector2i CEngine::GetWindowSize() const
   return m_Display->GetSize();
 }
 
+TVector2i CEngine::GetViewportSize() const
+{
+#if DEV_STAGE
+  TVector2i ViewportSize = m_EditorUI->GetViewportSize();
+  if (ViewportSize.X > 0 && ViewportSize.Y > 0)
+    return ViewportSize;
+#endif
+  return GetWindowSize();
+}
+
+uint32_t CEngine::GetRenderTextureID() const
+{
+  return m_RenderPipeline ? m_RenderPipeline->GetRenderTextureID() : 0;
+}
+
 CDisplay *CEngine::GetDisplay() const
 {
   return m_Display.get();
@@ -215,6 +231,9 @@ void CEngine::OnWindowResized(int _Width, int _Height)
 {
   TVector2i NewSize{_Width, _Height};
   event::Notify(TEventType::WindowResized, NewSize);
+#if !DEV_STAGE // the editor viewport handles this event separately, so we shouldn't notify it twice
+  event::Notify(TEventType::ViewportResized, NewSize);
+#endif
 }
 
 void CEngine::ProcessInput(float _TimeDelta)

@@ -68,8 +68,6 @@ bool CShader::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager
     return false;
   }
 
-  CLogger::Log(ELogType::Debug, std::format("[CShader] Shader '{}' loaded successfully", _Path.string()));
-
 #if SHADERS_HOT_RELOAD
   m_BasePath = _Path;
 

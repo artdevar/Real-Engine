@@ -1,12 +1,7 @@
 #pragma once
 
-#if DEV_STAGE
-#include "editor/EditorUI.h"
-#endif
-
-#include "Passkey.h"
 #include "utils/Event.h"
-#include "engine/MathCore.h"
+#include <common/MathCore.h>
 #include <filesystem>
 
 class CConfig final
@@ -19,7 +14,7 @@ public:
   }
 
 #if DEV_STAGE
-  void SetShadowsEnabled(bool _Enabled, CPasskey<editor::CEditorUI>)
+  void SetShadowsEnabled(bool _Enabled)
   {
     if (AreShadowsEnabled != _Enabled)
     {
@@ -27,7 +22,7 @@ public:
       event::Notify(TEventType::Config_ShadowsEnabledChanged, _Enabled);
     }
   }
-  void SetShadowsMapSize(int _Size, CPasskey<editor::CEditorUI>)
+  void SetShadowsMapSize(int _Size)
   {
     if (ShadowMapSize != _Size)
     {
@@ -35,7 +30,7 @@ public:
       event::Notify(TEventType::Config_ShadowsMapSizeChanged, _Size);
     }
   }
-  void SetFXAAEnabled(bool _Enabled, CPasskey<editor::CEditorUI>)
+  void SetFXAAEnabled(bool _Enabled)
   {
     if (IsFXAAEnabled != _Enabled)
     {
@@ -43,7 +38,7 @@ public:
       event::Notify(TEventType::Config_FXAAEnabledChanged, _Enabled);
     }
   }
-  void SetHDREnabled(bool _Enabled, CPasskey<editor::CEditorUI>)
+  void SetHDREnabled(bool _Enabled)
   {
     if (IsHDREnabled != _Enabled)
     {
@@ -51,7 +46,7 @@ public:
       event::Notify(TEventType::Config_HDREnabledChanged, _Enabled);
     }
   }
-  void SetHDRExposure(float _Exposure, CPasskey<editor::CEditorUI>)
+  void SetHDRExposure(float _Exposure)
   {
     if (!math::AreEqual(HDRExposure, _Exposure))
     {
@@ -60,7 +55,7 @@ public:
     }
   }
 
-  void SetCameraZNear(float _ZNear, CPasskey<editor::CEditorUI>)
+  void SetCameraZNear(float _ZNear)
   {
     if (!math::AreEqual(Camera_ZNear, _ZNear))
     {
@@ -68,7 +63,7 @@ public:
       event::Notify(TEventType::Config_CameraZNearChanged, _ZNear);
     }
   }
-  void SetCameraZFar(float _ZFar, CPasskey<editor::CEditorUI>)
+  void SetCameraZFar(float _ZFar)
   {
     if (!math::AreEqual(Camera_ZFar, _ZFar))
     {
@@ -76,7 +71,7 @@ public:
       event::Notify(TEventType::Config_CameraZFarChanged, _ZFar);
     }
   }
-  void SetCameraFOV(float _FOV, CPasskey<editor::CEditorUI>)
+  void SetCameraFOV(float _FOV)
   {
     if (!math::AreEqual(Camera_FOV, _FOV))
     {
@@ -85,7 +80,7 @@ public:
     }
   }
 
-  void SetLightSpaceMatrixZNear(float _ZNear, CPasskey<editor::CEditorUI>)
+  void SetLightSpaceMatrixZNear(float _ZNear)
   {
     if (!math::AreEqual(LightSpaceMatrix_ZNear, _ZNear))
     {
@@ -93,7 +88,7 @@ public:
       event::Notify(TEventType::Config_LightSpaceMatrixZNearChanged, _ZNear);
     }
   }
-  void SetLightSpaceMatrixZFar(float _ZFar, CPasskey<editor::CEditorUI>)
+  void SetLightSpaceMatrixZFar(float _ZFar)
   {
     if (!math::AreEqual(LightSpaceMatrix_ZFar, _ZFar))
     {
@@ -101,7 +96,7 @@ public:
       event::Notify(TEventType::Config_LightSpaceMatrixZFarChanged, _ZFar);
     }
   }
-  void SetLightSpaceMatrixOrthLeftBot(float _LeftBot, CPasskey<editor::CEditorUI>)
+  void SetLightSpaceMatrixOrthLeftBot(float _LeftBot)
   {
     if (!math::AreEqual(LightSpaceMatrix_OrthLeftBot, _LeftBot))
     {
@@ -109,7 +104,7 @@ public:
       event::Notify(TEventType::Config_LightSpaceMatrixOrthLeftBotChanged, _LeftBot);
     }
   }
-  void SetLightSpaceMatrixOrthRightTop(float _RightTop, CPasskey<editor::CEditorUI>)
+  void SetLightSpaceMatrixOrthRightTop(float _RightTop)
   {
     if (!math::AreEqual(LightSpaceMatrix_OrthRightTop, _RightTop))
     {
@@ -182,6 +177,10 @@ public:
   {
     return ASSETS_DIR;
   }
+  std::filesystem::path GetFontsDir() const
+  {
+    return GetAssetsDir() / "fonts";
+  }
   std::filesystem::path GetTexturesDir() const
   {
     return GetAssetsDir() / "textures";
@@ -189,7 +188,7 @@ public:
 
 private:
   // Render
-  int   ShadowMapSize     = 2048;
+  int   ShadowMapSize     = 4096;
   bool  AreShadowsEnabled = true;
   bool  IsFXAAEnabled     = true;
   bool  IsHDREnabled      = false;

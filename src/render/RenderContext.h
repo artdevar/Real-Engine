@@ -1,13 +1,15 @@
 #pragma once
 
 #include <glm/mat4x4.hpp>
-#include "engine/MathTypes.h"
+#include <common/MathTypes.h>
 #include "Buffer.h"
+
+struct TRenderTarget;
 
 struct TRenderContext
 {
-  CFrameBuffer &SceneFrameBuffer;
-  uint32_t      RenderTexture;
+  TRenderTarget &SceneRenderTarget;
+  TRenderTarget &PostProcessRenderTarget;
 
   glm::vec3 CameraPosition;
   glm::mat4 ProjectionMatrix;

@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Defines.h"
-#include "MathCore.h"
+#include <common/MathTypes.h>
 #include "interfaces/Renderer.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
 #include <common/Common.h>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -45,6 +46,8 @@ public:
 
 public:
   TVector2i GetWindowSize() const;
+  TVector2i GetViewportSize() const;
+  uint32_t GetRenderTextureID() const;
 
   CDisplay *GetDisplay() const;
   std::shared_ptr<CWorld> GetWorld() const;

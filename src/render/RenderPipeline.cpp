@@ -2,12 +2,14 @@
 
 #include "RenderPipeline.h"
 #include "RenderQueue.h"
+#include "RenderTarget.h"
 #include "FrameData.h"
 #include "passes/OpaqueRenderPass.h"
 #include "passes/SkyboxRenderPass.h"
 #include "passes/TransparentRenderPass.h"
 #include "passes/ShadowRenderPass.h"
 #include "passes/PostProcessRenderPass.h"
+#include "passes/OutputRenderPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -31,7 +33,8 @@ CRenderPipeline::~CRenderPipeline() = default;
 
 void CRenderPipeline::Shutdown()
 {
-  m_SceneFBO.reset();
+  m_SceneTarget.reset();
+  m_PostProcessTarget.reset();
 }
 
 void CRenderPipeline::Init()
@@ -44,15 +47,17 @@ void CRenderPipeline::Init()
   m_GeometryPasses.push_back(CSkyboxRenderPass::Create(resource::LoadShader("Skybox")));
   m_GeometryPasses.push_back(CTransparentRenderPass::Create(resource::LoadShader("PBR")));
   m_PostProcessPasses.push_back(CPostProcessRenderPass::Create(resource::LoadShader("PostProcess")));
+  m_OutputPasses.push_back(COutputRenderPass::Create(resource::LoadShader("Output")));
 
-  InitFBO(CEngine::Instance().GetWindowSize());
+  m_SceneTarget       = CreateRenderTarget(RENDER_TEXTURE_NAME + "0", CEngine::Instance().GetViewportSize());
+  m_PostProcessTarget = CreateRenderTarget(RENDER_TEXTURE_NAME + "1", CEngine::Instance().GetViewportSize());
 
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
   m_LightingUBO.BindToBase(BINDING_LIGHTING_BUFFER);
   m_LightingUBO.Unbind();
 
-  event::Subscribe(TEventType::WindowResized, GetWeakPtr());
+  event::Subscribe(TEventType::ViewportResized, GetWeakPtr());
   event::Subscribe(TEventType::Config_ShadowsEnabledChanged, GetWeakPtr());
 }
 
@@ -72,28 +77,14 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
 
     break;
   }
-  case TEventType::WindowResized: {
+  case TEventType::ViewportResized: {
     const TVector2i NewSize = _Event.GetValue<TVector2i>();
-    InitFBO(NewSize);
+
+    m_SceneTarget       = CreateRenderTarget(RENDER_TEXTURE_NAME + "0", NewSize);
+    m_PostProcessTarget = CreateRenderTarget(RENDER_TEXTURE_NAME + "1", NewSize);
     break;
   }
   }
-}
-
-void CRenderPipeline::InitFBO(TVector2i _Size)
-{
-  m_SceneFBO = std::make_unique<TFBO>();
-
-  m_SceneFBO->Texture = CreateRenderTexture(RENDER_TEXTURE_NAME, _Size);
-
-  m_SceneFBO->RenderBuffer.Bind();
-  m_SceneFBO->RenderBuffer.AllocateStorage(GL_DEPTH_COMPONENT, _Size.X, _Size.Y);
-  m_SceneFBO->RenderBuffer.Unbind();
-
-  m_SceneFBO->FrameBuffer.Bind();
-  m_SceneFBO->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_SceneFBO->Texture->ID());
-  m_SceneFBO->FrameBuffer.AttachRenderbuffer(GL_DEPTH_ATTACHMENT, m_SceneFBO->RenderBuffer.ID());
-  m_SceneFBO->FrameBuffer.Unbind();
 }
 
 void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer)
@@ -110,6 +101,7 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
     ShadowPass(_Renderer, RenderContext, Commands);
     GeometryPass(_Renderer, RenderContext, Commands);
     PostProcessPass(_Renderer, RenderContext, Commands);
+    //OutputPass(_Renderer, RenderContext, Commands); // To render without editor. Untested
   }
 
   EndFrame(_Renderer);
@@ -117,7 +109,7 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
 
 void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
 {
-  _Renderer.SetViewport(CEngine::Instance().GetWindowSize());
+  _Renderer.SetViewport(CEngine::Instance().GetViewportSize());
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
   _Renderer.ClearColor({0.86f, 0.86f, 0.86f, 1.0f});
 }
@@ -129,7 +121,7 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer)
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneFrameBuffer.Unbind();
+  _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_ShadowPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -137,20 +129,31 @@ void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderCo
 
 void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneFrameBuffer.Bind();
+  _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
+
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_GeometryPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
 
-  _RenderContext.SceneFrameBuffer.Unbind();
+  _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
 }
 
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneFrameBuffer.Unbind();
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_PostProcessPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+}
+
+void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+
+  for (const std::shared_ptr<IRenderPass> &RenderPass : m_OutputPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
 }
 
@@ -245,15 +248,34 @@ TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
   const auto &Camera = _Renderer.GetCamera();
 
   return TRenderContext{
-      .SceneFrameBuffer     = m_SceneFBO->FrameBuffer,
-      .RenderTexture        = m_SceneFBO->Texture->ID(),
-      .CameraPosition       = Camera->GetPosition(),
-      .ProjectionMatrix     = Camera->GetProjection(),
-      .ViewMatrix           = Camera->GetView(),
-      .ViewProjectionMatrix = Camera->GetProjection() * Camera->GetView(),
-      .LightSpaceMatrix     = CalculateLightSpaceMatrix(),
-      .ShadowMap            = 0,
+      .SceneRenderTarget       = *m_SceneTarget,
+      .PostProcessRenderTarget = *m_PostProcessTarget,
+      .CameraPosition          = Camera->GetPosition(),
+      .ProjectionMatrix        = Camera->GetProjection(),
+      .ViewMatrix              = Camera->GetView(),
+      .ViewProjectionMatrix    = Camera->GetProjection() * Camera->GetView(),
+      .LightSpaceMatrix        = CalculateLightSpaceMatrix(),
+      .ShadowMap               = 0,
   };
+}
+
+std::unique_ptr<TRenderTarget> CRenderPipeline::CreateRenderTarget(const std::string &_Name, TVector2i _Size)
+{
+  auto RenderTarget = std::make_unique<TRenderTarget>();
+
+  RenderTarget->Size  = _Size;
+  RenderTarget->Color = CreateRenderTexture(_Name, _Size);
+
+  RenderTarget->Depth.Bind();
+  RenderTarget->Depth.AllocateStorage(GL_DEPTH_COMPONENT, _Size.X, _Size.Y);
+  RenderTarget->Depth.Unbind();
+
+  RenderTarget->FrameBuffer.Bind();
+  RenderTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, RenderTarget->Color->ID());
+  RenderTarget->FrameBuffer.AttachRenderbuffer(GL_DEPTH_ATTACHMENT, RenderTarget->Depth.ID());
+  RenderTarget->FrameBuffer.Unbind();
+
+  return RenderTarget;
 }
 
 std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size)
@@ -268,4 +290,9 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
   return resource::RecreateTexture(_Name, TextureParams);
+}
+
+uint32_t CRenderPipeline::GetRenderTextureID() const
+{
+  return m_PostProcessTarget ? m_PostProcessTarget->Color->ID() : 0;
 }

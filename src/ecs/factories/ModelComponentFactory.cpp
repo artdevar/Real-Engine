@@ -115,6 +115,7 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
     PrimitiveData.MaterialIndex                    = std::max(Primitive.MaterialIndex, 0);
     PrimitiveData.Mode                             = Primitive.Mode;
     PrimitiveData.PrimitiveMatrix                  = _NodeTransform;
+    PrimitiveData.VerticesCount                    = Primitive.VerticesCount;
 
     for (const auto &[Type, Attribute] : Primitive.Attributes)
     {
@@ -145,10 +146,6 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
       EBO.Assign(Primitive.Indices);
 
       PrimitiveData.VAO.Unbind();
-    }
-    else
-    {
-      PrimitiveData.VerticesCount = Primitive.VerticesCount;
     }
   }
 }

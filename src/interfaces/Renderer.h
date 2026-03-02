@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/MathCore.h"
+#include <common/MathTypes.h>
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
 #include <memory>

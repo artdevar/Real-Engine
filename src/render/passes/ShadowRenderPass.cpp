@@ -32,12 +32,15 @@ void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   m_OldViewport = _Renderer.GetViewport();
   TVector2i NewViewport(m_ShadowMapSize, m_ShadowMapSize);
 
-  _RenderContext.SceneFrameBuffer.Unbind();
   m_DepthMapFBO.Bind();
 
-  _Renderer.Clear(EClearFlags::Depth);
+  _Renderer.SetDepthTest(true);
+  _Renderer.SetDepthMask(true);
+  _Renderer.SetDepthFunc(GL_LESS);
+
   _Renderer.SetCullFace(ECullMode::Front);
   _Renderer.SetViewport(NewViewport);
+  _Renderer.Clear(EClearFlags::Depth);
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
 }
@@ -67,12 +70,7 @@ void CShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
 void CShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _RenderContext.ShadowMap = m_DepthMap->ID();
-
   m_DepthMapFBO.Unbind();
-  _RenderContext.SceneFrameBuffer.Bind();
-
-  _Renderer.SetCullFace(ECullMode::Back);
-  _Renderer.SetViewport(m_OldViewport);
 }
 
 bool CShadowRenderPass::Accepts(const TRenderCommand &_Command) const

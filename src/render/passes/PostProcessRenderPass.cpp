@@ -1,6 +1,7 @@
 #include "PostProcessRenderPass.h"
 #include "render/RenderCommand.h"
 #include "render/RenderContext.h"
+#include "render/RenderTarget.h"
 #include "interfaces/Renderer.h"
 #include "utils/Event.h"
 #include "assets/Shader.h"
@@ -37,13 +38,15 @@ CPostProcessRenderPass::CPostProcessRenderPass(std::shared_ptr<CShader> _Shader)
 
 void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
+  _Renderer.SetDepthTest(false);
+  _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   m_VAO.Bind();
 }
 
 void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
-  CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.RenderTexture);
+  CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
   _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
   _Renderer.SetUniform("IsFXAAEnabled", m_IsFxaaEnabled);

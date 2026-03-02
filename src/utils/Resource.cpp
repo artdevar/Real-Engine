@@ -58,4 +58,9 @@ void MarkUnused(const std::string &_Name)
   Get()->MarkUnused(_Name);
 }
 
+void UnloadUnusedAssets()
+{
+  Get()->UnloadUnusedAssets();
+}
+
 } // namespace resource

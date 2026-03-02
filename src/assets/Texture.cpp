@@ -178,7 +178,6 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   if (_Params.BorderColors.has_value())
     glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
 
-  CLogger::Log(ELogType::Debug, "[CTexture] Texture generated successfully ({}x{})", _Params.Width, _Params.Height);
   return true;
 }
 

@@ -35,10 +35,9 @@ public:
   std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params);
 
   void MarkUnused(const std::string &_Name);
+  void UnloadUnusedAssets();
 
 private:
-  void RemoveUnusedAssets();
-
   static std::filesystem::path GetDefaultTexturePath(ETextureType _TextureType);
 
 private:

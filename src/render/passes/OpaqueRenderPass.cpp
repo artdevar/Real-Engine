@@ -1,6 +1,7 @@
 #include "OpaqueRenderPass.h"
 #include "render/RenderContext.h"
 #include "render/RenderCommand.h"
+#include "render/RenderTarget.h"
 #include "interfaces/Renderer.h"
 #include "assets/Texture.h"
 
@@ -12,11 +13,11 @@ COpaqueRenderPass::COpaqueRenderPass(std::shared_ptr<CShader> _Shader) :
 void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
   _Renderer.SetDepthTest(true);
-  _Renderer.SetDepthFunc(GL_LESS);
   _Renderer.SetDepthMask(true);
+  _Renderer.SetDepthFunc(GL_LESS);
   _Renderer.SetCullFace(ECullMode::Back);
   _Renderer.SetBlending(EAlphaMode::Opaque);
-
+  _Renderer.SetViewport(_RenderContext.SceneRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);

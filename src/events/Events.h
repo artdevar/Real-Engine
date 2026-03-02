@@ -3,6 +3,7 @@
 enum class TEventType
 {
   WindowResized = 0,
+  ViewportResized,
   EntityRemoved,
 
   Config_CameraFOVChanged = 1000,

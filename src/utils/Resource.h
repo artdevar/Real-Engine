@@ -18,5 +18,6 @@ std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTex
 std::shared_ptr<CTextureBase> RecreateTexture(const std::string &_Name, const TTextureParams &_Params);
 std::shared_ptr<CTextureBase> GetDefaultTexture(ETextureType _TextureType);
 void MarkUnused(const std::string &_Name);
+void UnloadUnusedAssets();
 
 } // namespace resource

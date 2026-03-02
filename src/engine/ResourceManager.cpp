@@ -42,7 +42,7 @@ void CResourceManager::OnEvent(const TEvent &_Event)
   switch (_Event.Type)
   {
   case TEventType::EntityRemoved:
-    RemoveUnusedAssets();
+    UnloadUnusedAssets();
     break;
 
   default:
@@ -183,7 +183,7 @@ void CResourceManager::MarkUnused(const std::string &_Name)
   m_Assets.erase(It);
 }
 
-void CResourceManager::RemoveUnusedAssets()
+void CResourceManager::UnloadUnusedAssets()
 {
   for (auto It = m_Assets.begin(); It != m_Assets.end();)
   {

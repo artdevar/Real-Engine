@@ -5,7 +5,6 @@
 #include "RendererConcept.h"
 #include <ecs/Core.h>
 #include <unordered_map>
-#include <functional>
 
 namespace ecs
 {

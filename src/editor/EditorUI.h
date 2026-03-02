@@ -1,24 +1,22 @@
 #pragma once
 
 #if DEV_STAGE
-#include "renderer/ComponentRenderer.h"
 #include "interfaces/Shutdownable.h"
-#include "ecs/EntityType.h"
-#include <ecs/Core.h>
-#include <common/UnorderedVector.h>
-#include <optional>
+#include <common/MathTypes.h>
+#include <memory>
 
 class IWorldEditor;
-
-namespace ecs
-{
-struct TModelComponent;
-struct TTransformComponent;
-struct TLightComponent;
-} // namespace ecs
+struct GLFWwindow;
 
 namespace editor
 {
+
+class CMenuBar;
+class CSceneWindow;
+class CComponentDataWindow;
+class CGlobalParamsWindow;
+class CComponentRenderer;
+class CViewportWindow;
 
 class CEditorUI : public IShutdownable
 {
@@ -28,7 +26,9 @@ public:
 
   void Shutdown() override;
 
-  void Init();
+  void Init(GLFWwindow *_Window);
+
+  TVector2i GetViewportSize() const;
 
   void RenderFrame();
 
@@ -36,19 +36,15 @@ private:
   void RenderBegin();
   void RenderEnd();
 
-  void RenderEntities();
-  void RenderEntity(ecs::TEntity _Entity);
-  void RenderGlobalParams();
-
-  void SpawnEntity(ecs::TEntityType _Type);
-
 private:
-  int GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const;
+  IWorldEditor &m_WorldEditor;
 
-private:
-  IWorldEditor               &m_WorldEditor;
-  CComponentRenderer          m_ComponentRenderer;
-  std::optional<ecs::TEntity> m_SelectedEntity;
+  std::unique_ptr<CComponentRenderer>   m_ComponentRenderer;
+  std::unique_ptr<CComponentDataWindow> m_ComponentDataWindow;
+  std::unique_ptr<CGlobalParamsWindow>  m_GlobalParamsWindow;
+  std::unique_ptr<CViewportWindow>      m_ViewportWindow;
+  std::unique_ptr<CMenuBar>             m_MenuBar;
+  std::unique_ptr<CSceneWindow>         m_SceneWindow;
 };
 
 } // namespace editor
