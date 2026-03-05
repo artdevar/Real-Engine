@@ -33,6 +33,14 @@ void CGlobalParamsWindow::Render()
       float HDRExposure = CConfig::Instance().GetHDRExposure();
       if (ImGui::DragFloat("HDR exposure", &HDRExposure, 0.1f, 0.0f, 10.0f))
         CConfig::Instance().SetHDRExposure(HDRExposure);
+
+      bool GammaCorrectionEnabled = CConfig::Instance().GetGammaCorrectionEnabled();
+      if (ImGui::Checkbox("Gamma correction enabled", &GammaCorrectionEnabled))
+        CConfig::Instance().SetGammaCorrectionEnabled(GammaCorrectionEnabled);
+
+      float Gamma = CConfig::Instance().GetGamma();
+      if (ImGui::DragFloat("Gamma", &Gamma, 0.1f, 0.01f, 10.0f))
+        CConfig::Instance().SetGamma(Gamma);
     }
 
     if (ImGui::CollapsingHeader("Camera"))

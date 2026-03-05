@@ -151,6 +151,8 @@ void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_Ren
 
 void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
+  // glEnable(GL_FRAMEBUFFER_SRGB); verify if needed
+
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_OutputPasses)
@@ -215,9 +217,8 @@ void CRenderPipeline::SetLightingData(const std::vector<TLight> &_Lighting)
     case ELightType::Directional:
       ShaderLighting.LightDirectional = TLightDirectional{
           .Direction = Light.Direction,
-          .Ambient   = Light.Ambient,
-          .Diffuse   = Light.Diffuse,
-          .Specular  = Light.Specular,
+          .Color     = Light.Color,
+          .Intensity = Light.Intensity,
       };
       break;
     }

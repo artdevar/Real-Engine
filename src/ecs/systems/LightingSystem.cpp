@@ -15,9 +15,8 @@ void CLightingSystem::Collect(TFrameData &_FrameData)
     _FrameData.Lights.emplace_back(TLight{
         .Type      = Light.Type,
         .Direction = Light.Direction,
-        .Ambient   = Light.Ambient,
-        .Diffuse   = Light.Diffuse,
-        .Specular  = Light.Specular,
+        .Color     = Light.Color,
+        .Intensity = Light.Intensity,
     });
   }
 }

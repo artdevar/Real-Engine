@@ -6,7 +6,7 @@
 
 namespace
 {
-GLint ToGLWrap(ETextureWrap _Wrap)
+constexpr GLint ToGLWrap(ETextureWrap _Wrap)
 {
   switch (_Wrap)
   {
@@ -23,7 +23,7 @@ GLint ToGLWrap(ETextureWrap _Wrap)
   }
 }
 
-GLint ToGLFilter(ETextureFilter _Filter)
+constexpr GLint ToGLFilter(ETextureFilter _Filter)
 {
   switch (_Filter)
   {
@@ -41,6 +41,42 @@ GLint ToGLFilter(ETextureFilter _Filter)
     [[fallthrough]];
   default:
     return GL_LINEAR_MIPMAP_LINEAR;
+  }
+}
+
+constexpr GLint ToInternalFormat(int _Channels, bool _sRGB)
+{
+  switch (_Channels)
+  {
+  case 1:
+    return GL_R8;
+  case 2:
+    return GL_RG8;
+  case 3:
+    return _sRGB ? GL_SRGB8 : GL_RGB8;
+  case 4:
+    return _sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+  default:
+    assert(false && "Unsupported number of channels");
+    return GL_RGB;
+  }
+}
+
+constexpr GLint ToFormat(int _Channels)
+{
+  switch (_Channels)
+  {
+  case 1:
+    return GL_RED;
+  case 2:
+    return GL_RG;
+  case 3:
+    return GL_RGB;
+  case 4:
+    return GL_RGBA;
+  default:
+    assert(false && "Unsupported number of channels");
+    return GL_RGB;
   }
 }
 } // namespace
@@ -109,11 +145,6 @@ CTexture::CTexture() :
 bool CTexture::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
   TTextureParams Params;
-  Params.WrapS     = ETextureWrap::Repeat;
-  Params.WrapT     = ETextureWrap::Repeat;
-  Params.MinFilter = ETextureFilter::Nearest;
-  Params.MagFilter = ETextureFilter::Nearest;
-
   return Load(_Path, Params);
 }
 
@@ -124,6 +155,8 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 
 bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_Params)
 {
+  assert(!IsValid() && "The texture already used");
+
   TImage Image;
   Image.Data = stbi_load(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
   if (!Image.Data)
@@ -132,11 +165,12 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
     return false;
   }
 
-  const GLenum Format = FORMATS[Image.Channels - 1];
+  const GLenum Format         = ToFormat(Image.Channels);
+  const GLenum InternalFormat = ToInternalFormat(Image.Channels, _Params.sRGB);
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, Format, Image.Width, Image.Height, 0, Format, GL_UNSIGNED_BYTE, Image.Data);
+  glTexImage2D(m_Target, 0, InternalFormat, Image.Width, Image.Height, 0, Format, GL_UNSIGNED_BYTE, Image.Data);
   glGenerateMipmap(m_Target);
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
@@ -252,7 +286,7 @@ bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &_P
     for (int i = 0; i < Images.GetActualSize(); ++i)
     {
       const TImage &Image  = Images[i];
-      const GLenum  Format = FORMATS[Image.Channels - 1];
+      const GLenum  Format = ToFormat(Image.Channels);
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.Width, Image.Height, 0, Format, GL_UNSIGNED_BYTE, Image.Data);
     }
 

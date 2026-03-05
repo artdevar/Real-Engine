@@ -8,6 +8,8 @@ uniform vec2      InverseScreenSize;
 uniform bool      IsFXAAEnabled;
 uniform bool      IsHDR;
 uniform float     Exposure;
+uniform bool      IsGammaCorrectionEnabled;
+uniform float     Gamma;
 
 float Luma(vec3 color)
 {
@@ -65,6 +67,9 @@ void main()
 
   if (IsHDR)
     color = vec4(vec3(1.0) - exp(-color.rgb * Exposure), 1.0);
+
+  if (IsGammaCorrectionEnabled)
+    color.rgb = pow(color.rgb, vec3(1.0 / Gamma));
 
   o_FragColor = color;
 }

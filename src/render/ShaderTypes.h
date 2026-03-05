@@ -35,67 +35,14 @@ constexpr inline int MAX_POINT_LIGHTS = 5;
 struct TLightDirectional
 {
   alignas(16) glm::vec3 Direction;
-  alignas(16) glm::vec3 Ambient;
-  alignas(16) glm::vec3 Diffuse;
-  alignas(16) glm::vec3 Specular;
-};
+  alignas(16) glm::vec3 Color;
 
-struct TLightPoint
-{
-  alignas(16) glm::vec3 Position;
-  alignas(16) glm::vec3 Ambient;
-  alignas(16) glm::vec3 Diffuse;
-  alignas(16) glm::vec3 Specular;
-
-  alignas(4) float Constant;
-  alignas(4) float Linear;
-  alignas(4) float Quadratic;
-};
-
-struct TLightSpot
-{
-  alignas(16) glm::vec3 Position;
-  alignas(16) glm::vec3 Direction;
-  alignas(16) glm::vec3 Ambient;
-  alignas(16) glm::vec3 Diffuse;
-  alignas(16) glm::vec3 Specular;
-
-  alignas(4) float CutOff;
-  alignas(4) float OuterCutOff;
-  alignas(4) float Constant;
-  alignas(4) float Linear;
-  alignas(4) float Quadratic;
+  alignas(4) float Intensity;
 };
 
 struct TShaderLighting
 {
   TLightDirectional LightDirectional;
-  // TLightSpot LightSpot;
-  // TLightPoint LightPoints[MAX_POINT_LIGHTS];
-  // alignas(4) int PointLightsCount;
-};
-
-struct TShaderMaterial
-{
-  alignas(4) int BaseColorTextureUnit;
-  alignas(4) int BaseColorTextureTexCoordIndex;
-
-  alignas(4) int MetallicRoughnessTextureUnit;
-  alignas(4) int MetallicRoughnessTextureTexCoordIndex;
-
-  alignas(4) int NormalTextureUnit;
-  alignas(4) int NormalTextureTexCoordIndex;
-
-  alignas(4) int EmissiveTextureUnit;
-  alignas(4) int EmissiveTextureTexCoordIndex;
-
-  alignas(16) glm::vec4 BaseColorFactor;
-  alignas(16) glm::vec3 EmissiveFactor;
-  alignas(4) float MetallicFactor;
-  alignas(4) float RoughnessFactor;
-  alignas(4) float AlphaCutoff;
-  alignas(4) int AlphaMode;
-  alignas(4) int IsDoubleSided;
 };
 
 //

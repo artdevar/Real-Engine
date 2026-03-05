@@ -11,6 +11,9 @@ class CSkyboxRenderSystem : public IRenderCollector,
 {
 public:
   void Collect(CRenderQueue &_Queue) override;
+
+protected:
+  void OnEntityAdded(ecs::TEntity _Entity) override;
 };
 
 } // namespace ecs

@@ -54,6 +54,22 @@ public:
       event::Notify(TEventType::Config_HDRExposureChanged, _Exposure);
     }
   }
+  void SetGammaCorrectionEnabled(bool _Enabled)
+  {
+    if (IsGammaCorrectionEnabled != _Enabled)
+    {
+      IsGammaCorrectionEnabled = _Enabled;
+      event::Notify(TEventType::Config_GammaCorrectionEnabledChanged, _Enabled);
+    }
+  }
+  void SetGamma(float _Gamma)
+  {
+    if (!math::AreEqual(Gamma, _Gamma))
+    {
+      Gamma = _Gamma;
+      event::Notify(TEventType::Config_GammaChanged, _Gamma);
+    }
+  }
 
   void SetCameraZNear(float _ZNear)
   {
@@ -138,6 +154,14 @@ public:
   {
     return HDRExposure;
   }
+  bool GetGammaCorrectionEnabled() const
+  {
+    return IsGammaCorrectionEnabled;
+  }
+  float GetGamma() const
+  {
+    return Gamma;
+  }
 
   float GetCameraZNear() const
   {
@@ -188,11 +212,13 @@ public:
 
 private:
   // Render
-  int   ShadowMapSize     = 4096;
-  bool  AreShadowsEnabled = true;
-  bool  IsFXAAEnabled     = true;
-  bool  IsHDREnabled      = false;
-  float HDRExposure       = 1.0f;
+  int   ShadowMapSize            = 4096;
+  bool  AreShadowsEnabled        = true;
+  bool  IsFXAAEnabled            = true;
+  bool  IsHDREnabled             = false;
+  float HDRExposure              = 1.0f;
+  bool  IsGammaCorrectionEnabled = false;
+  float Gamma                    = 2.2f;
 
   // Camera parameters
   float Camera_ZNear = 0.1f;

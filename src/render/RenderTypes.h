@@ -90,7 +90,7 @@ struct TLight
   ELightType Type;
 
   glm::vec3 Direction = glm::vec3(0.0f);
-  glm::vec3 Ambient   = glm::vec3(0.0f);
-  glm::vec3 Diffuse   = glm::vec3(0.0f);
-  glm::vec3 Specular  = glm::vec3(0.0f);
+  glm::vec3 Color     = glm::vec3(1.0f);
+
+  float Intensity = 1.0f;
 };

@@ -26,7 +26,9 @@ CPostProcessRenderPass::CPostProcessRenderPass(std::shared_ptr<CShader> _Shader)
     m_VBO(GL_STATIC_DRAW),
     m_IsFxaaEnabled(CConfig::Instance().GetFXAAEnabled()),
     m_IsHDREnabled(CConfig::Instance().GetHDREnabled()),
-    m_HDRExposure(CConfig::Instance().GetHDRExposure())
+    m_IsGammaCorrectionEnabled(CConfig::Instance().GetGammaCorrectionEnabled()),
+    m_HDRExposure(CConfig::Instance().GetHDRExposure()),
+    m_Gamma(CConfig::Instance().GetGamma())
 {
   m_VAO.Bind();
   m_VBO.Bind();
@@ -51,7 +53,9 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
   _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
   _Renderer.SetUniform("IsFXAAEnabled", m_IsFxaaEnabled);
   _Renderer.SetUniform("IsHDR", m_IsHDREnabled);
+  _Renderer.SetUniform("IsGammaCorrectionEnabled", m_IsGammaCorrectionEnabled);
   _Renderer.SetUniform("Exposure", m_HDRExposure);
+  _Renderer.SetUniform("Gamma", m_Gamma);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }
 
@@ -83,6 +87,12 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
   case TEventType::Config_HDRExposureChanged:
     m_HDRExposure = _Event.GetValue<float>();
     break;
+  case TEventType::Config_GammaCorrectionEnabledChanged:
+    m_IsGammaCorrectionEnabled = _Event.GetValue<bool>();
+    break;
+  case TEventType::Config_GammaChanged:
+    m_Gamma = _Event.GetValue<float>();
+    break;
 
   default:
     break;
@@ -94,4 +104,6 @@ void CPostProcessRenderPass::SubscribeToEvents()
   event::Subscribe(TEventType::Config_FXAAEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_HDREnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_HDRExposureChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_GammaCorrectionEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_GammaChanged, GetWeakPtr());
 }

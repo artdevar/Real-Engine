@@ -44,5 +44,7 @@ private:
 
   bool  m_IsFxaaEnabled;
   bool  m_IsHDREnabled;
+  bool  m_IsGammaCorrectionEnabled;
   float m_HDRExposure;
+  float m_Gamma;
 };

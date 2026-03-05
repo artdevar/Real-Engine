@@ -53,7 +53,7 @@ private:
   static void OnErrorOccuredProxy(int _ErrorCode, const char *_Description);
 
 private:
-  static constexpr int DEFAULT_WIDTH  = 1400;
+  static constexpr int DEFAULT_WIDTH  = 1600;
   static constexpr int DEFAULT_HEIGHT = 900;
 
 private:

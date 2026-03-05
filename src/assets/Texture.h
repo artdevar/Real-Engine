@@ -24,6 +24,12 @@ public:
   static constexpr inline GLuint INVALID_VALUE = 0u;
 
 protected:
+  CTextureBase(GLenum _Target);
+
+  static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
+  static void Unbind(GLenum _Target);
+
+protected:
   struct TImage
   {
     unsigned char *Data;
@@ -32,13 +38,6 @@ protected:
     int Height;
     int Channels;
   };
-
-  CTextureBase(GLenum _Target);
-
-  static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
-  static void Unbind(GLenum _Target);
-
-  static constexpr inline GLenum FORMATS[] = {GL_RED, GL_RED, GL_RGB, GL_RGBA};
 
   GLuint       m_ID;
   const GLenum m_Target;

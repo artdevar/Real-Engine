@@ -57,13 +57,20 @@ static GLenum ToRawAttributeComponentType(EAttributeComponentType _ComponentType
   }
 }
 
-static TTextureParams ParseSampler(const TSampler &_Sampler)
+static TTextureParams CreateTextureParams(ETextureType _TextureType)
 {
   TTextureParams Params;
-  Params.WrapS     = _Sampler.WrapS;
-  Params.WrapT     = _Sampler.WrapT;
-  Params.MinFilter = _Sampler.MinFilter;
-  Params.MagFilter = _Sampler.MagFilter;
+  Params.sRGB = _TextureType == ETextureType::BasicColor || _TextureType == ETextureType::Emissive;
+  return Params;
+}
+
+static TTextureParams CreateTextureParams(ETextureType _TextureType, const TSampler &_Sampler)
+{
+  TTextureParams Params = CreateTextureParams(_TextureType);
+  Params.WrapS          = _Sampler.WrapS;
+  Params.WrapT          = _Sampler.WrapT;
+  Params.MinFilter      = _Sampler.MinFilter;
+  Params.MagFilter      = _Sampler.MagFilter;
 
   return Params;
 }
@@ -72,11 +79,19 @@ static TModelComponent::TTexture LoadTexture(const TModelData &_ModelData, const
 {
   std::shared_ptr<CTextureBase> TexturePtr;
   if (_Texture.ImageIndex < 0 || _Texture.ImageIndex >= _ModelData.Images.size())
+  {
     TexturePtr = resource::GetDefaultTexture(_TextureType);
+  }
   else if (_Texture.SamplerIndex < 0 || _Texture.SamplerIndex >= _ModelData.Samplers.size())
-    TexturePtr = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI);
+  {
+    TTextureParams Params = CreateTextureParams(_TextureType);
+    TexturePtr            = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, Params);
+  }
   else
-    TexturePtr = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, ParseSampler(_ModelData.Samplers[_Texture.SamplerIndex]));
+  {
+    TTextureParams Params = CreateTextureParams(_TextureType, _ModelData.Samplers[_Texture.SamplerIndex]);
+    TexturePtr            = resource::LoadTexture(_ModelData.Images[_Texture.ImageIndex].URI, Params);
+  }
 
   assert(TexturePtr && "Failed to load texture");
 

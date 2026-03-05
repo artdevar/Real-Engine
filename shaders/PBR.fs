@@ -2,10 +2,9 @@
 
 struct TLightDirectional
 {
-  vec3 Direction;
-  vec3 Ambient;
-  vec3 Diffuse;
-  vec3 Specular;
+  vec3  Direction;
+  vec3  Color;
+  float Intensity;
 };
 
 layout(std140, binding = 1) uniform u_Lighting
@@ -85,7 +84,7 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
-  return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+  return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
@@ -98,8 +97,7 @@ float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
 
     float closestDepth = texture(u_ShadowMap, lightCoords.xy).r;
     float currentDepth = lightCoords.z;
-
-    shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+    float bias         = max(0.0005 * (1.0 - dot(normalize(io_Normal), lightDir)), 0.00005);
 
     vec2 texelSize = 1.0 / textureSize(u_ShadowMap, 0);
     for (int x = -1; x <= 1; ++x)
@@ -107,7 +105,7 @@ float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
       for (int y = -1; y <= 1; ++y)
       {
         float pcfDepth = texture(u_ShadowMap, lightCoords.xy + vec2(x, y) * texelSize).r;
-        shadow        += currentDepth > pcfDepth ? 1.0 : 0.0;
+        shadow        += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
       }
     }
     shadow /= 9.0;
@@ -154,15 +152,15 @@ void main()
   // === Fresnel base reflectance ===
   vec3 F0 = vec3(0.04);
   F0      = mix(F0, albedo, metallic);
+  vec3 F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
 
   // === Cook-Torrance BRDF ===
   float NDF = DistributionGGX(N, H, roughness);
   float G   = GeometrySmith(N, V, L, roughness);
-  vec3  F   = FresnelSchlick(max(dot(H, V), 0.0), F0);
 
-  vec3  numerator = NDF * G * F;
-  float denom     = 4.0 * max(dot(N, V), 0.0) * NdotL + 0.0001;
-  vec3  specular  = numerator / denom;
+  vec3  numerator   = NDF * G * F;
+  float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+  vec3  specular    = numerator / denominator;
 
   // Energy conservation
   vec3 kS = F;
@@ -171,20 +169,21 @@ void main()
 
   vec3 diffuse = kD * albedo / PI;
 
-  // Shadow
-  float shadow = CalculateShadow(io_FragLightPos, L);
-
-  vec3 radiance = LightDirectional.Diffuse;
-
-  vec3 lighting = (1.0 - shadow) * (diffuse + specular) * radiance * NdotL;
-
-  // Ambient (very basic, no IBL yet)
-  vec3 ambient = LightDirectional.Ambient * albedo;
-
   // Emissive
   vec3 emissive = texture(u_Material.EmissiveTexture, emissiveTexCoords).rgb * u_Material.EmissiveFactor;
 
-  vec3  color = ambient + lighting + emissive;
+  // Shadow
+  float shadow = CalculateShadow(io_FragLightPos, L);
+
+  // Rest
+  vec3 radiance = LightDirectional.Color * LightDirectional.Intensity;
+
+  vec3 Lo = (1.0 - shadow) * (diffuse + specular) * radiance * NdotL;
+
+  // Ambient (very basic, no IBL yet)
+  vec3 ambient = vec3(0.5) * albedo;
+
+  vec3  color = ambient + Lo + emissive;
   float alpha = (u_Material.AlphaMode == 0) ? 1.0 : baseColorSample.a;
 
   o_FragColor = vec4(color, alpha);

@@ -14,6 +14,8 @@ enum class TEventType
   Config_FXAAEnabledChanged,
   Config_HDREnabledChanged,
   Config_HDRExposureChanged,
+  Config_GammaCorrectionEnabledChanged,
+  Config_GammaChanged,
   Config_LightSpaceMatrixZNearChanged,
   Config_LightSpaceMatrixZFarChanged,
   Config_LightSpaceMatrixOrthLeftBotChanged,

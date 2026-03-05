@@ -16,9 +16,7 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
   if (m_Entities.Empty())
     return;
 
-  assert(m_Entities.Size() == 1 && "It isn't supposed to be more than 1 skybox");
-
-  ecs::TEntity Entity          = m_Entities[0];
+  ecs::TEntity Entity          = m_Entities.front();
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
   TRenderCommand Command{
@@ -31,6 +29,11 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
   };
 
   _Queue.Push(std::move(Command));
+}
+
+void CSkyboxRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
+{
+  assert(m_Entities.Size() == 1 && "It isn't supposed to be more than 1 skybox");
 }
 
 } // namespace ecs
