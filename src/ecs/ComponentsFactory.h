@@ -23,6 +23,16 @@ public:
   }
 
   template <typename Component>
+  requires(std::is_same_v<Component, TNameComponent>)
+  [[nodiscard]] static Component Create(std::string _Name)
+  {
+    TNameComponent NameComponent;
+    NameComponent.Name = std::move(_Name);
+
+    return NameComponent;
+  }
+
+  template <typename Component>
   requires(std::is_same_v<Component, TSkyboxComponent>)
   [[nodiscard]] static Component Create(const std::shared_ptr<CTextureBase> &_Skybox)
   {

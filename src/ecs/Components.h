@@ -15,6 +15,13 @@ class CTextureBase;
 namespace ecs
 {
 
+struct TNameComponent
+{
+  std::string Name;
+};
+
+////////////////////////////////////////////////////////////////////
+
 struct TTransformComponent
 {
   glm::mat4x4 WorldMatrix = glm::mat4x4(1.0f);

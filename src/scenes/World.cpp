@@ -46,6 +46,14 @@ void CWorld::Collect(CRenderQueue &_Queue)
   m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(_Queue);
 }
 
+std::string CWorld::GetEntityName(ecs::TEntity _Entity) const
+{
+  if (m_EntitiesCoordinator->DoesComponentExist<ecs::TNameComponent>(_Entity))
+    return m_EntitiesCoordinator->GetComponent<ecs::TNameComponent>(_Entity).Name;
+
+  return std::format("Entity_{}", _Entity);
+}
+
 ecs::TEntity CWorld::CloneEntity(ecs::TEntity _Entity)
 {
   return m_EntitiesCoordinator->CloneEntity(_Entity);
@@ -79,6 +87,7 @@ void CWorld::InitECS()
   m_EntitiesCoordinator->RegisterComponent<ecs::TTransformComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TLightComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TSkyboxComponent>();
+  m_EntitiesCoordinator->RegisterComponent<ecs::TNameComponent>();
 
   m_EntitiesCoordinator->RegisterSystem<ecs::CLightingSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CModelRenderSystem>();
@@ -87,12 +96,14 @@ void CWorld::InitECS()
 
   {
     ecs::TSignature LightingSystemSignature;
+    LightingSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
     LightingSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TLightComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CLightingSystem>(LightingSystemSignature);
   }
 
   {
     ecs::TSignature ModelRenderSystemSignature;
+    ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TModelComponent>());
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CModelRenderSystem>(ModelRenderSystemSignature);
@@ -100,12 +111,14 @@ void CWorld::InitECS()
 
   {
     ecs::TSignature SkyboxRenderSystemSignature;
+    SkyboxRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
     SkyboxRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TSkyboxComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CSkyboxRenderSystem>(SkyboxRenderSystemSignature);
   }
 
   {
     ecs::TSignature PhysicsSystemSignature;
+    PhysicsSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
     PhysicsSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CPhysicsSystem>(PhysicsSystemSignature);
   }

@@ -5,6 +5,7 @@
 #include "TransformComponentRenderer.h"
 #include "LightComponentRenderer.h"
 #include "SkyboxComponentRenderer.h"
+#include "NameComponentRenderer.h"
 #include <ecs/ComponentView.h>
 
 namespace editor
@@ -22,6 +23,7 @@ CComponentRenderer::CComponentRenderer()
   RegisterComponentRenderer<TTransformComponentRenderer>();
   RegisterComponentRenderer<TLightComponentRenderer>();
   RegisterComponentRenderer<TSkyboxComponentRenderer>();
+  RegisterComponentRenderer<TNameComponentRenderer>();
 }
 
 void CComponentRenderer::Render(ecs::TComponentView _ComponentView)

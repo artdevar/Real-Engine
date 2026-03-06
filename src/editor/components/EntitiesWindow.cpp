@@ -106,12 +106,6 @@ void CEntitiesWindow::DisplayEntitiesList()
 {
   const CUnorderedVector<ecs::TEntity> &Entities = m_WorldEditor.GetEntities();
 
-  std::vector<std::string> EntitiesNames;
-  EntitiesNames.reserve(Entities.Size());
-
-  for (auto Entity : Entities)
-    EntitiesNames.push_back(std::to_string(Entity));
-
   int CurrentEntityIndex = GetSelectedEntityIndex(Entities);
 
   ImGuiStyle  &Style    = ImGui::GetStyle();
@@ -127,14 +121,18 @@ void CEntitiesWindow::DisplayEntitiesList()
   {
     for (int n = 0; n < Entities.Size(); n++)
     {
+      ImGui::PushID(n);
+
       const bool IsSelected = (CurrentEntityIndex == n);
-      if (ImGui::Selectable(std::to_string(Entities[n]).c_str(), IsSelected))
+      if (ImGui::Selectable(m_WorldEditor.GetEntityName(Entities[n]).c_str(), IsSelected))
       {
         m_SelectedEntity = Entities[n];
       }
 
       if (IsSelected)
         ImGui::SetItemDefaultFocus();
+
+      ImGui::PopID();
     }
     ImGui::EndListBox();
   }
@@ -158,9 +156,10 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
 
     auto &&TransformComponent = ecs::CComponentsFactory::Create<ecs::TTransformComponent>(glm::mat4x4(1.0f));
     auto &&ModelComponent     = ecs::CComponentsFactory::Create<ecs::TModelComponent>(Model);
+    auto &&NameComponent      = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Mesh");
 
     ecs::CEntitySpawner Builder = m_WorldEditor.CreateEntitySpawner();
-    Builder.AddComponent(std::move(TransformComponent)).AddComponent(std::move(ModelComponent));
+    Builder.AddComponent(std::move(TransformComponent)).AddComponent(std::move(ModelComponent)).AddComponent(std::move(NameComponent));
     m_SelectedEntity = Builder.Spawn();
 
     break;
@@ -176,28 +175,32 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
       return;
 
     auto &&SkyboxComponent = ecs::CComponentsFactory::Create<ecs::TSkyboxComponent>(Cubemap);
-    m_SelectedEntity       = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(SkyboxComponent)).Spawn();
+    auto &&NameComponent   = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Skybox");
+    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(SkyboxComponent)).AddComponent(std::move(NameComponent)).Spawn();
 
     break;
   }
 
   case ecs::TEntityType::PointLight: {
     auto &&LightComponent = ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Point);
-    m_SelectedEntity      = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).Spawn();
+    auto &&NameComponent  = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Point light");
+    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn();
 
     break;
   }
 
   case ecs::TEntityType::DirectionalLight: {
     auto &&LightComponent = ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Directional);
-    m_SelectedEntity      = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).Spawn();
+    auto &&NameComponent  = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Directional light");
+    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn();
 
     break;
   }
 
   case ecs::TEntityType::Spotlight: {
     auto &&LightComponent = ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Spotlight);
-    m_SelectedEntity      = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).Spawn();
+    auto &&NameComponent  = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Spotlight");
+    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn();
 
     break;
   }
