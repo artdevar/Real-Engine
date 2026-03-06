@@ -21,7 +21,7 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
 
   TRenderCommand Command{
       .Material      = TMaterialD{.SkyboxTexture = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE},
-      .VAO           = SkyboxComponent.VAO,
+      .VAO           = *SkyboxComponent.VAO,
       .ModelMatrix   = glm::mat4(1.0f),
       .IndicesCount  = SkyboxComponent.VerticesCount,
       .IndexType     = EIndexType::Absent,

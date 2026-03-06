@@ -131,6 +131,7 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
     PrimitiveData.Mode                             = Primitive.Mode;
     PrimitiveData.PrimitiveMatrix                  = _NodeTransform;
     PrimitiveData.VerticesCount                    = Primitive.VerticesCount;
+    PrimitiveData.VAO                              = std::make_shared<CVertexArray>();
 
     for (const auto &[Type, Attribute] : Primitive.Attributes)
     {
@@ -138,15 +139,15 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
 
       assert(AttributeLoc != GLuint(-1));
 
-      PrimitiveData.VAO.Bind();
+      PrimitiveData.VAO->Bind();
 
-      CVertexBuffer &VBO = PrimitiveData.VBOs.emplace_back(GL_STATIC_DRAW);
-      VBO.Bind();
-      VBO.Assign(Attribute.Data);
+      TSharedVBO &VBO = PrimitiveData.VBOs.emplace_back(std::make_shared<CVertexBuffer>(GL_STATIC_DRAW));
+      VBO->Bind();
+      VBO->Assign(Attribute.Data);
 
-      PrimitiveData.VAO.EnableAttrib(AttributeLoc, Attribute.Type, ToRawAttributeComponentType(Attribute.ComponentType), Attribute.IsNormalized,
-                                     Attribute.ByteStride);
-      PrimitiveData.VAO.Unbind();
+      PrimitiveData.VAO->EnableAttrib(AttributeLoc, Attribute.Type, ToRawAttributeComponentType(Attribute.ComponentType), Attribute.IsNormalized,
+                                      Attribute.ByteStride);
+      PrimitiveData.VAO->Unbind();
     }
 
     if (!Primitive.Indices.empty())
@@ -154,13 +155,13 @@ static void ParseMesh(const TModelData &_Model, const TMesh &_Mesh, TModelCompon
       PrimitiveData.IndicesCount = Primitive.IndicesCount;
       PrimitiveData.Type         = Primitive.IndicesType;
 
-      PrimitiveData.VAO.Bind();
+      PrimitiveData.VAO->Bind();
 
-      CElementBuffer &EBO = PrimitiveData.EBO.emplace(GL_STATIC_DRAW);
-      EBO.Bind();
-      EBO.Assign(Primitive.Indices);
+      TSharedEBO &EBO = PrimitiveData.EBO.emplace(std::make_shared<CElementBuffer>(GL_STATIC_DRAW));
+      EBO->Bind();
+      EBO->Assign(Primitive.Indices);
 
-      PrimitiveData.VAO.Unbind();
+      PrimitiveData.VAO->Unbind();
     }
   }
 }

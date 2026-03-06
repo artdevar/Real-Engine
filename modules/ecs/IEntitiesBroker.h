@@ -13,6 +13,7 @@ class IEntitiesBroker
 public:
   virtual ~IEntitiesBroker() = default;
 
+  virtual TEntity CloneEntity(TEntity _Entity)                                        = 0;
   virtual void DestroyEntity(TEntity _Entity)                                         = 0;
   virtual CEntitySpawner CreateEntitySpawner()                                        = 0;
   virtual CUnorderedVector<TEntity> GetEntities() const                               = 0;

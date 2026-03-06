@@ -67,6 +67,15 @@ public:
     return static_cast<void *>(&GetData(_Entity));
   }
 
+  void Clone(TEntity _Source, TEntity _Target) override
+  {
+    if (IsDataExist(_Source))
+    {
+      T ComponentCopy = GetData(_Source);
+      InsertData(_Target, std::move(ComponentCopy));
+    }
+  }
+
   TTypeID GetComponentTypeID() const override
   {
     return utils::GetComponentTypeID<T>();

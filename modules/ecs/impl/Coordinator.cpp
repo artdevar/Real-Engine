@@ -15,6 +15,18 @@ ecs::TEntity CCoordinator::CreateEntity()
   return m_EntityManager->CreateEntity();
 }
 
+ecs::TEntity CCoordinator::CloneEntity(TEntity _Entity)
+{
+  const TEntity NewEntity = CreateEntity();
+  m_ComponentManager->CloneEntity(_Entity, NewEntity);
+
+  const TSignature Signature = m_EntityManager->GetSignature(_Entity);
+  m_EntityManager->SetSignature(NewEntity, Signature);
+  m_SystemManager->EntitySignatureChanged(NewEntity, Signature);
+
+  return NewEntity;
+}
+
 void CCoordinator::DestroyEntity(ecs::TEntity _Entity)
 {
   m_EntityManager->DestroyEntity(_Entity);

@@ -58,9 +58,7 @@ void CEntitiesWindow::DisplaySpawnPopup()
   {
     ImGui::SameLine();
     if (ImGui::Button("Dublicate##DupEntity"))
-    {
-      //m_SelectedEntity = m_WorldEditor.Clone(m_SelectedEntity.value());
-    }
+      m_SelectedEntity = m_WorldEditor.CloneEntity(m_SelectedEntity.value());
 
     ImGui::SameLine();
     if (ImGui::Button("Delete##DelEntity"))
@@ -125,20 +123,20 @@ void CEntitiesWindow::DisplayEntitiesList()
   ImGui::PushStyleColor(ImGuiCol_FrameBgActive, WindowBg);
   ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
 
-  if (ImGui::ListBox(
-          "##EntitiesList", &CurrentEntityIndex,
-          [](void *_Vec, int _Index, const char **_Ret) -> bool {
-            auto EntitiesNames = reinterpret_cast<std::vector<std::string> *>(_Vec);
-
-            if (_Index < 0 || _Index >= static_cast<int>(EntitiesNames->size()))
-              return false;
-
-            *_Ret = EntitiesNames->at(_Index).c_str();
-            return true;
-          },
-          reinterpret_cast<void *>(&EntitiesNames), static_cast<int>(EntitiesNames.size()), 8))
+  if (ImGui::BeginListBox("##EntitiesList", ImGui::GetContentRegionAvail()))
   {
-    m_SelectedEntity = Entities[CurrentEntityIndex];
+    for (int n = 0; n < Entities.Size(); n++)
+    {
+      const bool IsSelected = (CurrentEntityIndex == n);
+      if (ImGui::Selectable(std::to_string(Entities[n]).c_str(), IsSelected))
+      {
+        m_SelectedEntity = Entities[n];
+      }
+
+      if (IsSelected)
+        ImGui::SetItemDefaultFocus();
+    }
+    ImGui::EndListBox();
   }
 
   ImGui::PopStyleVar();

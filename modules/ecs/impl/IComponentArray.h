@@ -9,11 +9,12 @@ namespace ecs
 class IComponentArray
 {
 public:
-  virtual ~IComponentArray()                     = default;
-  virtual void EntityDestroyed(TEntity _Entity)  = 0;
-  virtual void *GetRawComponent(TEntity _Entity) = 0;
-  virtual TTypeID GetComponentTypeID() const     = 0;
-  virtual TTypeName GetComponentName() const     = 0;
+  virtual ~IComponentArray()                           = default;
+  virtual void EntityDestroyed(TEntity _Entity)        = 0;
+  virtual void *GetRawComponent(TEntity _Entity)       = 0;
+  virtual void Clone(TEntity _Source, TEntity _Target) = 0;
+  virtual TTypeID GetComponentTypeID() const           = 0;
+  virtual TTypeName GetComponentName() const           = 0;
 };
 
 } // namespace ecs

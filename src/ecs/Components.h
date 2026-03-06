@@ -32,15 +32,15 @@ struct TModelComponent
 
   struct TPrimitiveData
   {
-    CVertexArray                  VAO;
-    std::vector<CVertexBuffer>    VBOs;
-    std::optional<CElementBuffer> EBO;
-    EPrimitiveMode                Mode            = EPrimitiveMode::Triangles;
-    glm::mat4                     PrimitiveMatrix = glm::mat4(1.0f);
-    int                           MaterialIndex   = -1;
-    uint32_t                      VerticesCount   = 0;
-    uint32_t                      IndicesCount    = 0;
-    EIndexType                    Type            = EIndexType::Absent;
+    TSharedVAO                VAO;
+    std::vector<TSharedVBO>   VBOs;
+    std::optional<TSharedEBO> EBO;
+    EPrimitiveMode            Mode            = EPrimitiveMode::Triangles;
+    glm::mat4                 PrimitiveMatrix = glm::mat4(1.0f);
+    int                       MaterialIndex   = -1;
+    uint32_t                  VerticesCount   = 0;
+    uint32_t                  IndicesCount    = 0;
+    EIndexType                Type            = EIndexType::Absent;
   };
 
   struct TMaterialData
@@ -79,8 +79,8 @@ struct TLightComponent
 struct TSkyboxComponent
 {
   std::shared_ptr<CTextureBase> SkyboxTexture;
-  CVertexArray                  VAO;
-  CVertexBuffer                 VBO           = GL_STATIC_DRAW;
+  TSharedVAO                    VAO;
+  TSharedVBO                    VBO;
   uint32_t                      VerticesCount = 0;
 };
 

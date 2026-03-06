@@ -469,3 +469,7 @@ public:
   {
   }
 };
+
+using TSharedVAO = std::shared_ptr<CVertexArray>;
+using TSharedVBO = std::shared_ptr<CVertexBuffer>;
+using TSharedEBO = std::shared_ptr<CElementBuffer>;

@@ -44,7 +44,7 @@ void CModelRenderSystem::Collect(CRenderQueue &_Queue)
                   .AlphaMode                             = Material.AlphaMode,
                   .IsDoubleSided                         = Material.IsDoubleSided,
               },
-          .VAO           = Primitive.VAO,
+          .VAO           = *Primitive.VAO,
           .ModelMatrix   = TransformComponent.WorldMatrix * Primitive.PrimitiveMatrix,
           .IndicesCount  = Primitive.IndicesCount,
           .IndexType     = Primitive.Type,

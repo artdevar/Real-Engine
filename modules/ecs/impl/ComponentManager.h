@@ -78,6 +78,12 @@ public:
     return Components;
   }
 
+  void CloneEntity(TEntity _Source, TEntity _Target)
+  {
+    for (const auto &[TypeID, Component] : m_ComponentArrays)
+      Component->Clone(_Source, _Target);
+  }
+
 private:
   template <typename T>
   std::shared_ptr<CComponentArray<T>> GetComponentArray()

@@ -46,6 +46,11 @@ void CWorld::Collect(CRenderQueue &_Queue)
   m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(_Queue);
 }
 
+ecs::TEntity CWorld::CloneEntity(ecs::TEntity _Entity)
+{
+  return m_EntitiesCoordinator->CloneEntity(_Entity);
+}
+
 void CWorld::DestroyEntity(ecs::TEntity _Entity)
 {
   m_EntitiesCoordinator->DestroyEntity(_Entity);

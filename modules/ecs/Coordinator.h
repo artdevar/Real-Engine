@@ -18,6 +18,7 @@ public:
   void Init();
 
   TEntity CreateEntity();
+  TEntity CloneEntity(TEntity _Entity);
   void DestroyEntity(TEntity _Entity);
 
   CUnorderedVector<TEntity> GetEntities() const;
