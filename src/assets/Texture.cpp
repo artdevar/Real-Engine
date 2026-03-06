@@ -177,6 +177,7 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
   glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
+  glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, _Params.Anisotropy);
 
   if (_Params.BorderColors.has_value())
     glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
