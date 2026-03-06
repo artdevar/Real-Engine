@@ -16,7 +16,7 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
   if (m_Entities.Empty())
     return;
 
-  ecs::TEntity Entity          = m_Entities.front();
+  ecs::TEntity Entity          = m_Entities[0];
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
   TRenderCommand Command{
