@@ -57,7 +57,7 @@ void CTransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
 
     Command.VAO.get().Bind();
 
-    if (Command.IndexType != EIndexType::None)
+    if (Command.IndexType != EIndexType::Absent)
       _Renderer.DrawElements(Command.PrimitiveMode, Command.IndicesCount, Command.IndexType);
     else
       _Renderer.DrawArrays(Command.PrimitiveMode, Command.IndicesCount);

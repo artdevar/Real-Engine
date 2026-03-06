@@ -125,21 +125,14 @@ EIndexType ToIndexType(int _ComponentType)
 {
   switch (_ComponentType)
   {
-  case TINYGLTF_COMPONENT_TYPE_BYTE:
-    return EIndexType::Byte;
   case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
     return EIndexType::UnsignedByte;
-  case TINYGLTF_COMPONENT_TYPE_SHORT:
-    return EIndexType::Short;
   case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
     return EIndexType::UnsignedShort;
-  case TINYGLTF_COMPONENT_TYPE_INT:
-    return EIndexType::Int;
   case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
     return EIndexType::UnsignedInt;
-  case TINYGLTF_COMPONENT_TYPE_FLOAT:
-    return EIndexType::Float;
   default:
+    assert(false && "Unsupported index component type");
     return EIndexType::UnsignedInt;
   }
 }

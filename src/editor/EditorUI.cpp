@@ -1,7 +1,7 @@
 #if DEV_STAGE
 #include "EditorUI.h"
 #include "components/MenuBar.h"
-#include "components/SceneWindow.h"
+#include "components/EntitiesWindow.h"
 #include "components/ComponentDataWindow.h"
 #include "components/GlobalParamsWindow.h"
 #include "components/ViewportWindow.h"
@@ -36,7 +36,7 @@ CEditorUI::CEditorUI(IWorldEditor &_WorldEditor) :
     m_GlobalParamsWindow(std::make_unique<CGlobalParamsWindow>()),
     m_ViewportWindow(std::make_unique<CViewportWindow>()),
     m_MenuBar(std::make_unique<CMenuBar>()),
-    m_SceneWindow(std::make_unique<CSceneWindow>(_WorldEditor)),
+    m_EntitiesWindow(std::make_unique<CEntitiesWindow>(_WorldEditor)),
     m_PerformanceWindow(std::make_unique<CPerformanceWindow>())
 {
 }
@@ -78,8 +78,8 @@ void CEditorUI::RenderFrame()
 
   m_MenuBar->Render();
   m_ViewportWindow->Render();
-  m_SceneWindow->Render();
-  m_ComponentDataWindow->Render(m_SceneWindow->GetSelectedEntity());
+  m_EntitiesWindow->Render();
+  m_ComponentDataWindow->Render(m_EntitiesWindow->GetSelectedEntity());
   m_GlobalParamsWindow->Render();
   m_PerformanceWindow->Render();
 
@@ -123,7 +123,7 @@ void CEditorUI::RenderBegin()
     ImGuiID RightNodeID    = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Right, 0.2f, nullptr, &DockSpaceID);
     ImGuiID RightTopNodeID = ImGui::DockBuilderSplitNode(RightNodeID, ImGuiDir_Up, 0.5f, nullptr, &RightNodeID);
 
-    ImGui::DockBuilderDockWindow(m_SceneWindow->GetName().c_str(), SceneNodeID);
+    ImGui::DockBuilderDockWindow(m_EntitiesWindow->GetName().c_str(), SceneNodeID);
     ImGui::DockBuilderDockWindow(m_ComponentDataWindow->GetName().c_str(), LeftNodeID);
     ImGui::DockBuilderDockWindow(m_GlobalParamsWindow->GetName().c_str(), RightTopNodeID);
     ImGui::DockBuilderDockWindow(m_PerformanceWindow->GetName().c_str(), RightNodeID);

@@ -1,8 +1,8 @@
 #pragma once
 
 #include "interfaces/RenderPass.h"
+#include "interfaces/RenderPipeline.h"
 #include "interfaces/Sharable.h"
-#include "interfaces/Shutdownable.h"
 #include "interfaces/EventsListener.h"
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
@@ -21,7 +21,7 @@ struct TFrameData;
 
 class CRenderPipeline final : public CSharable<CRenderPipeline>,
                               public IEventsListener,
-                              public IShutdownable
+                              public IRenderPipeline
 {
 public:
   CRenderPipeline();
@@ -31,9 +31,16 @@ public:
 
   void OnEvent(const TEvent &_Event) override;
 
-  void Init();
-  void Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer);
-  uint32_t GetRenderTextureID() const;
+  void Init() override;
+  void Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer) override;
+
+  uint32_t GetDrawCallsCount() const override;
+  uint32_t GetVerticesCount() const override;
+  uint32_t GetIndicesCount() const override;
+  uint32_t GetTrianglesCount() const override;
+  uint32_t GetLinesCount() const override;
+  uint32_t GetPointsCount() const override;
+  uint32_t GetRenderTextureID() const override;
 
 private:
   void BeginFrame(IRenderer &_Renderer);
@@ -72,4 +79,11 @@ private:
 
   TShaderLighting m_Lighting;
   CUniformBuffer  m_LightingUBO;
+
+  uint32_t m_LastFrameDrawCalls;
+  uint32_t m_LastFrameVertices;
+  uint32_t m_LastFrameIndices;
+  uint32_t m_LastFrameTriangles;
+  uint32_t m_LastFrameLines;
+  uint32_t m_LastFramePoints;
 };

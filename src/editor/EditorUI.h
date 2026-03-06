@@ -12,7 +12,7 @@ namespace editor
 {
 
 class CMenuBar;
-class CSceneWindow;
+class CEntitiesWindow;
 class CComponentDataWindow;
 class CGlobalParamsWindow;
 class CComponentRenderer;
@@ -45,7 +45,7 @@ private:
   std::unique_ptr<CGlobalParamsWindow>  m_GlobalParamsWindow;
   std::unique_ptr<CViewportWindow>      m_ViewportWindow;
   std::unique_ptr<CMenuBar>             m_MenuBar;
-  std::unique_ptr<CSceneWindow>         m_SceneWindow;
+  std::unique_ptr<CEntitiesWindow>      m_EntitiesWindow;
   std::unique_ptr<CPerformanceWindow>   m_PerformanceWindow;
 };
 

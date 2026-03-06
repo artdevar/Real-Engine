@@ -1,6 +1,6 @@
 #if DEV_STAGE
 
-#include "SceneWindow.h"
+#include "EntitiesWindow.h"
 
 #include "../platform/SysUtils.h"
 #include "utils/Resource.h"
@@ -26,12 +26,12 @@ static constexpr std::pair<const char *, ecs::TEntityType> ENTITY_TYPES[] = {std
                                                                              std::make_pair("Directional light", ecs::TEntityType::DirectionalLight),
                                                                              std::make_pair("Skybox", ecs::TEntityType::Skybox)};
 
-CSceneWindow::CSceneWindow(IWorldEditor &_WorldEditor) :
+CEntitiesWindow::CEntitiesWindow(IWorldEditor &_WorldEditor) :
     m_WorldEditor(_WorldEditor)
 {
 }
 
-void CSceneWindow::Render()
+void CEntitiesWindow::Render()
 {
   if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
   {
@@ -45,7 +45,7 @@ void CSceneWindow::Render()
   ImGui::End();
 }
 
-void CSceneWindow::DisplaySpawnPopup()
+void CEntitiesWindow::DisplaySpawnPopup()
 {
   static bool SpawnPopupOpen = false;
   if (ImGui::Button("Add##AddEntity"))
@@ -56,6 +56,12 @@ void CSceneWindow::DisplaySpawnPopup()
 
   if (m_SelectedEntity.has_value())
   {
+    ImGui::SameLine();
+    if (ImGui::Button("Dublicate##DupEntity"))
+    {
+      //m_SelectedEntity = m_WorldEditor.Clone(m_SelectedEntity.value());
+    }
+
     ImGui::SameLine();
     if (ImGui::Button("Delete##DelEntity"))
     {
@@ -98,7 +104,7 @@ void CSceneWindow::DisplaySpawnPopup()
   }
 }
 
-void CSceneWindow::DisplayEntitiesList()
+void CEntitiesWindow::DisplayEntitiesList()
 {
   const CUnorderedVector<ecs::TEntity> &Entities = m_WorldEditor.GetEntities();
 
@@ -139,7 +145,7 @@ void CSceneWindow::DisplayEntitiesList()
   ImGui::PopStyleColor(3);
 }
 
-void CSceneWindow::SpawnEntity(ecs::TEntityType _Type)
+void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
 {
   switch (_Type)
   {
@@ -204,7 +210,7 @@ void CSceneWindow::SpawnEntity(ecs::TEntityType _Type)
   }
 }
 
-int CSceneWindow::GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const
+int CEntitiesWindow::GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity> &_Entities) const
 {
   if (m_SelectedEntity.has_value())
   {

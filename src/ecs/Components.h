@@ -40,7 +40,7 @@ struct TModelComponent
     int                           MaterialIndex   = -1;
     uint32_t                      VerticesCount   = 0;
     uint32_t                      IndicesCount    = 0;
-    EIndexType                    Type            = EIndexType::None;
+    EIndexType                    Type            = EIndexType::Absent;
   };
 
   struct TMaterialData

@@ -25,7 +25,13 @@ const std::string CRenderPipeline::RENDER_TEXTURE_NAME = "PIPELINE_SCENE_RENDER_
 
 CRenderPipeline::CRenderPipeline() :
     m_Lighting({}),
-    m_LightingUBO(GL_DYNAMIC_DRAW)
+    m_LightingUBO(GL_DYNAMIC_DRAW),
+    m_LastFrameDrawCalls(0),
+    m_LastFrameVertices(0),
+    m_LastFrameIndices(0),
+    m_LastFrameTriangles(0),
+    m_LastFrameLines(0),
+    m_LastFramePoints(0)
 {
 }
 
@@ -109,6 +115,7 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
 
 void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
 {
+  _Renderer.OnFrameBegin();
   _Renderer.SetViewport(CEngine::Instance().GetViewportSize());
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
   _Renderer.ClearColor({0.86f, 0.86f, 0.86f, 1.0f});
@@ -116,6 +123,13 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
 
 void CRenderPipeline::EndFrame(IRenderer &_Renderer)
 {
+  m_LastFrameDrawCalls = _Renderer.GetDrawCallsCount();
+  m_LastFrameVertices  = _Renderer.GetVerticesCount();
+  m_LastFrameIndices   = _Renderer.GetIndicesCount();
+  m_LastFrameTriangles = _Renderer.GetTrianglesCount();
+  m_LastFrameLines     = _Renderer.GetLinesCount();
+  m_LastFramePoints    = _Renderer.GetPointsCount();
+
   _Renderer.CheckErrors();
 }
 
@@ -296,4 +310,34 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
 uint32_t CRenderPipeline::GetRenderTextureID() const
 {
   return m_PostProcessTarget ? m_PostProcessTarget->Color->ID() : 0;
+}
+
+uint32_t CRenderPipeline::GetDrawCallsCount() const
+{
+  return m_LastFrameDrawCalls;
+}
+
+uint32_t CRenderPipeline::GetVerticesCount() const
+{
+  return m_LastFrameVertices;
+}
+
+uint32_t CRenderPipeline::GetIndicesCount() const
+{
+  return m_LastFrameIndices;
+}
+
+uint32_t CRenderPipeline::GetTrianglesCount() const
+{
+  return m_LastFrameTriangles;
+}
+
+uint32_t CRenderPipeline::GetLinesCount() const
+{
+  return m_LastFrameLines;
+}
+
+uint32_t CRenderPipeline::GetPointsCount() const
+{
+  return m_LastFramePoints;
 }

@@ -216,9 +216,9 @@ TVector2i CEngine::GetViewportSize() const
   return GetWindowSize();
 }
 
-uint32_t CEngine::GetRenderTextureID() const
+std::shared_ptr<IRenderPipeline> CEngine::GetRenderPipeline() const
 {
-  return m_RenderPipeline ? m_RenderPipeline->GetRenderTextureID() : 0;
+  return m_RenderPipeline;
 }
 
 CDisplay *CEngine::GetDisplay() const

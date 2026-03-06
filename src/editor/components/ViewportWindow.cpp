@@ -2,6 +2,7 @@
 
 #include "ViewportWindow.h"
 #include "engine/Engine.h"
+#include "interfaces/RenderPipeline.h"
 #include "utils/Event.h"
 #include <imgui/imgui.h>
 
@@ -24,7 +25,7 @@ void CViewportWindow::Render()
 {
   if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
   {
-    const uint32_t  TextureID = CEngine::Instance().GetRenderTextureID();
+    const uint32_t  TextureID = CEngine::Instance().GetRenderPipeline()->GetRenderTextureID();
     const ImVec2    Available = ImGui::GetContentRegionAvail();
     const TVector2i NewSize   = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
 

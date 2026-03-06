@@ -5,6 +5,45 @@
 #include "assets/Texture.h"
 #include "utils/Logger.h"
 
+namespace
+{
+
+GLenum ConvertPrimitiveMode(EPrimitiveMode _Mode)
+{
+  switch (_Mode)
+  {
+  case EPrimitiveMode::Points:
+    return GL_POINTS;
+  case EPrimitiveMode::Line:
+    return GL_LINES;
+  case EPrimitiveMode::LineLoop:
+    return GL_LINE_LOOP;
+  case EPrimitiveMode::LineStrip:
+    return GL_LINE_STRIP;
+  case EPrimitiveMode::Triangles:
+    return GL_TRIANGLES;
+  case EPrimitiveMode::TriangleStrip:
+    return GL_TRIANGLE_STRIP;
+  case EPrimitiveMode::TriangleFan:
+    return GL_TRIANGLE_FAN;
+  default:
+    assert(false && "Invalid primitive mode");
+    return GL_TRIANGLES;
+  }
+}
+
+} // namespace
+
+void COpenGLRenderer::OnFrameBegin()
+{
+  m_DrawCallsCount = 0;
+  m_VerticesCount  = 0;
+  m_IndicesCount   = 0;
+  m_TrianglesCount = 0;
+  m_LinesCount     = 0;
+  m_PointsCount    = 0;
+}
+
 void COpenGLRenderer::CheckErrors()
 {
   while (true)
@@ -46,100 +85,87 @@ TVector2i COpenGLRenderer::GetViewport() const
   return TVector2i(Viewport[2], Viewport[3]);
 }
 
-void COpenGLRenderer::DrawArrays(EPrimitiveMode mode, int count)
+void COpenGLRenderer::DrawArrays(EPrimitiveMode _Mode, int _Count)
 {
-  GLenum glMode = GL_TRIANGLES;
-  switch (mode)
+  GLenum glMode = ConvertPrimitiveMode(_Mode);
+
+  glDrawArrays(glMode, static_cast<GLint>(0), static_cast<GLsizei>(_Count));
+  m_DrawCallsCount++;
+  m_VerticesCount += _Count;
+
+  switch (glMode)
   {
-  case EPrimitiveMode::Points:
-    glMode = GL_POINTS;
+  case GL_TRIANGLES:
+    m_TrianglesCount += _Count / 3;
     break;
-  case EPrimitiveMode::Line:
-    glMode = GL_LINES;
+  case GL_TRIANGLE_STRIP:
+    [[fallthrough]];
+  case GL_TRIANGLE_FAN:
+    m_TrianglesCount += (_Count > 2) ? (_Count - 2) : 0;
     break;
-  case EPrimitiveMode::LineLoop:
-    glMode = GL_LINE_LOOP;
+  case GL_LINES:
+    m_LinesCount += _Count / 2;
     break;
-  case EPrimitiveMode::LineStrip:
-    glMode = GL_LINE_STRIP;
+  case GL_LINE_STRIP:
+    m_LinesCount += (_Count > 1) ? (_Count - 1) : 0;
     break;
-  case EPrimitiveMode::Triangles:
-    glMode = GL_TRIANGLES;
+  case GL_LINE_LOOP:
+    m_LinesCount += _Count;
     break;
-  case EPrimitiveMode::TriangleStrip:
-    glMode = GL_TRIANGLE_STRIP;
-    break;
-  case EPrimitiveMode::TriangleFan:
-    glMode = GL_TRIANGLE_FAN;
-    break;
-  default:
-    assert(false && "Invalid primitive mode");
+  case GL_POINTS:
+    m_PointsCount += _Count;
     break;
   }
-  glDrawArrays(glMode, static_cast<GLint>(0), static_cast<GLsizei>(count));
 }
 
-void COpenGLRenderer::DrawElements(EPrimitiveMode mode, int count, EIndexType indexType, const void *offset)
+void COpenGLRenderer::DrawElements(EPrimitiveMode _Mode, int _Count, EIndexType _IndexType, const void *_Offset)
 {
-  GLenum glMode = GL_TRIANGLES;
-  switch (mode)
-  {
-  case EPrimitiveMode::Points:
-    glMode = GL_POINTS;
-    break;
-  case EPrimitiveMode::Line:
-    glMode = GL_LINES;
-    break;
-  case EPrimitiveMode::LineLoop:
-    glMode = GL_LINE_LOOP;
-    break;
-  case EPrimitiveMode::LineStrip:
-    glMode = GL_LINE_STRIP;
-    break;
-  case EPrimitiveMode::Triangles:
-    glMode = GL_TRIANGLES;
-    break;
-  case EPrimitiveMode::TriangleStrip:
-    glMode = GL_TRIANGLE_STRIP;
-    break;
-  case EPrimitiveMode::TriangleFan:
-    glMode = GL_TRIANGLE_FAN;
-    break;
-  default:
-    assert(false && "Invalid primitive mode");
-    break;
-  }
+  GLenum glMode = ConvertPrimitiveMode(_Mode);
 
   GLenum glIndexType = GL_UNSIGNED_INT;
-  switch (indexType)
+  switch (_IndexType)
   {
-  case EIndexType::Byte:
-    glIndexType = GL_BYTE;
-    break;
   case EIndexType::UnsignedByte:
     glIndexType = GL_UNSIGNED_BYTE;
-    break;
-  case EIndexType::Short:
-    glIndexType = GL_SHORT;
     break;
   case EIndexType::UnsignedShort:
     glIndexType = GL_UNSIGNED_SHORT;
     break;
-  case EIndexType::Int:
-    glIndexType = GL_INT;
-    break;
   case EIndexType::UnsignedInt:
     glIndexType = GL_UNSIGNED_INT;
-    break;
-  case EIndexType::Float:
-    glIndexType = GL_FLOAT;
     break;
   default:
     assert(false && "Invalid index type");
     break;
   }
 
-  glDrawElements(glMode, static_cast<GLsizei>(count), static_cast<GLenum>(glIndexType), offset);
+  glDrawElements(glMode, static_cast<GLsizei>(_Count), static_cast<GLenum>(glIndexType), _Offset);
+  m_DrawCallsCount++;
+  m_IndicesCount += _Count;
+
+  switch (glMode)
+  {
+  case GL_TRIANGLES:
+    m_TrianglesCount += _Count / 3;
+    break;
+  case GL_TRIANGLE_STRIP:
+    [[fallthrough]];
+  case GL_TRIANGLE_FAN:
+    m_TrianglesCount += (_Count > 2) ? (_Count - 2) : 0;
+    break;
+  case GL_LINES:
+    m_LinesCount += _Count / 2;
+    break;
+  case GL_LINE_STRIP:
+    m_LinesCount += (_Count > 1) ? (_Count - 1) : 0;
+    break;
+  case GL_LINE_LOOP:
+    m_LinesCount += _Count;
+    break;
+  case GL_POINTS:
+    m_PointsCount += _Count;
+    break;
+  }
 }
 
 void COpenGLRenderer::SetCamera(const std::shared_ptr<CCamera> &_Camera)
@@ -279,4 +305,29 @@ std::string COpenGLRenderer::GetGLErrorDescription(GLenum _Error)
   default:
     return "UNDEFINED";
   }
+}
+
+uint32_t COpenGLRenderer::GetDrawCallsCount() const
+{
+  return m_DrawCallsCount;
+}
+uint32_t COpenGLRenderer::GetVerticesCount() const
+{
+  return m_VerticesCount;
+}
+uint32_t COpenGLRenderer::GetIndicesCount() const
+{
+  return m_IndicesCount;
+}
+uint32_t COpenGLRenderer::GetTrianglesCount() const
+{
+  return m_TrianglesCount;
+}
+uint32_t COpenGLRenderer::GetLinesCount() const
+{
+  return m_LinesCount;
+}
+uint32_t COpenGLRenderer::GetPointsCount() const
+{
+  return m_PointsCount;
 }

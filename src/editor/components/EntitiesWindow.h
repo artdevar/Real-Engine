@@ -14,16 +14,16 @@ class IWorldEditor;
 namespace editor
 {
 
-class CSceneWindow : public IEditorWindow
+class CEntitiesWindow : public IEditorWindow
 {
 public:
-  CSceneWindow(IWorldEditor &_WorldEditor);
+  CEntitiesWindow(IWorldEditor &_WorldEditor);
 
   void Render();
 
   std::string GetName() const override
   {
-    return "Scene";
+    return "Entities";
   }
 
   TVector2i GetSize() const override

@@ -2,15 +2,28 @@
 
 #include "PerformanceWindow.h"
 #include "engine/Engine.h"
+#include "interfaces/RenderPipeline.h"
 #include <algorithm>
 #include <numeric>
 #include <imgui/imgui.h>
 #include <imgui/implot/implot.h>
 
-namespace editor
+namespace
 {
 
-static TVector2i size{};
+std::string FormatCount(int _Count)
+{
+  if (_Count >= 1'000'000)
+    return std::format("{:.1f}M", static_cast<float>(_Count) / 1'000'000.0f);
+  if (_Count >= 1'000)
+    return std::format("{:.1f}K", static_cast<float>(_Count) / 1'000.0f);
+  return std::to_string(_Count);
+}
+
+} // namespace
+
+namespace editor
+{
 
 std::string CPerformanceWindow::GetName() const
 {
@@ -41,21 +54,17 @@ void CPerformanceWindow::Render()
         ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_RangeFit);
         ImPlot::SetupAxis(ImAxis_Y2, nullptr, ImPlotAxisFlags_AuxDefault | ImPlotAxisFlags_RangeFit);
 
-        if (!m_FPSHistory.empty())
-        {
-          ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.front().X, m_FPSHistory.back().X, ImGuiCond_Always);
-          ImPlot::SetupAxisLimits(ImAxis_Y1, m_MinFps - 10.0f, m_MaxFps + 10.0f, ImGuiCond_Always);
-          ImPlot::SetupAxisLimits(ImAxis_Y2, m_MinFrameTime - 1.0f, m_MaxFrameTime + 1.0f, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.front().X, m_FPSHistory.back().X, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y1, m_MinFps - 10.0f, m_MaxFps + 10.0f, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_Y2, m_MinFrameTime - 1.0f, m_MaxFrameTime + 1.0f, ImGuiCond_Always);
 
-          ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
-          ImPlot::SetAxis(ImAxis_Y1);
-          ImPlot::PlotLine("FPS", &m_FPSHistory[0].X, &m_FPSHistory[0].Y, (int)m_FPSHistory.size(), 0, 0, sizeof(TVector2f));
+        ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
+        ImPlot::SetAxis(ImAxis_Y1);
+        ImPlot::PlotLine("FPS", &m_FPSHistory[0].X, &m_FPSHistory[0].Y, (int)m_FPSHistory.size(), 0, 0, sizeof(TVector2f));
 
-          ImPlot::SetAxis(ImAxis_Y2);
-          ImPlot::PlotLine("Latency (ms)", &m_FrameTimeHistory[0].X, &m_FrameTimeHistory[0].Y, (int)m_FrameTimeHistory.size(), 0, 0,
-                           sizeof(TVector2f));
-          ImPlot::PopStyleVar();
-        }
+        ImPlot::SetAxis(ImAxis_Y2);
+        ImPlot::PlotLine("Latency (ms)", &m_FrameTimeHistory[0].X, &m_FrameTimeHistory[0].Y, (int)m_FrameTimeHistory.size(), 0, 0, sizeof(TVector2f));
+        ImPlot::PopStyleVar();
 
         ImPlot::EndPlot();
       }
@@ -71,6 +80,19 @@ void CPerformanceWindow::Render()
       ImGui::Text("Max: %.2f", m_MaxFrameTime);
       ImGui::Text("Avg: %.2f", m_AvgFrameTime);
       ImGui::Columns(1);
+    }
+
+    if (ImGui::CollapsingHeader("Render data"))
+    {
+      if (const auto Pipeline = Engine.GetRenderPipeline())
+      {
+        ImGui::Text("Draw calls: %s", FormatCount(Pipeline->GetDrawCallsCount()).c_str());
+        ImGui::Text("Vertices submitted: %s", FormatCount(Pipeline->GetVerticesCount()).c_str());
+        ImGui::Text("Indices submitted: %s", FormatCount(Pipeline->GetIndicesCount()).c_str());
+        ImGui::Text("Triangles: %s", FormatCount(Pipeline->GetTrianglesCount()).c_str());
+        ImGui::Text("Lines: %s", FormatCount(Pipeline->GetLinesCount()).c_str());
+        ImGui::Text("Points: %s", FormatCount(Pipeline->GetPointsCount()).c_str());
+      }
     }
   }
 

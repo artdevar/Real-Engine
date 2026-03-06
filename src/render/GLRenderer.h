@@ -9,6 +9,7 @@
 class COpenGLRenderer final : public IRenderer
 {
 public:
+  void OnFrameBegin() override;
   void CheckErrors() override;
 
   void Clear(EClearFlags _ClearFlags) override;
@@ -33,6 +34,13 @@ public:
   void SetDepthFunc(int _Func) override;
   void SetDepthMask(bool _Flag) override;
 
+  uint32_t GetDrawCallsCount() const override;
+  uint32_t GetVerticesCount() const override;
+  uint32_t GetIndicesCount() const override;
+  uint32_t GetTrianglesCount() const override;
+  uint32_t GetLinesCount() const override;
+  uint32_t GetPointsCount() const override;
+
 private:
   static std::string GetGLErrorDescription(GLenum _Error);
 
@@ -42,4 +50,11 @@ public:
 
   EAlphaMode m_AlphaMode   = static_cast<EAlphaMode>(-1);
   ECullMode  m_CullingMode = static_cast<ECullMode>(-1);
+
+  uint32_t m_DrawCallsCount = 0;
+  uint32_t m_VerticesCount  = 0;
+  uint32_t m_IndicesCount   = 0;
+  uint32_t m_TrianglesCount = 0;
+  uint32_t m_LinesCount     = 0;
+  uint32_t m_PointsCount    = 0;
 };

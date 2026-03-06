@@ -19,7 +19,7 @@ class CModel;
 class CDisplay;
 class CInputManager;
 class CEventsManager;
-class CRenderPipeline;
+class IRenderPipeline;
 
 namespace editor
 {
@@ -55,6 +55,7 @@ public:
   std::shared_ptr<CResourceManager> GetResourceManager() const;
   std::shared_ptr<CInputManager> GetInputManager() const;
   std::shared_ptr<CEventsManager> GetEventsManager() const;
+  std::shared_ptr<IRenderPipeline> GetRenderPipeline() const;
 
   float GetFrameTime() const;
   int GetFPS() const;
@@ -88,7 +89,7 @@ private:
   std::shared_ptr<CCamera>          m_Camera;
   std::shared_ptr<CWorld>           m_World;
   std::shared_ptr<CResourceManager> m_ResourceManager;
-  std::shared_ptr<CRenderPipeline>  m_RenderPipeline;
+  std::shared_ptr<IRenderPipeline>  m_RenderPipeline;
 
 #if DEV_STAGE
   std::unique_ptr<editor::CEditorUI> m_EditorUI;

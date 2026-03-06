@@ -24,7 +24,7 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
       .VAO           = SkyboxComponent.VAO,
       .ModelMatrix   = glm::mat4(1.0f),
       .IndicesCount  = SkyboxComponent.VerticesCount,
-      .IndexType     = EIndexType::None,
+      .IndexType     = EIndexType::Absent,
       .PrimitiveMode = EPrimitiveMode::Triangles,
   };
 

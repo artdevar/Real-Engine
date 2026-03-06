@@ -45,14 +45,10 @@ enum class EPrimitiveMode : uint8_t
 
 enum class EIndexType : uint8_t
 {
-  None,
-  Byte,
+  Absent,
   UnsignedByte,
-  Short,
   UnsignedShort,
-  Int,
-  UnsignedInt,
-  Float
+  UnsignedInt
 };
 
 enum class ECullMode : uint8_t
