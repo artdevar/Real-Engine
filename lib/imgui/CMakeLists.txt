@@ -9,8 +9,11 @@ file(GLOB IMGUI_CORE
 file(GLOB IMGUI_MISC
 	${CMAKE_CURRENT_SOURCE_DIR}/misc/cpp/*.cpp
 )
+file(GLOB IMGUI_IMPLOT
+	${CMAKE_CURRENT_SOURCE_DIR}/implot/*.cpp
+)
 
-set(IMGUI_SRCS ${IMGUI_CORE} ${IMGUI_MISC})
+set(IMGUI_SRCS ${IMGUI_CORE} ${IMGUI_MISC} ${IMGUI_IMPLOT})
 list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_glfw.cpp)
 list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
 

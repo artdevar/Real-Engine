@@ -14,6 +14,12 @@ void CGlobalParamsWindow::Render()
   {
     if (ImGui::CollapsingHeader("Render"))
     {
+      bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
+      if (ImGui::Checkbox("FXAA enabled", &FXAAEnabled))
+        CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
+
+      ImGui::Separator();
+
       bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
       if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
         CConfig::Instance().SetShadowsEnabled(ShadowsEnabled);
@@ -22,9 +28,7 @@ void CGlobalParamsWindow::Render()
       if (ImGui::DragInt("Shadow map size", &ShadowMapSize, 256, 512, 4096))
         CConfig::Instance().SetShadowsMapSize(ShadowMapSize);
 
-      bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
-      if (ImGui::Checkbox("FXAA enabled", &FXAAEnabled))
-        CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
+      ImGui::Separator();
 
       bool HDREnabled = CConfig::Instance().GetHDREnabled();
       if (ImGui::Checkbox("HDR enabled", &HDREnabled))
@@ -33,6 +37,8 @@ void CGlobalParamsWindow::Render()
       float HDRExposure = CConfig::Instance().GetHDRExposure();
       if (ImGui::DragFloat("HDR exposure", &HDRExposure, 0.1f, 0.0f, 10.0f))
         CConfig::Instance().SetHDRExposure(HDRExposure);
+
+      ImGui::Separator();
 
       bool GammaCorrectionEnabled = CConfig::Instance().GetGammaCorrectionEnabled();
       if (ImGui::Checkbox("Gamma correction enabled", &GammaCorrectionEnabled))

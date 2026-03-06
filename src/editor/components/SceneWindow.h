@@ -2,7 +2,7 @@
 
 #if DEV_STAGE
 
-#include "EditorWIndow.h"
+#include "EditorWindow.h"
 #include "ecs/EntityType.h"
 #include <ecs/Core.h>
 #include <common/UnorderedVector.h>

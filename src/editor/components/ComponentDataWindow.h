@@ -2,7 +2,7 @@
 
 #if DEV_STAGE
 
-#include "EditorWIndow.h"
+#include "EditorWindow.h"
 #include <ecs/Core.h>
 #include <ecs/ComponentView.h>
 #include <imgui/imgui.h>

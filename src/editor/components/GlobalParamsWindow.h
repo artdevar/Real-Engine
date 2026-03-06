@@ -2,7 +2,7 @@
 
 #if DEV_STAGE
 
-#include "EditorWIndow.h"
+#include "EditorWindow.h"
 #include <common/MathTypes.h>
 
 namespace editor

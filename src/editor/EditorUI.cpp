@@ -5,6 +5,7 @@
 #include "components/ComponentDataWindow.h"
 #include "components/GlobalParamsWindow.h"
 #include "components/ViewportWindow.h"
+#include "components/PerformanceWindow.h"
 #include "renderer/ComponentRenderer.h"
 #include "interfaces/WorldEditor.h"
 #include "engine/Config.h"
@@ -13,6 +14,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
+#include <imgui/implot/implot.h>
 #include <filesystem>
 
 namespace editor
@@ -34,7 +36,8 @@ CEditorUI::CEditorUI(IWorldEditor &_WorldEditor) :
     m_GlobalParamsWindow(std::make_unique<CGlobalParamsWindow>()),
     m_ViewportWindow(std::make_unique<CViewportWindow>()),
     m_MenuBar(std::make_unique<CMenuBar>()),
-    m_SceneWindow(std::make_unique<CSceneWindow>(_WorldEditor))
+    m_SceneWindow(std::make_unique<CSceneWindow>(_WorldEditor)),
+    m_PerformanceWindow(std::make_unique<CPerformanceWindow>())
 {
 }
 
@@ -49,6 +52,8 @@ void CEditorUI::Init(GLFWwindow *_Window)
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
+  ImPlot::CreateContext();
+
   ImGuiIO &IO     = ImGui::GetIO();
   IO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
@@ -63,6 +68,7 @@ void CEditorUI::Shutdown()
 {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
+  ImPlot::DestroyContext();
   ImGui::DestroyContext();
 }
 
@@ -75,6 +81,7 @@ void CEditorUI::RenderFrame()
   m_SceneWindow->Render();
   m_ComponentDataWindow->Render(m_SceneWindow->GetSelectedEntity());
   m_GlobalParamsWindow->Render();
+  m_PerformanceWindow->Render();
 
   RenderEnd();
 }
@@ -103,29 +110,29 @@ void CEditorUI::RenderBegin()
 
   ImGui::Begin("DockSpaceRoot", nullptr, Flags);
 
-  ImGuiID dockspace_id = ImGui::GetID("MainDockSpace");
-  ImGui::DockSpace(dockspace_id, ImVec2(0, 0));
+  ImGuiID DockSpaceID = ImGui::GetID("MainDockSpace");
+  ImGui::DockSpace(DockSpaceID, ImVec2(0, 0));
 
-  static bool layout_initialized = false;
-  if (!layout_initialized)
-  {
-    layout_initialized = true;
+  static const bool InitLayout = [this, DockSpaceID, Viewport]() mutable {
+    ImGui::DockBuilderRemoveNode(DockSpaceID);
+    ImGui::DockBuilderAddNode(DockSpaceID, ImGuiDockNodeFlags_DockSpace);
+    ImGui::DockBuilderSetNodeSize(DockSpaceID, Viewport->WorkSize);
 
-    ImGui::DockBuilderRemoveNode(dockspace_id);
-    ImGui::DockBuilderAddNode(dockspace_id, ImGuiDockNodeFlags_DockSpace);
-    ImGui::DockBuilderSetNodeSize(dockspace_id, Viewport->WorkSize);
+    ImGuiID LeftNodeID     = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Left, 0.2f, nullptr, &DockSpaceID);
+    ImGuiID SceneNodeID    = ImGui::DockBuilderSplitNode(LeftNodeID, ImGuiDir_Up, 0.5f, nullptr, &LeftNodeID);
+    ImGuiID RightNodeID    = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Right, 0.2f, nullptr, &DockSpaceID);
+    ImGuiID RightTopNodeID = ImGui::DockBuilderSplitNode(RightNodeID, ImGuiDir_Up, 0.5f, nullptr, &RightNodeID);
 
-    ImGuiID left_node  = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Left, 0.25f, nullptr, &dockspace_id);
-    ImGuiID scene_node = ImGui::DockBuilderSplitNode(left_node, ImGuiDir_Up, 0.5f, nullptr, &left_node);
-    ImGuiID right_node = ImGui::DockBuilderSplitNode(dockspace_id, ImGuiDir_Right, 0.25f, nullptr, &dockspace_id);
+    ImGui::DockBuilderDockWindow(m_SceneWindow->GetName().c_str(), SceneNodeID);
+    ImGui::DockBuilderDockWindow(m_ComponentDataWindow->GetName().c_str(), LeftNodeID);
+    ImGui::DockBuilderDockWindow(m_GlobalParamsWindow->GetName().c_str(), RightTopNodeID);
+    ImGui::DockBuilderDockWindow(m_PerformanceWindow->GetName().c_str(), RightNodeID);
+    ImGui::DockBuilderDockWindow(m_ViewportWindow->GetName().c_str(), DockSpaceID);
 
-    ImGui::DockBuilderDockWindow(m_SceneWindow->GetName().c_str(), scene_node);
-    ImGui::DockBuilderDockWindow(m_ComponentDataWindow->GetName().c_str(), left_node);
-    ImGui::DockBuilderDockWindow(m_GlobalParamsWindow->GetName().c_str(), right_node);
-    ImGui::DockBuilderDockWindow(m_ViewportWindow->GetName().c_str(), dockspace_id);
+    ImGui::DockBuilderFinish(DockSpaceID);
 
-    ImGui::DockBuilderFinish(dockspace_id);
-  }
+    return true;
+  }();
 }
 
 void CEditorUI::RenderEnd()

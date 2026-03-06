@@ -56,7 +56,13 @@ public:
   std::shared_ptr<CInputManager> GetInputManager() const;
   std::shared_ptr<CEventsManager> GetEventsManager() const;
 
+  float GetFrameTime() const;
+  int GetFPS() const;
+  float GetApplicationRunningTime() const;
+
 private:
+  void SetFrameTime(float _Time);
+
   void Render(IRenderer &_Renderer);
   void Update(float _TimeDelta) override;
 
@@ -74,6 +80,8 @@ private:
 #endif
 
 private:
+  float m_FrameTime;
+
   std::unique_ptr<CDisplay>         m_Display;
   std::shared_ptr<CInputManager>    m_InputManager;
   std::shared_ptr<CEventsManager>   m_EventsManager;

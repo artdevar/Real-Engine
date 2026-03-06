@@ -19,7 +19,11 @@
 
 CEngine *CEngine::Singleton = nullptr;
 
-CEngine::CEngine()  = default;
+CEngine::CEngine() :
+    m_FrameTime(0.0f)
+{
+}
+
 CEngine::~CEngine() = default;
 
 CEngine &CEngine::Instance()
@@ -135,6 +139,8 @@ int CEngine::Run()
     const float  FrameDelta       = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
     LastFrameTime                 = CurrentFrameTime;
 
+    SetFrameTime(FrameDelta);
+
     // const int FPS = std::lround(1000.0f / FrameDelta);
     // const std::string Title = std::format("FPS={}", FPS);
     // m_Display->SetTitle(Title);
@@ -173,6 +179,26 @@ void CEngine::Render(IRenderer &_Renderer)
 #if DEV_STAGE
   m_EditorUI->RenderFrame();
 #endif
+}
+
+void CEngine::SetFrameTime(float _Time)
+{
+  m_FrameTime = _Time;
+}
+
+float CEngine::GetFrameTime() const
+{
+  return m_FrameTime;
+}
+
+int CEngine::GetFPS() const
+{
+  return static_cast<int>(1000.0f / GetFrameTime());
+}
+
+float CEngine::GetApplicationRunningTime() const
+{
+  return static_cast<float>(glfwGetTime());
 }
 
 TVector2i CEngine::GetWindowSize() const

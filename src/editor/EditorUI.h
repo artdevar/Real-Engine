@@ -17,6 +17,7 @@ class CComponentDataWindow;
 class CGlobalParamsWindow;
 class CComponentRenderer;
 class CViewportWindow;
+class CPerformanceWindow;
 
 class CEditorUI : public IShutdownable
 {
@@ -45,6 +46,7 @@ private:
   std::unique_ptr<CViewportWindow>      m_ViewportWindow;
   std::unique_ptr<CMenuBar>             m_MenuBar;
   std::unique_ptr<CSceneWindow>         m_SceneWindow;
+  std::unique_ptr<CPerformanceWindow>   m_PerformanceWindow;
 };
 
 } // namespace editor
