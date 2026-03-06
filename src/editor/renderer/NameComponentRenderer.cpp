@@ -28,7 +28,7 @@ void TNameComponentRenderer::Render(void *Data) noexcept
   constexpr auto Flags = ImGuiInputTextFlags_NoUndoRedo;
   ImGui::InputText("Name##EntityName", &Buffer, Flags);
 
-  if (ImGui::IsItemDeactivatedAfterEdit())
+  if (ImGui::IsItemDeactivatedAfterEdit() && !Buffer.empty())
     Component->Name = Buffer;
 }
 
