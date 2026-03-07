@@ -34,7 +34,7 @@ public:
 
     std::shared_ptr<RawT> Component = std::make_shared<RawT>(std::forward<T>(_Component));
     m_Actions.emplace_back([Component = std::move(Component)](CCoordinator &_Coordinator, ecs::TEntity _Entity) mutable {
-      _Coordinator.AddComponent(_Entity, std::forward<RawT>(*Component));
+      _Coordinator.AddComponent(_Entity, std::move(*Component));
     });
 
     return *this;
