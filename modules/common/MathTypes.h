@@ -92,6 +92,12 @@ struct TVector2
 using TVector2i = TVector2<int>;
 using TVector2f = TVector2<float>;
 
+using TSize2i = TVector2i;
+using TSize2f = TVector2f;
+
+using TPoint2i = TVector2i;
+using TPoint2f = TVector2f;
+
 template <typename T>
 requires std::is_arithmetic_v<T>
 struct TVector3
@@ -225,6 +231,31 @@ struct IsVector<TVector4<T>> : std::true_type
 
 template <typename T>
 concept Vector = IsVector<std::remove_cvref_t<T>>::value;
+
+template <typename T>
+requires std::is_arithmetic_v<T>
+struct TRect
+{
+  constexpr TRect() noexcept :
+      Position{},
+      Size{}
+  {
+  }
+
+  template <typename U>
+  requires std::is_convertible_v<U, T>
+  constexpr TRect(U _X, U _Y, U _Width, U _Height) noexcept :
+      Position(static_cast<T>(_X), static_cast<T>(_Y)),
+      Size(static_cast<T>(_Width), static_cast<T>(_Height))
+  {
+  }
+
+  TVector2<T> Position;
+  TVector2<T> Size;
+};
+
+using TRecti = TRect<int>;
+using TRectf = TRect<float>;
 
 namespace math
 {
