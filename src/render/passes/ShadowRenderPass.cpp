@@ -56,14 +56,14 @@ void CShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
     _Renderer.SetUniform("u_Material.AlphaCutoff", Command.Material.AlphaCutoff);
     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Command.Material.AlphaMode));
 
-    Command.VAO.get().Bind();
+    Command.VAO->Bind();
 
     if (Command.IndexType != EIndexType::Absent)
       _Renderer.DrawElements(Command.PrimitiveMode, Command.IndicesCount, Command.IndexType);
     else
       _Renderer.DrawArrays(Command.PrimitiveMode, Command.IndicesCount);
 
-    Command.VAO.get().Unbind();
+    Command.VAO->Unbind();
   }
 }
 

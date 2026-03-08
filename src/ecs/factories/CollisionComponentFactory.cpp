@@ -1,58 +1,11 @@
 #include "../ComponentsFactory.h"
-
 #include "physics/Collision.h"
 #include "assets/Model.h"
-#include "render/Buffer.h"
 #include <glm/mat4x4.hpp>
 #include <vector>
 
 namespace ecs
 {
-
-static void CreateBoxGeometry(TCollisionComponent &_Component)
-{
-  static constexpr glm::vec3 Vertices[] = {// Bottom square
-                                           {-0.5f, -0.5f, -0.5f},
-                                           {0.5f, -0.5f, -0.5f},
-                                           {0.5f, -0.5f, -0.5f},
-                                           {0.5f, -0.5f, 0.5f},
-                                           {0.5f, -0.5f, 0.5f},
-                                           {-0.5f, -0.5f, 0.5f},
-                                           {-0.5f, -0.5f, 0.5f},
-                                           {-0.5f, -0.5f, -0.5f},
-
-                                           // Top square
-                                           {-0.5f, 0.5f, -0.5f},
-                                           {0.5f, 0.5f, -0.5f},
-                                           {0.5f, 0.5f, -0.5f},
-                                           {0.5f, 0.5f, 0.5f},
-                                           {0.5f, 0.5f, 0.5f},
-                                           {-0.5f, 0.5f, 0.5f},
-                                           {-0.5f, 0.5f, 0.5f},
-                                           {-0.5f, 0.5f, -0.5f},
-
-                                           // Vertical lines
-                                           {-0.5f, -0.5f, -0.5f},
-                                           {-0.5f, 0.5f, -0.5f},
-                                           {0.5f, -0.5f, -0.5f},
-                                           {0.5f, 0.5f, -0.5f},
-                                           {0.5f, -0.5f, 0.5f},
-                                           {0.5f, 0.5f, 0.5f},
-                                           {-0.5f, -0.5f, 0.5f},
-                                           {-0.5f, 0.5f, 0.5f}};
-
-  _Component.VAO = std::make_shared<CVertexArray>();
-  _Component.VBO = std::make_shared<CVertexBuffer>(GL_STATIC_DRAW);
-
-  _Component.VAO->Bind();
-  _Component.VBO->Bind();
-  _Component.VBO->Assign(const_cast<glm::vec3 *>(Vertices), sizeof(Vertices));
-
-  _Component.VAO->EnableAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
-
-  _Component.VAO->Unbind();
-  _Component.VBO->Unbind();
-}
 
 static glm::mat4 ComputeNodeTransformLocal(const TNode &_Node)
 {
@@ -114,8 +67,6 @@ void CComponentsFactory::CreateCollisionComponent(const std::shared_ptr<CModel> 
 
   for (int NodeIndex : ModelData.RootNodes)
     CalculateAABB(ModelData, ModelData.Nodes[NodeIndex], _Component.BoundingBox, glm::mat4(1.0f));
-
-  CreateBoxGeometry(_Component);
 }
 
 } // namespace ecs

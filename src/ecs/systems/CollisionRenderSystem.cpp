@@ -5,7 +5,6 @@
 #include "ecs/Coordinator.h"
 #include "render/RenderCommand.h"
 #include "render/RenderQueue.h"
-#include "render/Buffer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace ecs
@@ -21,9 +20,6 @@ void CCollisionRenderSystem::Collect(CRenderQueue &_Queue)
     TTransformComponent &TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
     TCollisionComponent &CollisionComponent = m_Coordinator->GetComponent<TCollisionComponent>(Entity);
 
-    if (!CollisionComponent.VAO)
-      return;
-
     const TAABB    &Box    = CollisionComponent.BoundingBox;
     const glm::mat4 Model  = TransformComponent.WorldMatrix;
     const glm::vec3 Center = Box.Center();
@@ -36,12 +32,8 @@ void CCollisionRenderSystem::Collect(CRenderQueue &_Queue)
     RenderFlags.set(ERenderFlags_Wireframe);
 
     TRenderCommand Command{
-        .VAO           = *CollisionComponent.VAO,
-        .ModelMatrix   = BoxMatrix,
-        .IndicesCount  = 24,
-        .IndexType     = EIndexType::Absent,
-        .PrimitiveMode = EPrimitiveMode::Line,
-        .RenderFlags   = std::move(RenderFlags),
+        .ModelMatrix = BoxMatrix,
+        .RenderFlags = std::move(RenderFlags),
     };
 
     _Queue.Push(std::move(Command));

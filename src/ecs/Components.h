@@ -87,18 +87,13 @@ struct TLightComponent
 struct TSkyboxComponent
 {
   std::shared_ptr<CTextureBase> SkyboxTexture;
-  TSharedVAO                    VAO;
-  TSharedVBO                    VBO;
-  uint32_t                      VerticesCount = 0;
 };
 
 /////////////////////////////////////////////////////////////////
 
 struct TCollisionComponent
 {
-  TAABB      BoundingBox;
-  TSharedVAO VAO;
-  TSharedVBO VBO;
+  TAABB BoundingBox;
 };
 
 } // namespace ecs

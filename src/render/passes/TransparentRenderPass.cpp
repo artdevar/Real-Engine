@@ -56,14 +56,14 @@ void CTransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
     _Renderer.SetUniform("u_Material.AlphaCutoff", Command.Material.AlphaCutoff);
     _Renderer.SetCullFace(Command.Material.IsDoubleSided ? ECullMode::None : ECullMode::Back);
 
-    Command.VAO.get().Bind();
+    Command.VAO->Bind();
 
     if (Command.IndexType != EIndexType::Absent)
       _Renderer.DrawElements(Command.PrimitiveMode, Command.IndicesCount, Command.IndexType);
     else
       _Renderer.DrawArrays(Command.PrimitiveMode, Command.IndicesCount);
 
-    Command.VAO.get().Unbind();
+    Command.VAO->Unbind();
   }
 }
 

@@ -42,10 +42,8 @@ struct TMaterialD
 
 struct TRenderCommand
 {
-  using VAOReference = std::reference_wrapper<CVertexArray>;
-
   TMaterialD     Material;
-  VAOReference   VAO;
+  TSharedVAO     VAO;
   glm::mat4      ModelMatrix;
   uint32_t       IndicesCount;
   EIndexType     IndexType;

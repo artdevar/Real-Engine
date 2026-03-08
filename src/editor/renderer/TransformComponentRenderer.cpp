@@ -34,7 +34,7 @@ void TTransformComponentRenderer::Render(void *Data) noexcept
   ValueChanged |= ImGui::DragFloat("Z##ObjZPos", &Translation.z, 0.5f);
 
   ImGui::SeparatorText("Scale##ObjScale");
-  const float kMinScale = 0.0001f;
+  const float kMinScale = 0.01f;
   const float kMaxScale = 10000.0f;
   ValueChanged         |= ImGui::DragFloat("X##ObjXScale", &Scale.x, 0.1f, kMinScale, kMaxScale);
   ValueChanged         |= ImGui::DragFloat("Y##ObjYScale", &Scale.y, 0.1f, kMinScale, kMaxScale);

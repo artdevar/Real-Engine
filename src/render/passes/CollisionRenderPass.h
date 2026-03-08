@@ -2,6 +2,7 @@
 
 #include "interfaces/RenderPass.h"
 #include "interfaces/EventsListener.h"
+#include "render/Buffer.h"
 #include <common/Sharable.h>
 #include <memory>
 
@@ -40,4 +41,6 @@ private:
 private:
   std::shared_ptr<CShader> m_Shader;
   glm::vec4                m_WireframeColor;
+  CVertexArray             m_VAO;
+  CVertexBuffer            m_VBO;
 };

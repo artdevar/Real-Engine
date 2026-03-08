@@ -2,16 +2,58 @@
 #include "interfaces/Renderer.h"
 #include "render/RenderContext.h"
 #include "render/RenderCommand.h"
+#include "render/Buffer.h"
 #include "engine/Config.h"
 #include "assets/Shader.h"
 #include "utils/Resource.h"
 #include "utils/Event.h"
 #include <common/GlmUtils.h>
 
+static constexpr glm::vec3 WIREFRAME_VERTICES[] = {
+    // Bottom square
+    {-0.5f, -0.5f, -0.5f},
+    {0.5f, -0.5f, -0.5f},
+    {0.5f, -0.5f, -0.5f},
+    {0.5f, -0.5f, 0.5f},
+    {0.5f, -0.5f, 0.5f},
+    {-0.5f, -0.5f, 0.5f},
+    {-0.5f, -0.5f, 0.5f},
+    {-0.5f, -0.5f, -0.5f},
+
+    // Top square
+    {-0.5f, 0.5f, -0.5f},
+    {0.5f, 0.5f, -0.5f},
+    {0.5f, 0.5f, -0.5f},
+    {0.5f, 0.5f, 0.5f},
+    {0.5f, 0.5f, 0.5f},
+    {-0.5f, 0.5f, 0.5f},
+    {-0.5f, 0.5f, 0.5f},
+    {-0.5f, 0.5f, -0.5f},
+
+    // Vertical lines
+    {-0.5f, -0.5f, -0.5f},
+    {-0.5f, 0.5f, -0.5f},
+    {0.5f, -0.5f, -0.5f},
+    {0.5f, 0.5f, -0.5f},
+    {0.5f, -0.5f, 0.5f},
+    {0.5f, 0.5f, 0.5f},
+    {-0.5f, -0.5f, 0.5f},
+    {-0.5f, 0.5f, 0.5f}};
+
 CCollisionRenderPass::CCollisionRenderPass() :
     m_Shader(resource::LoadShader("Wireframe")),
-    m_WireframeColor(glm::ToVec4(CConfig::Instance().GetWireframeColor()))
+    m_WireframeColor(glm::ToVec4(CConfig::Instance().GetWireframeColor())),
+    m_VAO(),
+    m_VBO(GL_STATIC_DRAW)
 {
+  m_VAO.Bind();
+  m_VBO.Bind();
+  m_VBO.Assign(WIREFRAME_VERTICES, sizeof(WIREFRAME_VERTICES));
+
+  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+
+  m_VAO.Unbind();
+  m_VBO.Unbind();
 }
 
 void CCollisionRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
@@ -23,15 +65,17 @@ void CCollisionRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Ren
 
 void CCollisionRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
 {
+  m_VAO.Bind();
+
   for (const TRenderCommand &Command : _Commands)
   {
     _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command.ModelMatrix);
     _Renderer.SetUniform("u_Color", m_WireframeColor);
 
-    Command.VAO.get().Bind();
-    _Renderer.DrawArrays(Command.PrimitiveMode, Command.IndicesCount);
-    Command.VAO.get().Unbind();
+    _Renderer.DrawArrays(EPrimitiveMode::Line, ARRAY_SIZE(WIREFRAME_VERTICES));
   }
+
+  m_VAO.Unbind();
 }
 
 void CCollisionRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)

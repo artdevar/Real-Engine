@@ -248,7 +248,7 @@ private:
   bool   IsGammaCorrectionEnabled = false;
   float  Gamma                    = 2.2f;
   bool   IsWireframeEnabled       = true;
-  TColor WireframeColor           = TColor(1.0f, 1.0f, 0.0f, 1.0f);
+  TColor WireframeColor           = TColor(1.0f, 1.0f, 0.0f, 0.8f);
 
   // Camera parameters
   float Camera_ZNear = 0.1f;
@@ -256,7 +256,7 @@ private:
   float Camera_FOV   = 60.0f;
 
   // Light parameters
-  float LightSpaceMatrix_ZNear        = -20.0f;
+  float LightSpaceMatrix_ZNear        = -45.0f;
   float LightSpaceMatrix_ZFar         = 45.0f;
   float LightSpaceMatrix_OrthLeftBot  = -30.0f;
   float LightSpaceMatrix_OrthRightTop = 30.0f;
