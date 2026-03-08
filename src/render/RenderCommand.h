@@ -4,6 +4,21 @@
 #include "ShaderTypes.h"
 #include "RenderTypes.h"
 #include <glm/mat4x4.hpp>
+#include <bitset>
+
+enum ERenderFlags : uint32_t
+{
+  ERenderFlags_Transparent,
+  ERenderFlags_Opaque,
+  ERenderFlags_Skybox,
+  ERenderFlags_CastShadow,
+  ERenderFlags_ReceiveShadow,
+  ERenderFlags_Wireframe,
+
+  ERenderFlags_Count
+};
+
+using TRenderFlags = std::bitset<ERenderFlags_Count>;
 
 struct TMaterialD
 {
@@ -35,4 +50,5 @@ struct TRenderCommand
   uint32_t       IndicesCount;
   EIndexType     IndexType;
   EPrimitiveMode PrimitiveMode;
+  TRenderFlags   RenderFlags;
 };

@@ -47,6 +47,17 @@ void CGlobalParamsWindow::Render()
       float Gamma = CConfig::Instance().GetGamma();
       if (ImGui::DragFloat("Gamma", &Gamma, 0.1f, 0.01f, 10.0f))
         CConfig::Instance().SetGamma(Gamma);
+
+      ImGui::Separator();
+
+      bool WireframeEnabled = CConfig::Instance().GetWireframeEnabled();
+      if (ImGui::Checkbox("Wireframe enabled", &WireframeEnabled))
+        CConfig::Instance().SetWireframeEnabled(WireframeEnabled);
+
+      TColor WireframeColor       = CConfig::Instance().GetWireframeColor();
+      float  WireframeColorArr[4] = {WireframeColor.R, WireframeColor.G, WireframeColor.B, WireframeColor.A};
+      if (ImGui::ColorEdit4("Wireframe color", WireframeColorArr, ImGuiColorEditFlags_Float))
+        CConfig::Instance().SetWireframeColor(TColor(WireframeColorArr[0], WireframeColorArr[1], WireframeColorArr[2], WireframeColorArr[3]));
     }
 
     if (ImGui::CollapsingHeader("Camera"))
@@ -84,7 +95,7 @@ void CGlobalParamsWindow::Render()
     }
 
     const ImVec2 Available = ImGui::GetContentRegionAvail();
-    m_Size                 = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
+    m_Size                 = TVector2i(Available.x, Available.y);
   }
 
   ImGui::End();

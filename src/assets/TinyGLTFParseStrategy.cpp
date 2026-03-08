@@ -137,7 +137,7 @@ EIndexType ToIndexType(int _ComponentType)
   }
 }
 
-static void CopyData(const std::vector<uint8_t> &_Src, std::vector<uint8_t> &_Dst, size_t _Offset, size_t _Count, size_t _Stride, size_t _ElementSize)
+void CopyData(const std::vector<uint8_t> &_Src, std::vector<uint8_t> &_Dst, size_t _Offset, size_t _Count, size_t _Stride, size_t _ElementSize)
 {
   _Dst.reserve(_Dst.size() + _Count * _ElementSize);
 
@@ -147,6 +147,7 @@ static void CopyData(const std::vector<uint8_t> &_Src, std::vector<uint8_t> &_Ds
     std::copy(_Src.begin() + SrcIndex, _Src.begin() + SrcIndex + _ElementSize, std::back_inserter(_Dst));
   }
 }
+
 } // namespace
 
 bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelData &_Model)
@@ -289,7 +290,11 @@ void CTinyGLTFParseStrategy::ParseAttributes(const tinygltf::Model     &_Source,
     }
 
     if (Type == EAttributeType::Position)
+    {
       _TargetPrimitive.VerticesCount = static_cast<uint32_t>(Accessor.count);
+      _TargetPrimitive.MinValues     = Accessor.minValues.empty() ? glm::vec3(0.0f) : glm::vec3(glm::make_vec3(Accessor.minValues.data()));
+      _TargetPrimitive.MaxValues     = Accessor.maxValues.empty() ? glm::vec3(0.0f) : glm::vec3(glm::make_vec3(Accessor.maxValues.data()));
+    }
 
     TAttribute &Attribute   = _TargetPrimitive.Attributes[Type];
     Attribute.ComponentType = ToAttributeComponentType(Accessor.componentType);

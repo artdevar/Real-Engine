@@ -5,7 +5,7 @@
 #include "EditorWindow.h"
 #include "ecs/EntityType.h"
 #include <ecs/Core.h>
-#include <common/UnorderedVector.h>
+#include <common/containers/UnorderedVector.h>
 #include <imgui/imgui.h>
 #include <optional>
 
@@ -31,10 +31,7 @@ public:
     return m_Size;
   }
 
-  const std::optional<ecs::TEntity> &GetSelectedEntity() const
-  {
-    return m_SelectedEntity;
-  }
+  const std::optional<ecs::TEntity> &GetSelectedEntity() const;
 
 private:
   void SpawnEntity(ecs::TEntityType _Type);
@@ -42,6 +39,9 @@ private:
 
   void DisplaySpawnPopup();
   void DisplayEntitiesList();
+
+  void SelectEntity(ecs::TEntity _Entity);
+  void DeselectEntity();
 
 private:
   IWorldEditor               &m_WorldEditor;

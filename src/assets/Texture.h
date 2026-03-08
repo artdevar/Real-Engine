@@ -3,7 +3,7 @@
 #include <glad/glad.h>
 #include "interfaces/GeneratableTexture.h"
 #include "interfaces/TextureAsset.h"
-#include <common/StaticArray.h>
+#include <common/containers/StaticArray.h>
 
 class CTextureBase : public ITextureAsset,
                      public IGeneratableTexture

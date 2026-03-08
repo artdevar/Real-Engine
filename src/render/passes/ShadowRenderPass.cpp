@@ -9,9 +9,9 @@
 
 const std::string CShadowRenderPass::SHADOW_MAP_NAME = "SHADOW_PASS_DEPTH_MAP";
 
-CShadowRenderPass::CShadowRenderPass(std::shared_ptr<CShader> _Shader) :
+CShadowRenderPass::CShadowRenderPass() :
     m_ShadowMapSize(CConfig::Instance().GetShadowMapSize()),
-    m_Shader(std::move(_Shader)),
+    m_Shader(resource::LoadShader("Depth")),
     m_DepthMap(CreateDepthMap(TVector2i(m_ShadowMapSize, m_ShadowMapSize))),
     m_DepthMapFBO()
 {
@@ -75,7 +75,7 @@ void CShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_Rende
 
 bool CShadowRenderPass::Accepts(const TRenderCommand &_Command) const
 {
-  return _Command.Material.SkyboxTexture == CCubemap::INVALID_VALUE && _Command.Material.BaseColorTexture != CTexture::INVALID_VALUE;
+  return _Command.RenderFlags.test(ERenderFlags_CastShadow);
 }
 
 bool CShadowRenderPass::IsAvailable() const

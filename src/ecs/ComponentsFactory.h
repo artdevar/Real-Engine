@@ -65,8 +65,21 @@ public:
     return TransformComponent;
   }
 
+  template <typename Component>
+  requires(std::is_same_v<Component, TCollisionComponent>)
+  [[nodiscard]] static Component Create(const std::shared_ptr<CModel> &_Model)
+  {
+    assert(_Model != nullptr);
+
+    TCollisionComponent CollisionComponent;
+    CreateCollisionComponent(_Model, CollisionComponent);
+
+    return CollisionComponent;
+  }
+
 private:
   static void CreateModelComponent(const std::shared_ptr<CModel> &_Model, TModelComponent &_Component);
+  static void CreateCollisionComponent(const std::shared_ptr<CModel> &_Model, TCollisionComponent &_Component);
   static void CreateSkyboxComponent(const std::shared_ptr<CTextureBase> &_Skybox, TSkyboxComponent &_Component);
 };
 

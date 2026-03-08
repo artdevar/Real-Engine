@@ -70,6 +70,22 @@ public:
       event::Notify(TEventType::Config_GammaChanged, _Gamma);
     }
   }
+  void SetWireframeEnabled(bool _Enabled)
+  {
+    if (IsWireframeEnabled != _Enabled)
+    {
+      IsWireframeEnabled = _Enabled;
+      event::Notify(TEventType::Config_WireframeEnabledChanged, _Enabled);
+    }
+  }
+  void SetWireframeColor(const TColor &_Color)
+  {
+    if (WireframeColor != _Color)
+    {
+      WireframeColor = _Color;
+      event::Notify(TEventType::Config_WireframeColorChanged, _Color);
+    }
+  }
 
   void SetCameraZNear(float _ZNear)
   {
@@ -162,6 +178,14 @@ public:
   {
     return Gamma;
   }
+  bool GetWireframeEnabled() const
+  {
+    return IsWireframeEnabled;
+  }
+  TColor GetWireframeColor() const
+  {
+    return WireframeColor;
+  }
 
   float GetCameraZNear() const
   {
@@ -209,16 +233,22 @@ public:
   {
     return GetAssetsDir() / "textures";
   }
+  bool IsEditorEnabled() const
+  {
+    return static_cast<bool>(DEV_STAGE);
+  }
 
 private:
   // Render
-  int   ShadowMapSize            = 4096;
-  bool  AreShadowsEnabled        = true;
-  bool  IsFXAAEnabled            = true;
-  bool  IsHDREnabled             = false;
-  float HDRExposure              = 1.0f;
-  bool  IsGammaCorrectionEnabled = false;
-  float Gamma                    = 2.2f;
+  int    ShadowMapSize            = 4096;
+  bool   AreShadowsEnabled        = true;
+  bool   IsFXAAEnabled            = true;
+  bool   IsHDREnabled             = false;
+  float  HDRExposure              = 1.0f;
+  bool   IsGammaCorrectionEnabled = false;
+  float  Gamma                    = 2.2f;
+  bool   IsWireframeEnabled       = true;
+  TColor WireframeColor           = TColor(1.0f, 1.0f, 0.0f, 1.0f);
 
   // Camera parameters
   float Camera_ZNear = 0.1f;

@@ -2,9 +2,9 @@
 
 #include "interfaces/InputHandler.h"
 #include "interfaces/Updateable.h"
-#include "interfaces/Sharable.h"
 #include "interfaces/EventsListener.h"
 #include "interfaces/Shutdownable.h"
+#include <common/Sharable.h>
 
 class CCamera final : public IUpdateable,
                       public IInputHandler,

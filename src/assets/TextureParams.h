@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/StaticArray.h>
+#include <common/containers/StaticArray.h>
 #include <cstdint>
 #include <optional>
 

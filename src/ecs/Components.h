@@ -3,6 +3,7 @@
 #include "render/Buffer.h"
 #include "render/ShaderTypes.h"
 #include "render/RenderTypes.h"
+#include "physics/Collision.h"
 #include <common/Common.h>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
@@ -92,5 +93,12 @@ struct TSkyboxComponent
 };
 
 /////////////////////////////////////////////////////////////////
+
+struct TCollisionComponent
+{
+  TAABB      BoundingBox;
+  TSharedVAO VAO;
+  TSharedVBO VBO;
+};
 
 } // namespace ecs

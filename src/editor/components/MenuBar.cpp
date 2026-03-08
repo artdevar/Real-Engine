@@ -1,6 +1,7 @@
 #if DEV_STAGE
 
 #include "MenuBar.h"
+#include "utils/Event.h"
 #include <imgui/imgui.h>
 
 namespace editor
@@ -27,7 +28,7 @@ void CMenuBar::Render()
       ImGui::Separator();
       if (ImGui::MenuItem("Exit"))
       {
-        // TODO: Implement exit
+        event::Notify(TEventType::Editor_RequestAppClose);
       }
       ImGui::EndMenu();
     }

@@ -5,9 +5,10 @@
 #include "render/RenderTarget.h"
 #include "render/ShaderTypes.h"
 #include "assets/Texture.h"
+#include "utils/Resource.h"
 
-CSkyboxRenderPass::CSkyboxRenderPass(std::shared_ptr<CShader> _Shader) :
-    m_Shader(std::move(_Shader))
+CSkyboxRenderPass::CSkyboxRenderPass() :
+    m_Shader(resource::LoadShader("Skybox"))
 {
 }
 
@@ -49,7 +50,7 @@ void CSkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_Rende
 
 bool CSkyboxRenderPass::Accepts(const TRenderCommand &_Command) const
 {
-  return _Command.Material.SkyboxTexture != CCubemap::INVALID_VALUE;
+  return _Command.RenderFlags.test(ERenderFlags_Skybox);
 }
 
 bool CSkyboxRenderPass::IsAvailable() const

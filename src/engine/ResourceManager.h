@@ -3,7 +3,7 @@
 #include "assets/TextureParams.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/EventsListener.h"
-#include "interfaces/Sharable.h"
+#include <common/Sharable.h>
 
 class CModel;
 class CShader;

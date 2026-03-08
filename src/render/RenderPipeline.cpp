@@ -10,6 +10,7 @@
 #include "passes/ShadowRenderPass.h"
 #include "passes/PostProcessRenderPass.h"
 #include "passes/OutputRenderPass.h"
+#include "passes/CollisionRenderPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -20,8 +21,6 @@
 #include "utils/Resource.h"
 #include "utils/Logger.h"
 #include <glm/gtx/norm.hpp>
-
-const std::string CRenderPipeline::RENDER_TEXTURE_NAME = "PIPELINE_SCENE_RENDER_TEXTURE";
 
 CRenderPipeline::CRenderPipeline() :
     m_Lighting({}),
@@ -45,18 +44,25 @@ void CRenderPipeline::Shutdown()
 
 void CRenderPipeline::Init()
 {
+  const bool EditorEnabled  = CConfig::Instance().IsEditorEnabled();
   const bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
+
   if (ShadowsEnabled)
-    m_ShadowPasses.push_back(CShadowRenderPass::Create(resource::LoadShader("Depth")));
+    m_ShadowPasses.push_back(CShadowRenderPass::Create());
 
-  m_GeometryPasses.push_back(COpaqueRenderPass::Create(resource::LoadShader("PBR")));
-  m_GeometryPasses.push_back(CSkyboxRenderPass::Create(resource::LoadShader("Skybox")));
-  m_GeometryPasses.push_back(CTransparentRenderPass::Create(resource::LoadShader("PBR")));
-  m_PostProcessPasses.push_back(CPostProcessRenderPass::Create(resource::LoadShader("PostProcess")));
-  m_OutputPasses.push_back(COutputRenderPass::Create(resource::LoadShader("Output")));
+  if (EditorEnabled)
+    m_DebugPasses.push_back(CCollisionRenderPass::Create());
 
-  m_SceneTarget       = CreateRenderTarget(RENDER_TEXTURE_NAME + "0", CEngine::Instance().GetViewportSize());
-  m_PostProcessTarget = CreateRenderTarget(RENDER_TEXTURE_NAME + "1", CEngine::Instance().GetViewportSize());
+  if (!EditorEnabled)
+    m_OutputPasses.push_back(COutputRenderPass::Create());
+
+  m_GeometryPasses.push_back(COpaqueRenderPass::Create());
+  m_GeometryPasses.push_back(CSkyboxRenderPass::Create());
+  m_GeometryPasses.push_back(CTransparentRenderPass::Create());
+  m_PostProcessPasses.push_back(CPostProcessRenderPass::Create());
+
+  m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), CEngine::Instance().GetViewportSize());
+  m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), CEngine::Instance().GetViewportSize());
 
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
@@ -65,6 +71,7 @@ void CRenderPipeline::Init()
 
   event::Subscribe(TEventType::ViewportResized, GetWeakPtr());
   event::Subscribe(TEventType::Config_ShadowsEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_WireframeEnabledChanged, GetWeakPtr());
 }
 
 void CRenderPipeline::OnEvent(const TEvent &_Event)
@@ -77,17 +84,29 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
     const bool NeedToDisableShadows = !_Event.GetValue<bool>() && ShadowsEnabled;
 
     if (NeedToEnableShadows)
-      m_ShadowPasses.push_back(CShadowRenderPass::Create(resource::LoadShader("Depth")));
+      m_ShadowPasses.push_back(CShadowRenderPass::Create());
     else if (NeedToDisableShadows)
       m_ShadowPasses.clear();
+
+    break;
+  }
+  case TEventType::Config_WireframeEnabledChanged: {
+    const bool WireframeEnabled       = !m_DebugPasses.empty();
+    const bool NeedToEnableWireframe  = _Event.GetValue<bool>() && !WireframeEnabled;
+    const bool NeedToDisableWireframe = !_Event.GetValue<bool>() && WireframeEnabled;
+
+    if (NeedToEnableWireframe)
+      m_DebugPasses.push_back(CCollisionRenderPass::Create());
+    else if (NeedToDisableWireframe)
+      m_DebugPasses.clear();
 
     break;
   }
   case TEventType::ViewportResized: {
     const TVector2i NewSize = _Event.GetValue<TVector2i>();
 
-    m_SceneTarget       = CreateRenderTarget(RENDER_TEXTURE_NAME + "0", NewSize);
-    m_PostProcessTarget = CreateRenderTarget(RENDER_TEXTURE_NAME + "1", NewSize);
+    m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), NewSize);
+    m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), NewSize);
     break;
   }
   }
@@ -107,7 +126,8 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
     ShadowPass(_Renderer, RenderContext, Commands);
     GeometryPass(_Renderer, RenderContext, Commands);
     PostProcessPass(_Renderer, RenderContext, Commands);
-    //OutputPass(_Renderer, RenderContext, Commands); // To render without editor. Untested
+    DebugPass(_Renderer, RenderContext, Commands);
+    OutputPass(_Renderer, RenderContext, Commands);
   }
 
   EndFrame(_Renderer);
@@ -153,6 +173,16 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
   _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
 }
 
+void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
+
+  for (const std::shared_ptr<IRenderPass> &RenderPass : m_DebugPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+}
+
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
@@ -166,8 +196,7 @@ void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_Ren
 void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   // glEnable(GL_FRAMEBUFFER_SRGB); verify if needed
-
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+  //_RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_OutputPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -305,6 +334,14 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
   return resource::RecreateTexture(_Name, TextureParams);
+}
+
+std::string CRenderPipeline::GetRenderTextureName()
+{
+  constexpr std::string_view RENDER_TEXTURE_NAME = "PIPELINE_SCENE_RENDER_TEXTURE_";
+
+  static uint32_t Counter = 0;
+  return std::format("{}{}", RENDER_TEXTURE_NAME, Counter++);
 }
 
 uint32_t CRenderPipeline::GetRenderTextureID() const

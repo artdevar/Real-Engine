@@ -49,11 +49,13 @@ struct TMaterial
 
 struct TAttribute
 {
-  std::vector<uint8_t>    Data;
-  EAttributeComponentType ComponentType;
-  int                     ByteStride;
-  int                     Type;
-  bool                    IsNormalized = false;
+  std::vector<uint8_t>     Data;
+  EAttributeComponentType  ComponentType;
+  int                      ByteStride;
+  int                      Type;
+  bool                     IsNormalized = false;
+  std::optional<glm::vec3> Min;
+  std::optional<glm::vec3> Max;
 };
 
 struct TPrimitive
@@ -63,8 +65,10 @@ struct TPrimitive
   EPrimitiveMode                       Mode          = EPrimitiveMode::Triangles;
   EIndexType                           IndicesType   = EIndexType::Absent;
   uint32_t                             IndicesCount  = 0;
-  int                                  MaterialIndex = -1;
+  int32_t                              MaterialIndex = -1;
   uint32_t                             VerticesCount = 0;
+  std::optional<glm::vec3>             MinValues;
+  std::optional<glm::vec3>             MaxValues;
 };
 
 struct TMesh

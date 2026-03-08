@@ -2,7 +2,7 @@
 
 #include "ComponentDataWindow.h"
 
-#include <common/UnorderedVector.h>
+#include <common/containers/UnorderedVector.h>
 #include "../renderer/ComponentRenderer.h"
 #include "interfaces/WorldEditor.h"
 #include <ecs/ComponentView.h>
@@ -37,7 +37,7 @@ void CComponentDataWindow::Render(const std::optional<ecs::TEntity> &_SelectedEn
     }
 
     const ImVec2 Available = ImGui::GetContentRegionAvail();
-    m_Size                 = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
+    m_Size                 = TVector2i(Available.x, Available.y);
   }
 
   ImGui::End();

@@ -13,8 +13,10 @@ namespace ecs
 void CModelRenderSystem::Collect(CRenderQueue &_Queue)
 {
   constexpr auto GetTextureID = [](const TModelComponent::TTexture &_Texture) -> uint32_t {
-    return _Texture.Texture ? _Texture.Texture->ID() : 0;
+    return _Texture.Texture ? _Texture.Texture->ID() : CTexture::INVALID_VALUE;
   };
+
+  constexpr ERenderFlags AlphaFlag[] = {ERenderFlags_Opaque, ERenderFlags_Transparent};
 
   for (ecs::TEntity Entity : m_Entities)
   {
@@ -23,6 +25,11 @@ void CModelRenderSystem::Collect(CRenderQueue &_Queue)
     {
       TTransformComponent            &TransformComponent = m_Coordinator->GetComponent<TTransformComponent>(Entity);
       TModelComponent::TMaterialData &Material           = ModelComponent.Materials[Primitive.MaterialIndex];
+
+      TRenderFlags RenderFlags;
+      RenderFlags.set(ERenderFlags_CastShadow);
+      RenderFlags.set(ERenderFlags_ReceiveShadow);
+      RenderFlags.set(AlphaFlag[Material.AlphaMode == EAlphaMode::Blend]);
 
       TRenderCommand Command{
           .Material =
@@ -49,6 +56,7 @@ void CModelRenderSystem::Collect(CRenderQueue &_Queue)
           .IndicesCount  = Primitive.IndicesCount,
           .IndexType     = Primitive.Type,
           .PrimitiveMode = Primitive.Mode,
+          .RenderFlags   = std::move(RenderFlags),
       };
 
       _Queue.Push(std::move(Command));

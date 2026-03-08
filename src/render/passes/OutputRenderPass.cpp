@@ -7,6 +7,7 @@
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Engine.h"
+#include "utils/Resource.h"
 
 static constexpr float FULLSCREEN_QUAD_VERTICES[] = {
     // positions        // texcoords
@@ -20,8 +21,8 @@ static constexpr float FULLSCREEN_QUAD_VERTICES[] = {
     1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
 };
 
-COutputRenderPass::COutputRenderPass(std::shared_ptr<CShader> _Shader) :
-    m_Shader(std::move(_Shader)),
+COutputRenderPass::COutputRenderPass() :
+    m_Shader(resource::LoadShader("Output")),
     m_VAO(),
     m_VBO(GL_STATIC_DRAW)
 {

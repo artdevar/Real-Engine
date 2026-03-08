@@ -10,6 +10,7 @@
 #include "interfaces/WorldEditor.h"
 #include "engine/Config.h"
 #include "utils/Logger.h"
+#include "utils/Event.h"
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -43,6 +44,22 @@ CEditorUI::CEditorUI(IWorldEditor &_WorldEditor) :
 
 CEditorUI::~CEditorUI() = default;
 
+void CEditorUI::OnEvent(const TEvent &_Event)
+{
+  switch (_Event.Type)
+  {
+  case TEventType::Editor_RequestAppClose:
+    // save data if needed
+    event::Notify(TEventType::RequestAppShutdown);
+    break;
+  }
+}
+
+void CEditorUI::SubscribeToEvents()
+{
+  event::Subscribe(TEventType::Editor_RequestAppClose, GetWeakPtr());
+}
+
 TVector2i CEditorUI::GetViewportSize() const
 {
   return m_ViewportWindow->GetSize();
@@ -62,6 +79,8 @@ void CEditorUI::Init(GLFWwindow *_Window)
   ImGui_ImplGlfw_InitForOpenGL(_Window, true);
   ImGui_ImplOpenGL3_Init("#version 460");
   ImGui::StyleColorsDark();
+
+  SubscribeToEvents();
 }
 
 void CEditorUI::Shutdown()

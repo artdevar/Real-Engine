@@ -1,10 +1,10 @@
 #pragma once
 
-#include "interfaces/Renderer.h"
 #include "render/RenderCommand.h"
+#include "interfaces/Renderer.h"
 #include "interfaces/RenderPass.h"
-#include "interfaces/Sharable.h"
 #include "interfaces/EventsListener.h"
+#include <common/Sharable.h>
 #include <vector>
 
 class CTextureBase;
@@ -16,15 +16,15 @@ class CShadowRenderPass : public CSharable<CShadowRenderPass>,
 {
 public:
   template <typename... Args>
-  static SharedPtr Create(Args &&..._Args)
+  static TSharedPtr Create(Args &&..._Args)
   {
-    SharedPtr Instance = CSharable::Create(std::forward<Args>(_Args)...);
+    TSharedPtr Instance = CSharable::Create(std::forward<Args>(_Args)...);
     Instance->SubscribeToEvents();
     return Instance;
   }
 
 public:
-  explicit CShadowRenderPass(std::shared_ptr<CShader> _Shader);
+  explicit CShadowRenderPass();
   ~CShadowRenderPass();
 
   bool Accepts(const TRenderCommand &_Command) const override;

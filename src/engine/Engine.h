@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Defines.h"
-#include <common/MathTypes.h>
 #include "interfaces/Renderer.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
+#include "interfaces/EventsListener.h"
+#include <common/Sharable.h>
+#include <common/MathTypes.h>
 #include <common/Common.h>
 #include <cstdint>
 #include <memory>
@@ -26,18 +27,19 @@ namespace editor
 class CEditorUI;
 }
 
-class CEngine final : public IShutdownable,
+class CEngine final : public CSharable<CEngine>,
+                      public IEventsListener,
+                      public IShutdownable,
                       private IUpdateable
 {
   DISABLE_CLASS_COPY(CEngine);
-
-protected:
-  CEngine();
-
-  ~CEngine();
+  using CSharable<CEngine>::Create;
 
 public:
   static CEngine &Instance();
+
+  CEngine();
+  ~CEngine();
 
   void Shutdown();
 
@@ -61,11 +63,16 @@ public:
   int GetFPS() const;
   float GetApplicationRunningTime() const;
 
-private:
-  void SetFrameTime(float _Time);
+  void OnEvent(const TEvent &_Event) override;
 
+private:
   void Render(IRenderer &_Renderer);
   void Update(float _TimeDelta) override;
+
+  void SetFrameTime(float _Time);
+
+  void SubscribeToEvents();
+  void SubscribeToCallbacks();
 
   void OnWindowResized(int _Width, int _Height);
   void ProcessInput(float _TimeDelta);
@@ -74,7 +81,7 @@ private:
   void DispatchMouseMove(float _X, float _Y);
 
 private:
-  static CEngine *Singleton;
+  static TSharedPtr Singleton;
 
 #if DEV_STAGE
   bool m_CameraDragActive{false};
@@ -82,6 +89,7 @@ private:
 
 private:
   float m_FrameTime;
+  bool  m_RequestShutdown;
 
   std::unique_ptr<CDisplay>         m_Display;
   std::shared_ptr<CInputManager>    m_InputManager;
@@ -92,6 +100,6 @@ private:
   std::shared_ptr<IRenderPipeline>  m_RenderPipeline;
 
 #if DEV_STAGE
-  std::unique_ptr<editor::CEditorUI> m_EditorUI;
+  std::shared_ptr<editor::CEditorUI> m_EditorUI;
 #endif
 };

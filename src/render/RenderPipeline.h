@@ -2,11 +2,11 @@
 
 #include "interfaces/RenderPass.h"
 #include "interfaces/RenderPipeline.h"
-#include "interfaces/Sharable.h"
 #include "interfaces/EventsListener.h"
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
 #include "render/Buffer.h"
+#include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <cstdint>
 #include <vector>
@@ -48,6 +48,7 @@ private:
 
   void ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
+  void DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
 
@@ -58,6 +59,7 @@ private:
   std::unique_ptr<TRenderTarget> CreateRenderTarget(const std::string &_Name, TVector2i _Size);
 
 private:
+  static std::string GetRenderTextureName();
   static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
   static std::span<TRenderCommand> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass, std::vector<TRenderCommand> &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
@@ -67,10 +69,9 @@ private:
                            std::vector<TRenderCommand>        &_Commands);
 
 private:
-  static const std::string RENDER_TEXTURE_NAME;
-
   std::vector<std::shared_ptr<IRenderPass>> m_ShadowPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_GeometryPasses;
+  std::vector<std::shared_ptr<IRenderPass>> m_DebugPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_PostProcessPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_OutputPasses;
 

@@ -3,7 +3,7 @@
 #include "Events.h"
 #include "interfaces/Updateable.h"
 #include "interfaces/Shutdownable.h"
-#include <common/UnorderedVector.h>
+#include <common/containers/UnorderedVector.h>
 #include <map>
 
 class IEventsListener;
@@ -13,6 +13,8 @@ class CEventsManager final : public IUpdateable,
                              public IShutdownable
 {
 public:
+  CEventsManager();
+
   void Shutdown() override;
 
   void Update(float _TimeDelta) override;
@@ -28,4 +30,5 @@ private:
 
   std::unordered_map<TEventType, ListenersContainer> m_Listeners;
   CUnorderedVector<TEvent>                           m_PendingEvents;
+  bool                                               m_IsUpdateFunctionRunning;
 };

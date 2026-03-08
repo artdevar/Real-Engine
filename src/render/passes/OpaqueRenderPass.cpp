@@ -4,9 +4,10 @@
 #include "render/RenderTarget.h"
 #include "interfaces/Renderer.h"
 #include "assets/Texture.h"
+#include "utils/Resource.h"
 
-COpaqueRenderPass::COpaqueRenderPass(std::shared_ptr<CShader> _Shader) :
-    m_Shader(std::move(_Shader))
+COpaqueRenderPass::COpaqueRenderPass() :
+    m_Shader(resource::LoadShader("PBR"))
 {
 }
 
@@ -72,7 +73,7 @@ void COpaqueRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_Rende
 
 bool COpaqueRenderPass::Accepts(const TRenderCommand &_Command) const
 {
-  return _Command.Material.SkyboxTexture == CCubemap::INVALID_VALUE && _Command.Material.AlphaMode != EAlphaMode::Blend;
+  return _Command.RenderFlags.test(ERenderFlags_Opaque);
 }
 
 bool COpaqueRenderPass::IsAvailable() const

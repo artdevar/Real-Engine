@@ -66,14 +66,6 @@ enum class EAlphaMode : uint8_t
   Blend
 };
 
-struct TColor
-{
-  float R;
-  float G;
-  float B;
-  float A;
-};
-
 enum class ELightType : uint8_t
 {
   Directional,

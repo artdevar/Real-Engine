@@ -3,6 +3,11 @@
 #include "Event.h"
 #include <memory>
 
+CEventsManager::CEventsManager() :
+    m_IsUpdateFunctionRunning(false)
+{
+}
+
 void CEventsManager::Shutdown()
 {
   m_Listeners.clear();
@@ -11,10 +16,13 @@ void CEventsManager::Shutdown()
 
 void CEventsManager::Update(float _TimeDelta)
 {
+  m_IsUpdateFunctionRunning = true;
+
   if (m_PendingEvents.Empty())
     return;
 
-  for (const TEvent &Event : m_PendingEvents)
+  CUnorderedVector<TEvent> EventsToProcess = std::move(m_PendingEvents);
+  for (TEvent Event : EventsToProcess)
   {
     auto ItListeners = m_Listeners.find(Event.Type);
     if (ItListeners == m_Listeners.end())
@@ -34,7 +42,7 @@ void CEventsManager::Update(float _TimeDelta)
     }
   }
 
-  m_PendingEvents.Clear();
+  m_IsUpdateFunctionRunning = false;
 }
 
 void CEventsManager::Subscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener)

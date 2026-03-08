@@ -19,6 +19,9 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
   ecs::TEntity Entity          = m_Entities[0];
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
+  TRenderFlags RenderFlags;
+  RenderFlags.set(ERenderFlags_Skybox);
+
   TRenderCommand Command{
       .Material      = TMaterialD{.SkyboxTexture = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE},
       .VAO           = *SkyboxComponent.VAO,
@@ -26,6 +29,7 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
       .IndicesCount  = SkyboxComponent.VerticesCount,
       .IndexType     = EIndexType::Absent,
       .PrimitiveMode = EPrimitiveMode::Triangles,
+      .RenderFlags   = std::move(RenderFlags),
   };
 
   _Queue.Push(std::move(Command));

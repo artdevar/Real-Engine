@@ -4,9 +4,9 @@
 #include "interfaces/FrameDataCollector.h"
 #include "interfaces/Shutdownable.h"
 #include "interfaces/Updateable.h"
-#include "interfaces/Sharable.h"
 #include "interfaces/WorldEditor.h"
-#include <common/Common.h>
+#include "interfaces/EventsListener.h"
+#include <common/Sharable.h>
 
 class CEngine;
 
@@ -20,6 +20,7 @@ class CWorld : public IWorldEditor,
                public IRenderCollector,
                public IFrameDataCollector,
                public IShutdownable,
+               public IEventsListener,
                public CSharable<CWorld>
 {
   DISABLE_CLASS_COPY(CWorld);
@@ -31,6 +32,8 @@ public:
 
   void Init();
   void Shutdown() override;
+
+  void OnEvent(const TEvent &_Event) override;
 
   void Update(float _TimeDelta) override;
 
@@ -46,6 +49,7 @@ public:
 
 protected:
   void InitECS();
+  void SubscribeToEvents();
 
 public:
   std::unique_ptr<ecs::CCoordinator> m_EntitiesCoordinator;

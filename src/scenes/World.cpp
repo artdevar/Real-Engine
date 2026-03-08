@@ -6,6 +6,7 @@
 #include "ecs/systems/PhysicsSystem.h"
 #include "ecs/systems/SkyboxRenderSystem.h"
 #include "ecs/systems/ModelRenderSystem.h"
+#include "ecs/systems/CollisionRenderSystem.h"
 #include "engine/Engine.h"
 #include "assets/Shader.h"
 #include "render/RenderQueue.h"
@@ -23,11 +24,25 @@ CWorld::~CWorld() = default;
 void CWorld::Init()
 {
   InitECS();
+  SubscribeToEvents();
 }
 
 void CWorld::Shutdown()
 {
   m_EntitiesCoordinator.reset();
+}
+
+void CWorld::OnEvent(const TEvent &_Event)
+{
+  switch (_Event.Type)
+  {
+  case TEventType::Editor_EntitySelected:
+    m_EntitiesCoordinator->GetSystem<ecs::CCollisionRenderSystem>()->OnEntitySelected(_Event.GetValue<ecs::TEntity>());
+    break;
+  case TEventType::Editor_EntityDeselected:
+    m_EntitiesCoordinator->GetSystem<ecs::CCollisionRenderSystem>()->OnEntityDeselected(_Event.GetValue<ecs::TEntity>());
+    break;
+  }
 }
 
 void CWorld::Update(float _TimeDelta)
@@ -44,6 +59,7 @@ void CWorld::Collect(CRenderQueue &_Queue)
 {
   m_EntitiesCoordinator->GetSystem<ecs::CModelRenderSystem>()->Collect(_Queue);
   m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(_Queue);
+  m_EntitiesCoordinator->GetSystem<ecs::CCollisionRenderSystem>()->Collect(_Queue);
 }
 
 std::string CWorld::GetEntityName(ecs::TEntity _Entity) const
@@ -88,11 +104,13 @@ void CWorld::InitECS()
   m_EntitiesCoordinator->RegisterComponent<ecs::TLightComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TSkyboxComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TNameComponent>();
+  m_EntitiesCoordinator->RegisterComponent<ecs::TCollisionComponent>();
 
   m_EntitiesCoordinator->RegisterSystem<ecs::CLightingSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CModelRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CSkyboxRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CPhysicsSystem>();
+  m_EntitiesCoordinator->RegisterSystem<ecs::CCollisionRenderSystem>();
 
   {
     ecs::TSignature LightingSystemSignature;
@@ -106,6 +124,7 @@ void CWorld::InitECS()
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TModelComponent>());
     ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
+    ModelRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TCollisionComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CModelRenderSystem>(ModelRenderSystemSignature);
   }
 
@@ -122,4 +141,17 @@ void CWorld::InitECS()
     PhysicsSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
     m_EntitiesCoordinator->SetSystemSignature<ecs::CPhysicsSystem>(PhysicsSystemSignature);
   }
+
+  {
+    ecs::TSignature CollisionRenderSystemSignature;
+    CollisionRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TTransformComponent>());
+    CollisionRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TCollisionComponent>());
+    m_EntitiesCoordinator->SetSystemSignature<ecs::CCollisionRenderSystem>(CollisionRenderSystemSignature);
+  }
+}
+
+void CWorld::SubscribeToEvents()
+{
+  event::Subscribe(TEventType::Editor_EntitySelected, GetWeakPtr());
+  event::Subscribe(TEventType::Editor_EntityDeselected, GetWeakPtr());
 }

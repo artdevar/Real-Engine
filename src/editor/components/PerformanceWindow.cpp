@@ -40,7 +40,7 @@ void CPerformanceWindow::Render()
   if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
   {
     const ImVec2    Available = ImGui::GetContentRegionAvail();
-    const TVector2i NewSize   = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
+    const TVector2i NewSize   = TVector2i(Available.x, Available.y);
 
     m_Size = NewSize;
 

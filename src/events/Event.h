@@ -6,7 +6,7 @@
 
 struct TEvent
 {
-  using TEventData = std::variant<std::monostate, bool, int, float, TVector2i, TVector2f>;
+  using TEventData = std::variant<std::monostate, bool, int, unsigned int, float, TVector2i, TVector2f, TColor>;
 
   TEventData Value;
   TEventType Type;

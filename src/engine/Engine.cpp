@@ -17,11 +17,13 @@
 #include <glm/glm.hpp>
 #include <string>
 
-CEngine *CEngine::Singleton = nullptr;
+CEngine::TSharedPtr CEngine::Singleton = nullptr;
 
 CEngine::CEngine() :
-    m_FrameTime(0.0f)
+    m_FrameTime(0.0f),
+    m_RequestShutdown(false)
 {
+  assert(Singleton == nullptr && "CEngine instance already exists!");
 }
 
 CEngine::~CEngine() = default;
@@ -29,7 +31,7 @@ CEngine::~CEngine() = default;
 CEngine &CEngine::Instance()
 {
   if (!Singleton)
-    Singleton = new CEngine;
+    Singleton = CEngine::Create();
 
   return *Singleton;
 }
@@ -61,8 +63,7 @@ void CEngine::Shutdown()
   m_Display->Shutdown();
   m_Display.reset();
 
-  delete Singleton;
-  Singleton = nullptr;
+  Singleton.reset();
 }
 
 int CEngine::Init()
@@ -71,10 +72,10 @@ int CEngine::Init()
   m_InputManager    = std::make_shared<CInputManager>();
   m_EventsManager   = std::make_shared<CEventsManager>();
   m_Camera          = CCamera::Create();
-  m_World           = std::make_shared<CWorld>();
-  m_ResourceManager = std::make_shared<CResourceManager>();
+  m_World           = CWorld::Create();
+  m_ResourceManager = CResourceManager::Create();
 #if DEV_STAGE
-  m_EditorUI = std::make_unique<editor::CEditorUI>(*m_World);
+  m_EditorUI = editor::CEditorUI::Create(*m_World);
 #endif
 
   const std::string GameTitle       = CConfig::Instance().GetAppTitle();
@@ -82,27 +83,8 @@ int CEngine::Init()
   if (DisplayInitCode != EXIT_SUCCESS)
     return DisplayInitCode;
 
-  m_Display->SetResizeCallback([this](int w, int h) {
-    OnWindowResized(w, h);
-  });
-
-  m_Display->SetMouseButtonCallback([this](int b, int a, int m) {
-    m_InputManager->OnMouseButton(b, a, m);
-    DispatchMouseButton(b, a, m);
-  });
-  m_Display->SetMouseScrollCallback([this](float x, float y) {
-    m_InputManager->OnMouseScroll(x, y);
-  });
-
-  m_Display->SetMouseMoveCallback([this](float x, float y) {
-    m_InputManager->OnMouseMove(x, y);
-    DispatchMouseMove(x, y);
-  });
-
-  m_Display->SetKeyCallback([this](int k, int a, int m) {
-    m_InputManager->OnKeyEvent(k, a, m);
-    DispatchKeyInput(k, a, m);
-  });
+  SubscribeToCallbacks();
+  SubscribeToEvents();
 
 #if DEV_STAGE
   m_Display->SetCursorMode(GLFW_CURSOR_NORMAL);
@@ -133,7 +115,7 @@ int CEngine::Run()
   Renderer->SetCamera(m_Camera);
 
   double LastFrameTime = 0.0;
-  while (!m_Display->ShouldClose())
+  while (!m_RequestShutdown && !m_Display->ShouldClose())
   {
     const double CurrentFrameTime = glfwGetTime();
     const float  FrameDelta       = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
@@ -249,6 +231,46 @@ std::shared_ptr<CInputManager> CEngine::GetInputManager() const
 std::shared_ptr<CEventsManager> CEngine::GetEventsManager() const
 {
   return m_EventsManager;
+}
+
+void CEngine::OnEvent(const TEvent &_Event)
+{
+  switch (_Event.Type)
+  {
+  case TEventType::RequestAppShutdown:
+    m_RequestShutdown = true;
+    break;
+  }
+}
+
+void CEngine::SubscribeToEvents()
+{
+  event::Subscribe(TEventType::RequestAppShutdown, GetWeakPtr());
+}
+
+void CEngine::SubscribeToCallbacks()
+{
+  m_Display->SetResizeCallback([this](int w, int h) {
+    OnWindowResized(w, h);
+  });
+
+  m_Display->SetMouseButtonCallback([this](int b, int a, int m) {
+    m_InputManager->OnMouseButton(b, a, m);
+    DispatchMouseButton(b, a, m);
+  });
+  m_Display->SetMouseScrollCallback([this](float x, float y) {
+    m_InputManager->OnMouseScroll(x, y);
+  });
+
+  m_Display->SetMouseMoveCallback([this](float x, float y) {
+    m_InputManager->OnMouseMove(x, y);
+    DispatchMouseMove(x, y);
+  });
+
+  m_Display->SetKeyCallback([this](int k, int a, int m) {
+    m_InputManager->OnKeyEvent(k, a, m);
+    DispatchKeyInput(k, a, m);
+  });
 }
 
 // Callbacks

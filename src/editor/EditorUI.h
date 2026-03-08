@@ -2,6 +2,8 @@
 
 #if DEV_STAGE
 #include "interfaces/Shutdownable.h"
+#include "interfaces/EventsListener.h"
+#include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <memory>
 
@@ -19,13 +21,16 @@ class CComponentRenderer;
 class CViewportWindow;
 class CPerformanceWindow;
 
-class CEditorUI : public IShutdownable
+class CEditorUI : public CSharable<CEditorUI>,
+                  public IEventsListener,
+                  public IShutdownable
 {
 public:
   CEditorUI(IWorldEditor &_WorldEditor);
   ~CEditorUI();
 
   void Shutdown() override;
+  void OnEvent(const TEvent &_Event) override;
 
   void Init(GLFWwindow *_Window);
 
@@ -36,6 +41,8 @@ public:
 private:
   void RenderBegin();
   void RenderEnd();
+
+  void SubscribeToEvents();
 
 private:
   IWorldEditor &m_WorldEditor;

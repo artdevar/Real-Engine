@@ -5,9 +5,10 @@
 #include "render/RenderTarget.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
+#include "utils/Resource.h"
 
-CTransparentRenderPass::CTransparentRenderPass(std::shared_ptr<CShader> _Shader) :
-    m_Shader(std::move(_Shader))
+CTransparentRenderPass::CTransparentRenderPass() :
+    m_Shader(resource::LoadShader("PBR"))
 {
 }
 
@@ -73,7 +74,7 @@ void CTransparentRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_
 
 bool CTransparentRenderPass::Accepts(const TRenderCommand &_Command) const
 {
-  return _Command.Material.AlphaMode == EAlphaMode::Blend;
+  return _Command.RenderFlags.test(ERenderFlags_Transparent);
 }
 
 bool CTransparentRenderPass::IsAvailable() const

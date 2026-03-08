@@ -1,9 +1,11 @@
 #if DEV_STAGE
+#include "pch.h"
 
 #include "EntitiesWindow.h"
 
-#include "../platform/SysUtils.h"
+#include "editor/platform/SysUtils.h"
 #include "utils/Resource.h"
+#include "utils/Event.h"
 #include "ecs/Components.h"
 #include "ecs/ComponentsFactory.h"
 #include <ecs/EntityType.h>
@@ -35,14 +37,19 @@ void CEntitiesWindow::Render()
 {
   if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
   {
+    const ImVec2 Available = ImGui::GetContentRegionAvail();
+    m_Size                 = TVector2i(Available.x, Available.y);
+
     DisplaySpawnPopup();
     DisplayEntitiesList();
-
-    const ImVec2 Available = ImGui::GetContentRegionAvail();
-    m_Size                 = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
   }
 
   ImGui::End();
+}
+
+const std::optional<ecs::TEntity> &CEntitiesWindow::GetSelectedEntity() const
+{
+  return m_SelectedEntity;
 }
 
 void CEntitiesWindow::DisplaySpawnPopup()
@@ -58,13 +65,13 @@ void CEntitiesWindow::DisplaySpawnPopup()
   {
     ImGui::SameLine();
     if (ImGui::Button("Dublicate##DupEntity"))
-      m_SelectedEntity = m_WorldEditor.CloneEntity(m_SelectedEntity.value());
+      SelectEntity(m_WorldEditor.CloneEntity(m_SelectedEntity.value()));
 
     ImGui::SameLine();
     if (ImGui::Button("Delete##DelEntity"))
     {
       m_WorldEditor.DestroyEntity(m_SelectedEntity.value());
-      m_SelectedEntity.reset();
+      DeselectEntity();
     }
   }
 
@@ -125,9 +132,7 @@ void CEntitiesWindow::DisplayEntitiesList()
 
       const bool IsSelected = (CurrentEntityIndex == n);
       if (ImGui::Selectable(m_WorldEditor.GetEntityName(Entities[n]).c_str(), IsSelected))
-      {
-        m_SelectedEntity = Entities[n];
-      }
+        SelectEntity(Entities[n]);
 
       if (IsSelected)
         ImGui::SetItemDefaultFocus();
@@ -156,11 +161,15 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
 
     auto &&TransformComponent = ecs::CComponentsFactory::Create<ecs::TTransformComponent>(glm::mat4x4(1.0f));
     auto &&ModelComponent     = ecs::CComponentsFactory::Create<ecs::TModelComponent>(Model);
+    auto &&CollisionComponent = ecs::CComponentsFactory::Create<ecs::TCollisionComponent>(Model);
     auto &&NameComponent      = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Mesh");
 
     ecs::CEntitySpawner Builder = m_WorldEditor.CreateEntitySpawner();
-    Builder.AddComponent(std::move(TransformComponent)).AddComponent(std::move(ModelComponent)).AddComponent(std::move(NameComponent));
-    m_SelectedEntity = Builder.Spawn();
+    Builder.AddComponent(std::move(TransformComponent))
+        .AddComponent(std::move(ModelComponent))
+        .AddComponent(std::move(CollisionComponent))
+        .AddComponent(std::move(NameComponent));
+    SelectEntity(Builder.Spawn());
 
     break;
   }
@@ -176,7 +185,7 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
 
     auto &&SkyboxComponent = ecs::CComponentsFactory::Create<ecs::TSkyboxComponent>(Cubemap);
     auto &&NameComponent   = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Skybox");
-    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(SkyboxComponent)).AddComponent(std::move(NameComponent)).Spawn();
+    SelectEntity(m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(SkyboxComponent)).AddComponent(std::move(NameComponent)).Spawn());
 
     break;
   }
@@ -184,7 +193,7 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
   case ecs::TEntityType::PointLight: {
     auto &&LightComponent = ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Point);
     auto &&NameComponent  = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Point light");
-    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn();
+    SelectEntity(m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn());
 
     break;
   }
@@ -192,7 +201,7 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
   case ecs::TEntityType::DirectionalLight: {
     auto &&LightComponent = ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Directional);
     auto &&NameComponent  = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Directional light");
-    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn();
+    SelectEntity(m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn());
 
     break;
   }
@@ -200,7 +209,7 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
   case ecs::TEntityType::Spotlight: {
     auto &&LightComponent = ecs::CComponentsFactory::Create<ecs::TLightComponent>(ELightType::Spotlight);
     auto &&NameComponent  = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Spotlight");
-    m_SelectedEntity = m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn();
+    SelectEntity(m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(LightComponent)).AddComponent(std::move(NameComponent)).Spawn());
 
     break;
   }
@@ -223,6 +232,23 @@ int CEntitiesWindow::GetSelectedEntityIndex(const CUnorderedVector<ecs::TEntity>
   }
 
   return -1;
+}
+
+void CEntitiesWindow::SelectEntity(ecs::TEntity _Entity)
+{
+  DeselectEntity();
+
+  m_SelectedEntity.emplace(_Entity);
+  event::Notify(TEventType::Editor_EntitySelected, m_SelectedEntity.value());
+}
+
+void CEntitiesWindow::DeselectEntity()
+{
+  if (m_SelectedEntity.has_value())
+  {
+    event::Notify(TEventType::Editor_EntityDeselected, m_SelectedEntity.value());
+    m_SelectedEntity.reset();
+  }
 }
 
 } // namespace editor

@@ -4,6 +4,40 @@
 #include "MathCore.h"
 #include <type_traits>
 
+struct TColor
+{
+  constexpr TColor() noexcept :
+      R{},
+      G{},
+      B{},
+      A{}
+  {
+  }
+
+  constexpr TColor(float _R, float _G, float _B, float _A) noexcept :
+      R(_R),
+      G(_G),
+      B(_B),
+      A(_A)
+  {
+  }
+
+  constexpr bool operator==(const TColor &Other) const noexcept
+  {
+    return math::AreEqual(R, Other.R) && math::AreEqual(G, Other.G) && math::AreEqual(B, Other.B) && math::AreEqual(A, Other.A);
+  }
+
+  constexpr bool operator!=(const TColor &Other) const noexcept
+  {
+    return !(*this == Other);
+  }
+
+  float R;
+  float G;
+  float B;
+  float A;
+};
+
 template <typename T>
 requires std::is_arithmetic_v<T>
 struct TVector2
@@ -19,6 +53,13 @@ struct TVector2
   constexpr TVector2(U x, U y) noexcept :
       X(static_cast<T>(x)),
       Y(static_cast<T>(y))
+  {
+  }
+
+  template <typename U>
+  constexpr explicit TVector2(const TVector2<U> &_Other) noexcept :
+      X(static_cast<T>(_Other.X)),
+      Y(static_cast<T>(_Other.Y))
   {
   }
 
@@ -71,6 +112,14 @@ struct TVector3
   {
   }
 
+  template <typename U>
+  constexpr explicit TVector3(const TVector3<U> &_Other) noexcept :
+      X(static_cast<T>(_Other.X)),
+      Y(static_cast<T>(_Other.Y)),
+      Z(static_cast<T>(_Other.Z))
+  {
+  }
+
   constexpr inline TVector3 operator/(float _Scalar) const noexcept
   {
     return TVector3<T>(static_cast<T>(X / _Scalar), static_cast<T>(Y / _Scalar), static_cast<T>(Z / _Scalar));
@@ -115,12 +164,11 @@ struct TVector4
   }
 
   template <typename U>
-  requires std::is_convertible_v<U, T>
-  constexpr TVector4(U x, U y, U z, U w) noexcept :
-      X(static_cast<T>(x)),
-      Y(static_cast<T>(y)),
-      Z(static_cast<T>(z)),
-      W(static_cast<T>(w))
+  constexpr explicit TVector4(const TVector4<U> &_Other) noexcept :
+      X(static_cast<T>(_Other.X)),
+      Y(static_cast<T>(_Other.Y)),
+      Z(static_cast<T>(_Other.Z)),
+      W(static_cast<T>(_Other.W))
   {
   }
 

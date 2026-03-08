@@ -2,8 +2,8 @@
 
 #include "interfaces/RenderPass.h"
 #include "interfaces/EventsListener.h"
-#include "interfaces/Sharable.h"
 #include "render/Buffer.h"
+#include <common/Sharable.h>
 
 class CShader;
 
@@ -13,15 +13,15 @@ class CPostProcessRenderPass : public CSharable<CPostProcessRenderPass>,
 {
 public:
   template <typename... Args>
-  static SharedPtr Create(Args &&..._Args)
+  static TSharedPtr Create(Args &&..._Args)
   {
-    SharedPtr Instance = CSharable::Create(std::forward<Args>(_Args)...);
+    TSharedPtr Instance = CSharable::Create(std::forward<Args>(_Args)...);
     Instance->SubscribeToEvents();
     return Instance;
   }
 
 public:
-  explicit CPostProcessRenderPass(std::shared_ptr<CShader> _Shader);
+  explicit CPostProcessRenderPass();
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
   void Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;

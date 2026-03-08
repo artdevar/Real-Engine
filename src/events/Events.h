@@ -3,6 +3,7 @@
 enum class TEventType
 {
   WindowResized = 0,
+  RequestAppShutdown,
   ViewportResized,
   EntityRemoved,
 
@@ -16,8 +17,14 @@ enum class TEventType
   Config_HDRExposureChanged,
   Config_GammaCorrectionEnabledChanged,
   Config_GammaChanged,
+  Config_WireframeEnabledChanged,
+  Config_WireframeColorChanged,
   Config_LightSpaceMatrixZNearChanged,
   Config_LightSpaceMatrixZFarChanged,
   Config_LightSpaceMatrixOrthLeftBotChanged,
   Config_LightSpaceMatrixOrthRightTopChanged,
+
+  Editor_RequestAppClose = 2000,
+  Editor_EntitySelected,
+  Editor_EntityDeselected
 };

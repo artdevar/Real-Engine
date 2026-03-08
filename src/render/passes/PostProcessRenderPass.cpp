@@ -7,6 +7,7 @@
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Config.h"
+#include "utils/Resource.h"
 
 static constexpr float QUAD_VERTICES[] = {
     // positions        // texcoords
@@ -20,8 +21,8 @@ static constexpr float QUAD_VERTICES[] = {
     1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
 };
 
-CPostProcessRenderPass::CPostProcessRenderPass(std::shared_ptr<CShader> _Shader) :
-    m_Shader(std::move(_Shader)),
+CPostProcessRenderPass::CPostProcessRenderPass() :
+    m_Shader(resource::LoadShader("PostProcess")),
     m_VAO(),
     m_VBO(GL_STATIC_DRAW),
     m_IsFxaaEnabled(CConfig::Instance().GetFXAAEnabled()),
