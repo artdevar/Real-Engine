@@ -2,8 +2,8 @@
 
 #include "Core.h"
 #include <common/Common.h>
-#include <common/StaticArray.h>
-#include <common/UnorderedVector.h>
+#include <common/containers/StaticArray.h>
+#include <common/containers/UnorderedVector.h>
 
 namespace ecs
 {

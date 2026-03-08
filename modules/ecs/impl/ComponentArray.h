@@ -2,7 +2,7 @@
 
 #include "IComponentArray.h"
 #include "Utils.h"
-#include <common/StaticArray.h>
+#include <common/containers/StaticArray.h>
 #include <cassert>
 #include <unordered_map>
 
