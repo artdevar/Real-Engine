@@ -67,7 +67,7 @@ void CPostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_
 
 bool CPostProcessRenderPass::Accepts(const TRenderCommand &_Command) const
 {
-  return true;
+  return !_Command.RenderFlags.test(ERenderFlags_Wireframe);
 }
 
 bool CPostProcessRenderPass::IsAvailable() const

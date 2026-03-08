@@ -163,6 +163,15 @@ public:
     glReadBuffer(GL_NONE);
   }
 
+  static void Blit(GLuint _ReadBufferID, GLuint _DrawBufferID, GLsizei _Width, GLsizei _Height, GLbitfield _Mask, GLenum _Filter)
+  {
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, _ReadBufferID);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _DrawBufferID);
+    glBlitFramebuffer(0, 0, _Width, _Height, 0, 0, _Width, _Height, _Mask, _Filter);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, INVALID_BUFFER);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, INVALID_BUFFER);
+  }
+
 protected:
   void GenerateBuffer()
   {

@@ -10,6 +10,7 @@ struct TRenderContext
 {
   TRenderTarget &SceneRenderTarget;
   TRenderTarget &PostProcessRenderTarget;
+  TRenderTarget *FinalRenderTarget;
 
   glm::vec3 CameraPosition;
   glm::mat4 ProjectionMatrix;

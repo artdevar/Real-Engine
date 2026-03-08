@@ -95,7 +95,7 @@ int CEngine::Init()
   m_ResourceManager->Init();
 
   m_RenderPipeline = CRenderPipeline::Create();
-  m_RenderPipeline->Init();
+  m_RenderPipeline->Init(GetViewportSize());
 
   m_Camera->Init();
   m_World->Init();

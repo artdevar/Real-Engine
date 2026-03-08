@@ -35,7 +35,7 @@ enum EAttributeComponentType : uint8_t
 enum class EPrimitiveMode : uint8_t
 {
   Points,
-  Line,
+  Lines,
   LineLoop,
   LineStrip,
   Triangles,

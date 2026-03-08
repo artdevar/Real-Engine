@@ -70,6 +70,14 @@ public:
       event::Notify(TEventType::Config_GammaChanged, _Gamma);
     }
   }
+  void SetGridEnabled(bool _Enabled)
+  {
+    if (IsGridEnabled != _Enabled)
+    {
+      IsGridEnabled = _Enabled;
+      event::Notify(TEventType::Config_GridEnabledChanged, _Enabled);
+    }
+  }
   void SetWireframeEnabled(bool _Enabled)
   {
     if (IsWireframeEnabled != _Enabled)
@@ -178,6 +186,10 @@ public:
   {
     return Gamma;
   }
+  bool GetGridEnabled() const
+  {
+    return IsGridEnabled;
+  }
   bool GetWireframeEnabled() const
   {
     return IsWireframeEnabled;
@@ -217,38 +229,41 @@ public:
     return LightSpaceMatrix_OrthRightTop;
   }
 
-  std::filesystem::path GetShadersDir() const
+  constexpr std::filesystem::path GetShadersDir() const
   {
     return SHADERS_DIR;
   }
-  std::filesystem::path GetAssetsDir() const
+  constexpr std::filesystem::path GetAssetsDir() const
   {
     return ASSETS_DIR;
   }
-  std::filesystem::path GetFontsDir() const
+  constexpr std::filesystem::path GetFontsDir() const
   {
     return GetAssetsDir() / "fonts";
   }
-  std::filesystem::path GetTexturesDir() const
+  constexpr std::filesystem::path GetTexturesDir() const
   {
     return GetAssetsDir() / "textures";
   }
-  bool IsEditorEnabled() const
+  constexpr bool IsEditorEnabled() const
   {
     return static_cast<bool>(DEV_STAGE);
   }
 
 private:
   // Render
-  int    ShadowMapSize            = 4096;
-  bool   AreShadowsEnabled        = true;
-  bool   IsFXAAEnabled            = true;
-  bool   IsHDREnabled             = false;
-  float  HDRExposure              = 1.0f;
-  bool   IsGammaCorrectionEnabled = false;
-  float  Gamma                    = 2.2f;
-  bool   IsWireframeEnabled       = true;
-  TColor WireframeColor           = TColor(1.0f, 1.0f, 0.0f, 0.8f);
+  int   ShadowMapSize            = 4096;
+  bool  AreShadowsEnabled        = true;
+  bool  IsFXAAEnabled            = true;
+  bool  IsHDREnabled             = false;
+  float HDRExposure              = 1.0f;
+  bool  IsGammaCorrectionEnabled = false;
+  float Gamma                    = 2.2f;
+
+  // Debug
+  bool   IsGridEnabled      = true;
+  bool   IsWireframeEnabled = true;
+  TColor WireframeColor     = TColor(1.0f, 1.0f, 0.0f, 0.8f);
 
   // Camera parameters
   float Camera_ZNear = 0.1f;

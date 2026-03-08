@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cstdint>
 #include "Shutdownable.h"
+#include <common/MathTypes.h>
+#include <cstdint>
 
 class IRenderer;
 class CRenderQueue;
@@ -12,7 +13,7 @@ class IRenderPipeline : public IShutdownable
 public:
   virtual ~IRenderPipeline() = default;
 
-  virtual void Init()                                                                    = 0;
+  virtual void Init(TVector2i _Viewport)                                                 = 0;
   virtual void Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer) = 0;
 
   virtual uint32_t GetDrawCallsCount() const  = 0;

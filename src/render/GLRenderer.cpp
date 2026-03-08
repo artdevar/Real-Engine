@@ -14,7 +14,7 @@ GLenum ConvertPrimitiveMode(EPrimitiveMode _Mode)
   {
   case EPrimitiveMode::Points:
     return GL_POINTS;
-  case EPrimitiveMode::Line:
+  case EPrimitiveMode::Lines:
     return GL_LINES;
   case EPrimitiveMode::LineLoop:
     return GL_LINE_LOOP;

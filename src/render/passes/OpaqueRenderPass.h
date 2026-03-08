@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
 #include <common/Sharable.h>
 
@@ -10,6 +11,11 @@ class COpaqueRenderPass : public CSharable<COpaqueRenderPass>,
 {
 public:
   explicit COpaqueRenderPass();
+
+  ERenderPassType GetType() const override
+  {
+    return ERenderPassType::Opaque;
+  }
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
   void Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;

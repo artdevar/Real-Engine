@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
 #include "interfaces/EventsListener.h"
 #include "render/Buffer.h"
@@ -23,6 +24,11 @@ public:
 
 public:
   explicit CCollisionRenderPass();
+
+  ERenderPassType GetType() const override
+  {
+    return ERenderPassType::Collision;
+  }
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;
   void Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;

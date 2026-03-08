@@ -27,7 +27,7 @@ namespace editor
 
 std::string CPerformanceWindow::GetName() const
 {
-  return "Performance";
+  return "Overview";
 }
 
 TVector2i CPerformanceWindow::GetSize() const

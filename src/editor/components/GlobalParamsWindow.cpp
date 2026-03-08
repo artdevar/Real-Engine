@@ -47,11 +47,18 @@ void CGlobalParamsWindow::Render()
       float Gamma = CConfig::Instance().GetGamma();
       if (ImGui::DragFloat("Gamma", &Gamma, 0.1f, 0.01f, 10.0f))
         CConfig::Instance().SetGamma(Gamma);
+    }
+
+    if (ImGui::CollapsingHeader("Debug"))
+    {
+      bool GridEnabled = CConfig::Instance().GetGridEnabled();
+      if (ImGui::Checkbox("Draw grid", &GridEnabled))
+        CConfig::Instance().SetGridEnabled(GridEnabled);
 
       ImGui::Separator();
 
       bool WireframeEnabled = CConfig::Instance().GetWireframeEnabled();
-      if (ImGui::Checkbox("Wireframe enabled", &WireframeEnabled))
+      if (ImGui::Checkbox("Draw wireframe", &WireframeEnabled))
         CConfig::Instance().SetWireframeEnabled(WireframeEnabled);
 
       TColor WireframeColor       = CConfig::Instance().GetWireframeColor();

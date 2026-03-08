@@ -82,7 +82,7 @@ EPrimitiveMode ToPrimitiveRenderMode(int _Mode)
   case TINYGLTF_MODE_POINTS:
     return EPrimitiveMode::Points;
   case TINYGLTF_MODE_LINE:
-    return EPrimitiveMode::Line;
+    return EPrimitiveMode::Lines;
   case TINYGLTF_MODE_LINE_LOOP:
     return EPrimitiveMode::LineLoop;
   case TINYGLTF_MODE_LINE_STRIP:

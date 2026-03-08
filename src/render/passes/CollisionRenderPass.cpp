@@ -53,7 +53,6 @@ CCollisionRenderPass::CCollisionRenderPass() :
   m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
 
   m_VAO.Unbind();
-  m_VBO.Unbind();
 }
 
 void CCollisionRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
@@ -72,7 +71,7 @@ void CCollisionRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Render
     _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command.ModelMatrix);
     _Renderer.SetUniform("u_Color", m_WireframeColor);
 
-    _Renderer.DrawArrays(EPrimitiveMode::Line, ARRAY_SIZE(WIREFRAME_VERTICES));
+    _Renderer.DrawArrays(EPrimitiveMode::Lines, ARRAY_SIZE(WIREFRAME_VERTICES));
   }
 
   m_VAO.Unbind();

@@ -41,5 +41,5 @@ private:
   static std::filesystem::path GetDefaultTexturePath(ETextureType _TextureType);
 
 private:
-  std::map<std::string, std::shared_ptr<IAsset>, std::less<>> m_Assets;
+  std::map<std::string, std::shared_ptr<IAsset>> m_Assets;
 };

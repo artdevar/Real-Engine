@@ -10,11 +10,6 @@
 #include "assets/TinyGLTFParseStrategy.h"
 #include "utils/Logger.h"
 
-static inline bool operator<(const std::string &_L, const std::filesystem::path &_R)
-{
-  return _L < _R.c_str();
-}
-
 static bool IsFormatSupported(const std::filesystem::path &_Path)
 {
   const std::string Format = _Path.extension().string();

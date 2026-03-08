@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RenderPassTypes.h"
 #include "render/RenderCommand.h"
 #include "interfaces/Renderer.h"
 #include "interfaces/RenderPass.h"
@@ -26,6 +27,11 @@ public:
 public:
   explicit CShadowRenderPass();
   ~CShadowRenderPass();
+
+  ERenderPassType GetType() const override
+  {
+    return ERenderPassType::Shadow;
+  }
 
   bool Accepts(const TRenderCommand &_Command) const override;
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands) override;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
 #include "render/RenderContext.h"
 #include "render/Buffer.h"
@@ -12,6 +13,11 @@ class CSkyboxRenderPass : public CSharable<CSkyboxRenderPass>,
 {
 public:
   explicit CSkyboxRenderPass();
+
+  ERenderPassType GetType() const override
+  {
+    return ERenderPassType::Skybox;
+  }
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_FrameContext, std::span<TRenderCommand> _Commands) override;
   void Execute(IRenderer &_Renderer, TRenderContext &_FrameContext, std::span<TRenderCommand> _Commands) override;

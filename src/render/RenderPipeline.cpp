@@ -11,6 +11,7 @@
 #include "passes/PostProcessRenderPass.h"
 #include "passes/OutputRenderPass.h"
 #include "passes/CollisionRenderPass.h"
+#include "passes/GridRenderPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -42,27 +43,35 @@ void CRenderPipeline::Shutdown()
   m_PostProcessTarget.reset();
 }
 
-void CRenderPipeline::Init()
+void CRenderPipeline::Init(TVector2i _Viewport)
 {
-  const bool EditorEnabled  = CConfig::Instance().IsEditorEnabled();
-  const bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
+  const bool EditorEnabled    = CConfig::Instance().IsEditorEnabled();
+  const bool ShadowsEnabled   = CConfig::Instance().GetShadowsEnabled();
+  const bool GridEnabled      = CConfig::Instance().GetGridEnabled();
+  const bool WireframeEnabled = CConfig::Instance().GetWireframeEnabled();
 
   if (ShadowsEnabled)
     m_ShadowPasses.push_back(CShadowRenderPass::Create());
 
   if (EditorEnabled)
-    m_DebugPasses.push_back(CCollisionRenderPass::Create());
+  {
+    if (WireframeEnabled)
+      m_DebugPasses.push_back(CCollisionRenderPass::Create());
 
-  if (!EditorEnabled)
-    m_OutputPasses.push_back(COutputRenderPass::Create());
+    if (GridEnabled)
+      m_DebugPasses.push_back(CGridRenderPass::Create());
+  }
 
   m_GeometryPasses.push_back(COpaqueRenderPass::Create());
   m_GeometryPasses.push_back(CSkyboxRenderPass::Create());
   m_GeometryPasses.push_back(CTransparentRenderPass::Create());
   m_PostProcessPasses.push_back(CPostProcessRenderPass::Create());
+  m_OutputPasses.push_back(COutputRenderPass::Create());
 
-  m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), CEngine::Instance().GetViewportSize());
-  m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), CEngine::Instance().GetViewportSize());
+  m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), _Viewport);
+  m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), _Viewport);
+  if (EditorEnabled)
+    m_FinalTarget = CreateRenderTarget(GetRenderTextureName(), _Viewport);
 
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
@@ -71,6 +80,7 @@ void CRenderPipeline::Init()
 
   event::Subscribe(TEventType::ViewportResized, GetWeakPtr());
   event::Subscribe(TEventType::Config_ShadowsEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_GridEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_WireframeEnabledChanged, GetWeakPtr());
 }
 
@@ -79,34 +89,49 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
   switch (_Event.Type)
   {
   case TEventType::Config_ShadowsEnabledChanged: {
-    const bool ShadowsEnabled       = !m_ShadowPasses.empty();
+    const bool ShadowsEnabled       = DoesRenderPassExists(ERenderPassType::Shadow, m_ShadowPasses);
     const bool NeedToEnableShadows  = _Event.GetValue<bool>() && !ShadowsEnabled;
     const bool NeedToDisableShadows = !_Event.GetValue<bool>() && ShadowsEnabled;
 
     if (NeedToEnableShadows)
       m_ShadowPasses.push_back(CShadowRenderPass::Create());
     else if (NeedToDisableShadows)
-      m_ShadowPasses.clear();
+      RemoveRenderPass(ERenderPassType::Shadow, m_ShadowPasses);
+
+    break;
+  }
+  case TEventType::Config_GridEnabledChanged: {
+    const bool GridEnabled       = DoesRenderPassExists(ERenderPassType::Grid, m_DebugPasses);
+    const bool NeedToEnableGrid  = _Event.GetValue<bool>() && !GridEnabled;
+    const bool NeedToDisableGrid = !_Event.GetValue<bool>() && GridEnabled;
+
+    if (NeedToEnableGrid)
+      m_DebugPasses.push_back(CGridRenderPass::Create());
+    else if (NeedToDisableGrid)
+      RemoveRenderPass(ERenderPassType::Grid, m_DebugPasses);
 
     break;
   }
   case TEventType::Config_WireframeEnabledChanged: {
-    const bool WireframeEnabled       = !m_DebugPasses.empty();
+    const bool WireframeEnabled       = DoesRenderPassExists(ERenderPassType::Collision, m_DebugPasses);
     const bool NeedToEnableWireframe  = _Event.GetValue<bool>() && !WireframeEnabled;
     const bool NeedToDisableWireframe = !_Event.GetValue<bool>() && WireframeEnabled;
 
     if (NeedToEnableWireframe)
       m_DebugPasses.push_back(CCollisionRenderPass::Create());
     else if (NeedToDisableWireframe)
-      m_DebugPasses.clear();
+      RemoveRenderPass(ERenderPassType::Collision, m_DebugPasses);
 
     break;
   }
   case TEventType::ViewportResized: {
-    const TVector2i NewSize = _Event.GetValue<TVector2i>();
+    const TVector2i NewViewport = _Event.GetValue<TVector2i>();
 
-    m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), NewSize);
-    m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), NewSize);
+    m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), NewViewport);
+    m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), NewViewport);
+    if (m_FinalTarget)
+      m_FinalTarget = CreateRenderTarget(GetRenderTextureName(), NewViewport);
+
     break;
   }
   }
@@ -116,19 +141,19 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
 {
   BeginFrame(_Renderer);
 
-  if (std::vector<TRenderCommand> Commands = _Queue.StealCommands(); !Commands.empty())
-  {
-    SetLightingData(FrameData.Lights);
+  SetLightingData(FrameData.Lights);
 
-    TRenderContext RenderContext = CreateRenderContext(_Renderer);
-    SortCommands(Commands, RenderContext);
+  std::vector<TRenderCommand> Commands      = _Queue.StealCommands();
+  TRenderContext              RenderContext = CreateRenderContext(_Renderer);
 
-    ShadowPass(_Renderer, RenderContext, Commands);
-    GeometryPass(_Renderer, RenderContext, Commands);
-    PostProcessPass(_Renderer, RenderContext, Commands);
-    DebugPass(_Renderer, RenderContext, Commands);
-    OutputPass(_Renderer, RenderContext, Commands);
-  }
+  SortCommands(Commands, RenderContext);
+
+  ShadowPass(_Renderer, RenderContext, Commands);
+  GeometryPass(_Renderer, RenderContext, Commands);
+  PostProcessPass(_Renderer, RenderContext, Commands);
+
+  DebugPass(_Renderer, RenderContext, Commands);
+  OutputPass(_Renderer, RenderContext, Commands);
 
   EndFrame(_Renderer);
 }
@@ -138,7 +163,7 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
   _Renderer.OnFrameBegin();
   _Renderer.SetViewport(CEngine::Instance().GetViewportSize());
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
-  _Renderer.ClearColor({0.86f, 0.86f, 0.86f, 1.0f});
+  _Renderer.ClearColor({0.2f, 0.2f, 0.2f, 1.0f});
 }
 
 void CRenderPipeline::EndFrame(IRenderer &_Renderer)
@@ -173,16 +198,6 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
   _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
 }
 
-void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
-{
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
-
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_DebugPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
-
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
-}
-
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
@@ -193,13 +208,38 @@ void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_Ren
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 }
 
+void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  if (m_DebugPasses.empty())
+    return;
+
+  CFrameBuffer::Blit(_RenderContext.SceneRenderTarget.FrameBuffer.ID(),       //
+                     _RenderContext.PostProcessRenderTarget.FrameBuffer.ID(), //
+                     _RenderContext.SceneRenderTarget.Size.X,                 //
+                     _RenderContext.SceneRenderTarget.Size.Y,                 //
+                     GL_DEPTH_BUFFER_BIT,                                     //
+                     GL_NEAREST);
+
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
+
+  for (const std::shared_ptr<IRenderPass> &RenderPass : m_DebugPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+
+  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+}
+
 void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  // glEnable(GL_FRAMEBUFFER_SRGB); verify if needed
-  //_RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+  if (_RenderContext.FinalRenderTarget)
+    _RenderContext.FinalRenderTarget->FrameBuffer.Bind();
+  else
+    _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_OutputPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+
+  if (_RenderContext.FinalRenderTarget)
+    _RenderContext.FinalRenderTarget->FrameBuffer.Unbind();
 }
 
 void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
@@ -212,8 +252,6 @@ void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPa
     return;
 
   std::span<TRenderCommand> CommandsSpan = FilterCommands(_RenderPass, _Commands);
-  if (CommandsSpan.empty())
-    return;
 
   _RenderPass->PreExecute(_Renderer, _RenderContext, CommandsSpan);
   _RenderPass->Execute(_Renderer, _RenderContext, CommandsSpan);
@@ -294,6 +332,7 @@ TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
   return TRenderContext{
       .SceneRenderTarget       = *m_SceneTarget,
       .PostProcessRenderTarget = *m_PostProcessTarget,
+      .FinalRenderTarget       = m_FinalTarget.get(),
       .CameraPosition          = Camera->GetPosition(),
       .ProjectionMatrix        = Camera->GetProjection(),
       .ViewMatrix              = Camera->GetView(),
@@ -346,7 +385,7 @@ std::string CRenderPipeline::GetRenderTextureName()
 
 uint32_t CRenderPipeline::GetRenderTextureID() const
 {
-  return m_PostProcessTarget ? m_PostProcessTarget->Color->ID() : 0;
+  return m_FinalTarget ? m_FinalTarget->Color->ID() : 0;
 }
 
 uint32_t CRenderPipeline::GetDrawCallsCount() const
@@ -377,4 +416,21 @@ uint32_t CRenderPipeline::GetLinesCount() const
 uint32_t CRenderPipeline::GetPointsCount() const
 {
   return m_LastFramePoints;
+}
+
+bool CRenderPipeline::DoesRenderPassExists(ERenderPassType Type, const std::vector<std::shared_ptr<IRenderPass>> &_Container)
+{
+  return std::any_of(_Container.begin(), _Container.end(), [Type](const std::shared_ptr<IRenderPass> &RenderPass) {
+    return RenderPass->GetType() == Type;
+  });
+}
+
+void CRenderPipeline::RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container)
+{
+  auto It = std::remove_if(_Container.begin(), _Container.end(), [Type](const std::shared_ptr<IRenderPass> &RenderPass) {
+    return RenderPass->GetType() == Type;
+  });
+
+  if (It != _Container.end())
+    _Container.erase(It, _Container.end());
 }

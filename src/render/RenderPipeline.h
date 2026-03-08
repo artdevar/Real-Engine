@@ -1,23 +1,26 @@
 #pragma once
 
-#include "interfaces/RenderPass.h"
 #include "interfaces/RenderPipeline.h"
 #include "interfaces/EventsListener.h"
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
 #include "render/Buffer.h"
+#include "passes/RenderPassTypes.h"
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <span>
 
-class CRenderQueue;
 class IRenderer;
+class IRenderPass;
+class CRenderQueue;
 class CTextureBase;
 struct TRenderContext;
 struct TRenderTarget;
 struct TFrameData;
+struct TRenderCommand;
 
 class CRenderPipeline final : public CSharable<CRenderPipeline>,
                               public IEventsListener,
@@ -31,7 +34,7 @@ public:
 
   void OnEvent(const TEvent &_Event) override;
 
-  void Init() override;
+  void Init(TVector2i _Viewport) override;
   void Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer) override;
 
   uint32_t GetDrawCallsCount() const override;
@@ -68,6 +71,9 @@ private:
                            TRenderContext                     &_RenderContext,
                            std::vector<TRenderCommand>        &_Commands);
 
+  static bool DoesRenderPassExists(ERenderPassType Type, const std::vector<std::shared_ptr<IRenderPass>> &_Container);
+  static void RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container);
+
 private:
   std::vector<std::shared_ptr<IRenderPass>> m_ShadowPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_GeometryPasses;
@@ -77,6 +83,7 @@ private:
 
   std::unique_ptr<TRenderTarget> m_SceneTarget;
   std::unique_ptr<TRenderTarget> m_PostProcessTarget;
+  std::unique_ptr<TRenderTarget> m_FinalTarget;
 
   TShaderLighting m_Lighting;
   CUniformBuffer  m_LightingUBO;

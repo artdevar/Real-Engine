@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
 #include "render/RenderContext.h"
 #include <common/Sharable.h>
@@ -11,6 +12,11 @@ class CTransparentRenderPass : public CSharable<CTransparentRenderPass>,
 {
 public:
   explicit CTransparentRenderPass();
+
+  ERenderPassType GetType() const override
+  {
+    return ERenderPassType::Transparent;
+  }
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_FrameContext, std::span<TRenderCommand> _Commands) override;
   void Execute(IRenderer &_Renderer, TRenderContext &_FrameContext, std::span<TRenderCommand> _Commands) override;
