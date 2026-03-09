@@ -139,7 +139,7 @@ void CEditorUI::RenderBegin()
 
     ImGuiID LeftNodeID     = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Left, 0.2f, nullptr, &DockSpaceID);
     ImGuiID SceneNodeID    = ImGui::DockBuilderSplitNode(LeftNodeID, ImGuiDir_Up, 0.5f, nullptr, &LeftNodeID);
-    ImGuiID RightNodeID    = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Right, 0.2f, nullptr, &DockSpaceID);
+    ImGuiID RightNodeID    = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Right, 0.25f, nullptr, &DockSpaceID);
     ImGuiID RightTopNodeID = ImGui::DockBuilderSplitNode(RightNodeID, ImGuiDir_Up, 0.5f, nullptr, &RightNodeID);
 
     ImGui::DockBuilderDockWindow(m_EntitiesWindow->GetName().c_str(), SceneNodeID);

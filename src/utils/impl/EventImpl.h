@@ -1,6 +1,6 @@
 #pragma once
 
-#include <events/Event.h>
+#include <events/Core.h>
 
 namespace event
 {
