@@ -11,6 +11,8 @@ class CCoordinator;
 class CSystem
 {
 public:
+  virtual ~CSystem() = default;
+
   virtual void Init(CCoordinator *_Coordinator)
   {
     m_Coordinator = _Coordinator;
