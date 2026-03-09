@@ -229,23 +229,23 @@ public:
     return LightSpaceMatrix_OrthRightTop;
   }
 
-  constexpr std::filesystem::path GetShadersDir() const
+  std::filesystem::path GetShadersDir() const
   {
     return SHADERS_DIR;
   }
-  constexpr std::filesystem::path GetAssetsDir() const
+  std::filesystem::path GetAssetsDir() const
   {
     return ASSETS_DIR;
   }
-  constexpr std::filesystem::path GetFontsDir() const
+  std::filesystem::path GetFontsDir() const
   {
     return GetAssetsDir() / "fonts";
   }
-  constexpr std::filesystem::path GetTexturesDir() const
+  std::filesystem::path GetTexturesDir() const
   {
     return GetAssetsDir() / "textures";
   }
-  constexpr bool IsEditorEnabled() const
+  bool IsEditorEnabled() const
   {
     return static_cast<bool>(DEV_STAGE);
   }

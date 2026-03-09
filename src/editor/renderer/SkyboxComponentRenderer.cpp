@@ -15,7 +15,7 @@ ecs::TTypeID TSkyboxComponentRenderer::GetComponentTypeID() noexcept
 void TSkyboxComponentRenderer::Render(void *Data) noexcept
 {
   auto *Component = static_cast<ecs::TSkyboxComponent *>(Data);
-  ImGui::Text("Path: %s", Component->SkyboxTexture ? Component->SkyboxTexture->GetPath().c_str() : "Not loaded");
+  ImGui::Text("Path: %s", Component->SkyboxTexture ? Component->SkyboxTexture->GetPath().string().c_str() : "Not loaded");
 }
 
 } // namespace editor

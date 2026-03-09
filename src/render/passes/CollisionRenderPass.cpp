@@ -9,36 +9,36 @@
 #include "utils/Event.h"
 #include <common/GlmUtils.h>
 
-static constexpr glm::vec3 WIREFRAME_VERTICES[] = {
+static constexpr float WIREFRAME_VERTICES[] = {
     // Bottom square
-    {-0.5f, -0.5f, -0.5f},
-    {0.5f, -0.5f, -0.5f},
-    {0.5f, -0.5f, -0.5f},
-    {0.5f, -0.5f, 0.5f},
-    {0.5f, -0.5f, 0.5f},
-    {-0.5f, -0.5f, 0.5f},
-    {-0.5f, -0.5f, 0.5f},
-    {-0.5f, -0.5f, -0.5f},
+    -0.5f, -0.5f, -0.5f, //
+    0.5f, -0.5f, -0.5f,  //
+    0.5f, -0.5f, -0.5f,  //
+    0.5f, -0.5f, 0.5f,   //
+    0.5f, -0.5f, 0.5f,   //
+    -0.5f, -0.5f, 0.5f,  //
+    -0.5f, -0.5f, 0.5f,  //
+    -0.5f, -0.5f, -0.5f, //
 
     // Top square
-    {-0.5f, 0.5f, -0.5f},
-    {0.5f, 0.5f, -0.5f},
-    {0.5f, 0.5f, -0.5f},
-    {0.5f, 0.5f, 0.5f},
-    {0.5f, 0.5f, 0.5f},
-    {-0.5f, 0.5f, 0.5f},
-    {-0.5f, 0.5f, 0.5f},
-    {-0.5f, 0.5f, -0.5f},
+    -0.5f, 0.5f, -0.5f, //
+    0.5f, 0.5f, -0.5f,  //
+    0.5f, 0.5f, -0.5f,  //
+    0.5f, 0.5f, 0.5f,   //
+    0.5f, 0.5f, 0.5f,   //
+    -0.5f, 0.5f, 0.5f,  //
+    -0.5f, 0.5f, 0.5f,  //
+    -0.5f, 0.5f, -0.5f, //
 
     // Vertical lines
-    {-0.5f, -0.5f, -0.5f},
-    {-0.5f, 0.5f, -0.5f},
-    {0.5f, -0.5f, -0.5f},
-    {0.5f, 0.5f, -0.5f},
-    {0.5f, -0.5f, 0.5f},
-    {0.5f, 0.5f, 0.5f},
-    {-0.5f, -0.5f, 0.5f},
-    {-0.5f, 0.5f, 0.5f}};
+    -0.5f, -0.5f, -0.5f, //
+    -0.5f, 0.5f, -0.5f,  //
+    0.5f, -0.5f, -0.5f,  //
+    0.5f, 0.5f, -0.5f,   //
+    0.5f, -0.5f, 0.5f,   //
+    0.5f, 0.5f, 0.5f,    //
+    -0.5f, -0.5f, 0.5f,  //
+    -0.5f, 0.5f, 0.5f};
 
 CCollisionRenderPass::CCollisionRenderPass() :
     m_Shader(resource::LoadShader("Wireframe")),
@@ -50,7 +50,7 @@ CCollisionRenderPass::CCollisionRenderPass() :
   m_VBO.Bind();
   m_VBO.Assign(WIREFRAME_VERTICES, sizeof(WIREFRAME_VERTICES));
 
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3), (void *)0);
+  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
 
   m_VAO.Unbind();
 }
