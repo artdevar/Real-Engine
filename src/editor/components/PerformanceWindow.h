@@ -3,7 +3,7 @@
 #if DEV_STAGE
 
 #include "EditorWindow.h"
-#include <array>
+#include <common/containers/StaticArray.h>
 #include <imgui/imgui.h>
 
 namespace editor
@@ -21,19 +21,19 @@ private:
   void UpdateHistory(float _FPS, float _FrameTime, float _Time);
 
 private:
-  constexpr static size_t MaxHistory = 500;
+  constexpr static size_t MAX_HISTORY = 500;
 
   TVector2i m_Size;
 
-  std::vector<TVector2f> m_FPSHistory;
-  float                  m_MinFps = 0;
-  float                  m_MaxFps = 0;
-  float                  m_AvgFps = 0;
+  CStaticArray<TVector2f, MAX_HISTORY> m_FPSHistory;
+  float                                m_MinFps = 0;
+  float                                m_MaxFps = 0;
+  float                                m_AvgFps = 0;
 
-  std::vector<TVector2f> m_FrameTimeHistory;
-  float                  m_MinFrameTime = 0;
-  float                  m_MaxFrameTime = 0;
-  float                  m_AvgFrameTime = 0;
+  CStaticArray<TVector2f, MAX_HISTORY> m_FrameTimeHistory;
+  float                                m_MinFrameTime = 0;
+  float                                m_MaxFrameTime = 0;
+  float                                m_AvgFrameTime = 0;
 };
 
 } // namespace editor

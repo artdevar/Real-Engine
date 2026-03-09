@@ -136,6 +136,20 @@ public:
     m_ActualSize++;
   }
 
+  constexpr T &Front()
+  {
+    assert(!IsEmpty());
+
+    return m_Data[0];
+  }
+
+  constexpr const T &Front() const
+  {
+    assert(!IsEmpty());
+
+    return m_Data[0];
+  }
+
   constexpr T &Back()
   {
     assert(!IsEmpty());
@@ -156,6 +170,15 @@ public:
 
     if constexpr (std::is_trivially_default_constructible_v<T>)
       std::memset(&m_Data[m_ActualSize - 1], 0x00, sizeof(T));
+
+    m_ActualSize--;
+  }
+
+  constexpr void PopFront()
+  {
+    assert(!IsEmpty());
+
+    std::memmove(&m_Data[0], &m_Data[1], (m_ActualSize - 1) * sizeof(T));
 
     m_ActualSize--;
   }

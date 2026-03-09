@@ -3,10 +3,10 @@
 #include "PerformanceWindow.h"
 #include "engine/Engine.h"
 #include "interfaces/RenderPipeline.h"
-#include <algorithm>
-#include <numeric>
 #include <imgui/imgui.h>
 #include <imgui/implot/implot.h>
+#include <algorithm>
+#include <numeric>
 
 namespace
 {
@@ -53,17 +53,19 @@ void CPerformanceWindow::Render()
       {
         ImPlot::SetupAxes(nullptr, nullptr, 0, ImPlotAxisFlags_RangeFit);
         ImPlot::SetupAxis(ImAxis_Y2, nullptr, ImPlotAxisFlags_AuxDefault | ImPlotAxisFlags_RangeFit);
+        ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Horizontal);
 
-        ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.front().X, m_FPSHistory.back().X, ImGuiCond_Always);
+        ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.Front().X, m_FPSHistory.Back().X, ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y1, m_MinFps - 10.0f, m_MaxFps + 10.0f, ImGuiCond_Always);
         ImPlot::SetupAxisLimits(ImAxis_Y2, m_MinFrameTime - 1.0f, m_MaxFrameTime + 1.0f, ImGuiCond_Always);
 
         ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
         ImPlot::SetAxis(ImAxis_Y1);
-        ImPlot::PlotLine("FPS", &m_FPSHistory[0].X, &m_FPSHistory[0].Y, (int)m_FPSHistory.size(), 0, 0, sizeof(TVector2f));
+        ImPlot::PlotLine("FPS", &m_FPSHistory.Front().X, &m_FPSHistory.Front().Y, (int)m_FPSHistory.GetActualSize(), 0, 0, sizeof(TVector2f));
 
         ImPlot::SetAxis(ImAxis_Y2);
-        ImPlot::PlotLine("Latency (ms)", &m_FrameTimeHistory[0].X, &m_FrameTimeHistory[0].Y, (int)m_FrameTimeHistory.size(), 0, 0, sizeof(TVector2f));
+        ImPlot::PlotLine("Latency (ms)", &m_FrameTimeHistory.Front().X, &m_FrameTimeHistory.Front().Y, (int)m_FrameTimeHistory.GetActualSize(), 0, 0,
+                         sizeof(TVector2f));
         ImPlot::PopStyleVar();
 
         ImPlot::EndPlot();
@@ -101,29 +103,21 @@ void CPerformanceWindow::Render()
 
 void CPerformanceWindow::UpdateHistory(float _FPS, float _FrameTime, float _Time)
 {
+  constexpr float Smoothing         = 0.9f;
   static float    SmoothedFps       = 0.0f;
   static float    SmoothedFrameTime = 0.0f;
-  constexpr float Smoothing         = 0.9f;
 
-  if (m_FPSHistory.empty())
-  {
-    SmoothedFps       = _FPS;
-    SmoothedFrameTime = _FrameTime;
-  }
-  else
-  {
-    SmoothedFps       = SmoothedFps * Smoothing + _FPS * (1.0f - Smoothing);
-    SmoothedFrameTime = SmoothedFrameTime * Smoothing + _FrameTime * (1.0f - Smoothing);
-  }
+  SmoothedFps       = SmoothedFps * Smoothing + _FPS * (1.0f - Smoothing);
+  SmoothedFrameTime = SmoothedFrameTime * Smoothing + _FrameTime * (1.0f - Smoothing);
 
-  m_FPSHistory.push_back(TVector2f(_Time, SmoothedFps));
-  m_FrameTimeHistory.push_back(TVector2f(_Time, SmoothedFrameTime));
+  if (m_FPSHistory.GetActualSize() == m_FPSHistory.GetCapacity())
+    m_FPSHistory.PopFront();
 
-  if (m_FPSHistory.size() > MaxHistory)
-    m_FPSHistory.erase(m_FPSHistory.begin());
+  if (m_FrameTimeHistory.GetActualSize() == m_FrameTimeHistory.GetCapacity())
+    m_FrameTimeHistory.PopFront();
 
-  if (m_FrameTimeHistory.size() > MaxHistory)
-    m_FrameTimeHistory.erase(m_FrameTimeHistory.begin());
+  m_FPSHistory.PushBack(TVector2f(_Time, SmoothedFps));
+  m_FrameTimeHistory.PushBack(TVector2f(_Time, SmoothedFrameTime));
 
   m_MinFps = std::min_element(m_FPSHistory.begin(), m_FPSHistory.end(), [](const TVector2f &a, const TVector2f &b) {
                return a.Y < b.Y;
@@ -137,7 +131,7 @@ void CPerformanceWindow::UpdateHistory(float _FPS, float _FrameTime, float _Time
                              [](float sum, const TVector2f &point) {
                                return sum + point.Y;
                              }) /
-             m_FPSHistory.size();
+             m_FPSHistory.GetActualSize();
 
   m_MinFrameTime = std::min_element(m_FrameTimeHistory.begin(), m_FrameTimeHistory.end(), [](const TVector2f &a, const TVector2f &b) {
                      return a.Y < b.Y;
@@ -151,7 +145,7 @@ void CPerformanceWindow::UpdateHistory(float _FPS, float _FrameTime, float _Time
                                    [](float sum, const TVector2f &point) {
                                      return sum + point.Y;
                                    }) /
-                   m_FrameTimeHistory.size();
+                   m_FrameTimeHistory.GetActualSize();
 }
 
 } // namespace editor
