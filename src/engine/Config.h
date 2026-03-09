@@ -70,6 +70,14 @@ public:
       event::Notify(TEventType::Config_GammaChanged, _Gamma);
     }
   }
+  void SetGizmoEnabled(bool _Enabled)
+  {
+    if (IsGizmoEnabled != _Enabled)
+    {
+      IsGizmoEnabled = _Enabled;
+      event::Notify(TEventType::Config_GizmoEnabledChanged, _Enabled);
+    }
+  }
   void SetGridEnabled(bool _Enabled)
   {
     if (IsGridEnabled != _Enabled)
@@ -186,6 +194,10 @@ public:
   {
     return Gamma;
   }
+  bool GetGizmoEnabled() const
+  {
+    return IsGizmoEnabled;
+  }
   bool GetGridEnabled() const
   {
     return IsGridEnabled;
@@ -261,6 +273,7 @@ private:
   float Gamma                    = 2.2f;
 
   // Debug
+  bool   IsGizmoEnabled     = true;
   bool   IsGridEnabled      = true;
   bool   IsWireframeEnabled = true;
   TColor WireframeColor     = TColor(1.0f, 1.0f, 0.0f, 0.8f);

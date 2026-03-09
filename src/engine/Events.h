@@ -17,6 +17,7 @@ enum class TEventType
   Config_HDRExposureChanged,
   Config_GammaCorrectionEnabledChanged,
   Config_GammaChanged,
+  Config_GizmoEnabledChanged,
   Config_GridEnabledChanged,
   Config_WireframeEnabledChanged,
   Config_WireframeColorChanged,

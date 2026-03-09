@@ -3,6 +3,7 @@
 #include "ViewportWindow.h"
 #include "GizmoRenderer.h"
 #include "engine/Engine.h"
+#include "engine/Config.h"
 #include "interfaces/RenderPipeline.h"
 #include "interfaces/WorldEditor.h"
 #include "utils/Event.h"
@@ -32,10 +33,11 @@ void CViewportWindow::Render(const std::optional<ecs::TEntity> &_SelectedEntity)
 {
   if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
   {
-    const uint32_t  TextureID = CEngine::Instance().GetRenderPipeline()->GetRenderTextureID();
-    const ImVec2    Available = ImGui::GetContentRegionAvail();
-    const ImVec2    Pos       = ImGui::GetCursorScreenPos();
-    const TVector2i NewSize   = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
+    const bool      IsGizmoEnabled = CConfig::Instance().GetGizmoEnabled();
+    const uint32_t  TextureID      = CEngine::Instance().GetRenderPipeline()->GetRenderTextureID();
+    const ImVec2    Available      = ImGui::GetContentRegionAvail();
+    const ImVec2    Pos            = ImGui::GetCursorScreenPos();
+    const TVector2i NewSize        = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
 
     if (NewSize != m_Size)
     {
@@ -48,7 +50,7 @@ void CViewportWindow::Render(const std::optional<ecs::TEntity> &_SelectedEntity)
     else
       ImGui::TextUnformatted("Render texture unavailable");
 
-    if (_SelectedEntity.has_value())
+    if (IsGizmoEnabled && _SelectedEntity.has_value())
     {
       ImGui::SetCursorScreenPos(Pos);
       m_GizmoRenderer.Render(_SelectedEntity.value(), TRectf(Pos.x, Pos.y, Available.x, Available.y));

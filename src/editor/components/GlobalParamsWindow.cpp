@@ -51,6 +51,12 @@ void CGlobalParamsWindow::Render()
 
     if (ImGui::CollapsingHeader("Debug"))
     {
+      bool GizmoEnabled = CConfig::Instance().GetGizmoEnabled();
+      if (ImGui::Checkbox("Draw gizmo", &GizmoEnabled))
+        CConfig::Instance().SetGizmoEnabled(GizmoEnabled);
+
+      ImGui::Separator();
+
       bool GridEnabled = CConfig::Instance().GetGridEnabled();
       if (ImGui::Checkbox("Draw grid", &GridEnabled))
         CConfig::Instance().SetGridEnabled(GridEnabled);
