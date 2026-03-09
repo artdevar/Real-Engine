@@ -15,13 +15,13 @@ void CGlobalParamsWindow::Render()
     if (ImGui::CollapsingHeader("Render"))
     {
       bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
-      if (ImGui::Checkbox("FXAA enabled", &FXAAEnabled))
+      if (ImGui::Checkbox("FXAA", &FXAAEnabled))
         CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
 
       ImGui::Separator();
 
       bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
-      if (ImGui::Checkbox("Shadows enabled", &ShadowsEnabled))
+      if (ImGui::Checkbox("Draw shadows", &ShadowsEnabled))
         CConfig::Instance().SetShadowsEnabled(ShadowsEnabled);
 
       int ShadowMapSize = CConfig::Instance().GetShadowMapSize();
@@ -31,7 +31,7 @@ void CGlobalParamsWindow::Render()
       ImGui::Separator();
 
       bool HDREnabled = CConfig::Instance().GetHDREnabled();
-      if (ImGui::Checkbox("HDR enabled", &HDREnabled))
+      if (ImGui::Checkbox("HDR", &HDREnabled))
         CConfig::Instance().SetHDREnabled(HDREnabled);
 
       float HDRExposure = CConfig::Instance().GetHDRExposure();
@@ -41,7 +41,7 @@ void CGlobalParamsWindow::Render()
       ImGui::Separator();
 
       bool GammaCorrectionEnabled = CConfig::Instance().GetGammaCorrectionEnabled();
-      if (ImGui::Checkbox("Gamma correction enabled", &GammaCorrectionEnabled))
+      if (ImGui::Checkbox("Gamma correction", &GammaCorrectionEnabled))
         CConfig::Instance().SetGammaCorrectionEnabled(GammaCorrectionEnabled);
 
       float Gamma = CConfig::Instance().GetGamma();

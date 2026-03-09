@@ -25,7 +25,7 @@ static void LoadFonts(ImGuiIO &_IO)
 {
   const auto FontPath = CConfig::Instance().GetFontsDir() / "Roboto_Regular.ttf";
   if (std::filesystem::exists(FontPath))
-    _IO.Fonts->AddFontFromFileTTF(FontPath.string().c_str(), 14.0f);
+    _IO.Fonts->AddFontFromFileTTF(FontPath.string().c_str(), 15.0f);
   else
     CLogger::Log(ELogType::Warning, "[Editor] Font file not found: %s", FontPath.string());
 }

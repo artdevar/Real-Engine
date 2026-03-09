@@ -1,9 +1,9 @@
 #pragma once
 
 #include "interfaces/Renderer.h"
-#include "interfaces/Shutdownable.h"
-#include "interfaces/Updateable.h"
-#include "interfaces/EventsListener.h"
+#include <events/EventsListener.h>
+#include <common/interfaces/Updateable.h>
+#include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <common/Common.h>

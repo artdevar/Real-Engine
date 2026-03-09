@@ -1,11 +1,11 @@
 #pragma once
 
 #include "interfaces/RenderPipeline.h"
-#include "interfaces/EventsListener.h"
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
 #include "render/Buffer.h"
 #include "passes/RenderPassTypes.h"
+#include <events/EventsListener.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <cstdint>

@@ -1,8 +1,8 @@
 #pragma once
 
 #if DEV_STAGE
-#include "interfaces/Shutdownable.h"
-#include "interfaces/EventsListener.h"
+#include <events/EventsListener.h>
+#include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <memory>

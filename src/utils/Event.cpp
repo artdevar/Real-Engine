@@ -1,7 +1,6 @@
 #include "Event.h"
-#include "events/EventsManager.h"
-#include "events/Event.h"
 #include "engine/Engine.h"
+#include <events/EventsManager.h>
 
 static CEventsManager *Get()
 {

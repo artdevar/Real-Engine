@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Shutdownable.h"
+#include <common/interfaces/Shutdownable.h>
 #include <common/MathTypes.h>
 #include <cstdint>
 

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Events.h"
-#include "interfaces/Updateable.h"
-#include "interfaces/Shutdownable.h"
+#include "Core.h"
+#include <common/interfaces/Updateable.h>
+#include <common/interfaces/Shutdownable.h>
 #include <common/containers/UnorderedVector.h>
 #include <map>
+#include <memory>
 
 class IEventsListener;
 struct TEvent;
@@ -14,9 +15,9 @@ class CEventsManager final : public IUpdateable,
 {
 public:
   CEventsManager();
+  ~CEventsManager();
 
   void Shutdown() override;
-
   void Update(float _TimeDelta) override;
 
   void Subscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener);

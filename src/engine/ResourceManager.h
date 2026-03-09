@@ -1,8 +1,8 @@
 #pragma once
 
 #include "assets/TextureParams.h"
-#include "interfaces/Shutdownable.h"
-#include "interfaces/EventsListener.h"
+#include <events/EventsListener.h>
+#include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 
 class CModel;

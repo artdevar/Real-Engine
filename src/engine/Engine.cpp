@@ -4,8 +4,6 @@
 #include "Display.h"
 #include "InputManager.h"
 #include "ResourceManager.h"
-#include "events/EventsManager.h"
-#include "events/Event.h"
 #include "editor/EditorUI.h"
 #include "utils/Event.h"
 #include "render/GLRenderer.h"
@@ -14,6 +12,7 @@
 #include "render/RenderPipeline.h"
 #include "render/RenderQueue.h"
 #include "scenes/World.h"
+#include <events/EventsManager.h>
 #include <glm/glm.hpp>
 #include <string>
 

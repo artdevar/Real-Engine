@@ -2,11 +2,11 @@
 
 #include "interfaces/RenderCollector.h"
 #include "interfaces/FrameDataCollector.h"
-#include "interfaces/Shutdownable.h"
-#include "interfaces/Updateable.h"
 #include "interfaces/WorldEditor.h"
-#include "interfaces/EventsListener.h"
+#include <common/interfaces/Shutdownable.h>
+#include <common/interfaces/Updateable.h>
 #include <common/Sharable.h>
+#include <events/EventsListener.h>
 
 class CEngine;
 

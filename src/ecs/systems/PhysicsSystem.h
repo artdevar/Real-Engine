@@ -1,6 +1,6 @@
 #pragma once
 
-#include "interfaces/Updateable.h"
+#include <common/interfaces/Updateable.h>
 #include <ecs/System.h>
 
 namespace ecs

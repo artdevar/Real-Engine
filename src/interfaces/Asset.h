@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Shutdownable.h"
 #include "engine/Passkey.h"
+#include <common/interfaces/Shutdownable.h>
 #include <filesystem>
 
 class CResourceManager;

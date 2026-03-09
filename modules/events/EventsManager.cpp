@@ -1,12 +1,13 @@
 #include "EventsManager.h"
-#include "interfaces/EventsListener.h"
+#include "EventsListener.h"
 #include "Event.h"
-#include <memory>
 
 CEventsManager::CEventsManager() :
     m_IsUpdateFunctionRunning(false)
 {
 }
+
+CEventsManager::~CEventsManager() = default;
 
 void CEventsManager::Shutdown()
 {

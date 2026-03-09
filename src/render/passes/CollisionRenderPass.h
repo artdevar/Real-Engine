@@ -2,8 +2,8 @@
 
 #include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
-#include "interfaces/EventsListener.h"
 #include "render/Buffer.h"
+#include <events/EventsListener.h>
 #include <common/Sharable.h>
 #include <memory>
 

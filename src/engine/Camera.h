@@ -1,9 +1,9 @@
 #pragma once
 
 #include "interfaces/InputHandler.h"
-#include "interfaces/Updateable.h"
-#include "interfaces/EventsListener.h"
-#include "interfaces/Shutdownable.h"
+#include <events/EventsListener.h>
+#include <common/interfaces/Updateable.h>
+#include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 
 class CCamera final : public IUpdateable,

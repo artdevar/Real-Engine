@@ -80,6 +80,7 @@ add_subdirectory(lib/MikkTSpace)
 add_subdirectory(lib/imgui)
 add_subdirectory(modules/common)
 add_subdirectory(modules/ecs)
+add_subdirectory(modules/events)
 
 # Linking
 
@@ -90,6 +91,7 @@ target_link_libraries(Real_Engine PRIVATE
     mikktspace
     imgui
     ecs
+    events
 )
 
 if (WIN32)
