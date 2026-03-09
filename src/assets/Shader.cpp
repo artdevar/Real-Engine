@@ -1,7 +1,7 @@
 #include "pch.h"
 
 #include "Shader.h"
-#include "utils/Logger.h"
+#include <common/Logger.h>
 #include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>

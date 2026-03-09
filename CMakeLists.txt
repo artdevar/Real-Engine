@@ -90,6 +90,7 @@ target_link_libraries(Real_Engine PRIVATE
     tinygltf
     mikktspace
     imgui
+    common
     ecs
     events
 )

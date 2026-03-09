@@ -1,7 +1,7 @@
 #pragma once
 
-#include "engine/Passkey.h"
 #include "assets/TextureParams.h"
+#include <common/Passkey.h>
 
 class CResourceManager;
 

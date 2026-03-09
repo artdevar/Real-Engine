@@ -20,7 +20,7 @@
 #include "interfaces/Renderer.h"
 #include "render/RenderContext.h"
 #include "utils/Resource.h"
-#include "utils/Logger.h"
+#include <common/Logger.h>
 #include <glm/gtx/norm.hpp>
 
 CRenderPipeline::CRenderPipeline() :

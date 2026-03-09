@@ -9,8 +9,8 @@
 #include "renderer/ComponentRenderer.h"
 #include "interfaces/WorldEditor.h"
 #include "engine/Config.h"
-#include "utils/Logger.h"
 #include "utils/Event.h"
+#include <common/Logger.h>
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/backends/imgui_impl_glfw.h>

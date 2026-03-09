@@ -1,5 +1,5 @@
 #include "engine/Engine.h"
-#include "utils/Logger.h"
+#include <common/Logger.h>
 
 int main(int argc, char *argv[])
 {
@@ -10,17 +10,17 @@ int main(int argc, char *argv[])
 
   if (const int InitCode = Engine.Init(); InitCode != EXIT_SUCCESS)
   {
-    CLogger::Log(ELogType::Fatal, "Engine initialisation failed. Error: {}", InitCode);
+    LOG_FATAL("Engine initialisation failed. Error: {}", InitCode);
     Engine.Shutdown();
     return InitCode;
   }
 
-  CLogger::Log(ELogType::Info, "Engine initialisation finished");
+  LOG_INFO("Engine initialisation finished");
 
   const int RunCode = Engine.Run();
   Engine.Shutdown();
 
-  CLogger::Log(ELogType::Info, "Engine shutdown. Code: {}", RunCode);
+  LOG_INFO("Engine shutdown. Code: {}", RunCode);
 
   return RunCode;
 }

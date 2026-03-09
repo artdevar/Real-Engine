@@ -1,7 +1,8 @@
 #include "Model.h"
-#include "utils/Logger.h"
+#include <common/Logger.h>
 
-CModel::CModel(std::unique_ptr<IModelParseStrategy> _ParseStrategy) : m_ParseStrategy(std::move(_ParseStrategy))
+CModel::CModel(std::unique_ptr<IModelParseStrategy> _ParseStrategy) :
+    m_ParseStrategy(std::move(_ParseStrategy))
 {
 }
 

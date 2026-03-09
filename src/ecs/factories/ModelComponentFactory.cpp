@@ -5,7 +5,7 @@
 #include "render/ShaderTypes.h"
 #include "assets/Texture.h"
 #include "utils/Resource.h"
-#include "utils/Stopwatch.h"
+#include <common/Stopwatch.h>
 
 namespace ecs
 {

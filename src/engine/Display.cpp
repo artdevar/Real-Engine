@@ -1,5 +1,5 @@
 #include "Display.h"
-#include "utils/Logger.h"
+#include <common/Logger.h>
 #include <cstdlib>
 #include <cstring>
 #include <format>

@@ -1,19 +1,25 @@
 #pragma once
 
+#include "Core.h"
 #include "Logger.h"
 #include <chrono>
 #include <optional>
+#include <format>
 
 class CStopwatch final
 {
   DISABLE_CLASS_COPY(CStopwatch);
 
 public:
-  CStopwatch() : m_Message(), m_Start(std::chrono::high_resolution_clock::now())
+  CStopwatch() :
+      m_Message(),
+      m_Start(std::chrono::high_resolution_clock::now())
   {
   }
 
-  CStopwatch(std::string_view _Message) : m_Message(_Message.data()), m_Start(std::chrono::high_resolution_clock::now())
+  CStopwatch(std::string_view _Message) :
+      m_Message(_Message.data()),
+      m_Start(std::chrono::high_resolution_clock::now())
   {
   }
 

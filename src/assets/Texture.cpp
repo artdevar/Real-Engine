@@ -1,6 +1,6 @@
 #include "Texture.h"
-#include "utils/Logger.h"
 #include "utils/Path.h"
+#include <common/Logger.h>
 #include <stb_image.h>
 #include <vector>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Coordinator.h"
-#include <common/Common.h>
+#include <common/Core.h>
 #include <vector>
 
 namespace ecs

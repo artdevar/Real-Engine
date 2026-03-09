@@ -1,6 +1,5 @@
 #include "pch.h"
 
-#include "Passkey.h"
 #include "ResourceManager.h"
 #include "engine/Config.h"
 #include "assets/Model.h"
@@ -8,7 +7,8 @@
 #include "assets/Texture.h"
 #include "assets/TextureParams.h"
 #include "assets/TinyGLTFParseStrategy.h"
-#include "utils/Logger.h"
+#include <common/Logger.h>
+#include <common/Passkey.h>
 
 static bool IsFormatSupported(const std::filesystem::path &_Path)
 {

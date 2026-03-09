@@ -6,7 +6,7 @@
 #include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
-#include <common/Common.h>
+#include <common/Core.h>
 #include <cstdint>
 #include <memory>
 #include <string>

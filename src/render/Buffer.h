@@ -1,8 +1,8 @@
 #pragma once
 
 #include <glad/glad.h>
+#include <common/Core.h>
 #include <vector>
-#include <common/Common.h>
 
 template <class Derived>
 class CBuffer
@@ -478,6 +478,8 @@ public:
   {
   }
 };
+
+// ------------------------------------------------
 
 using TSharedVAO = std::shared_ptr<CVertexArray>;
 using TSharedVBO = std::shared_ptr<CVertexBuffer>;

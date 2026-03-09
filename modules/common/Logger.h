@@ -1,6 +1,6 @@
 #pragma once
 
-#include <common/containers/StaticArray.h>
+#include "containers/StaticArray.h"
 #include <format>
 #include <map>
 #include <string>
@@ -64,3 +64,9 @@ private:
 
   static ELogType Verbosity;
 };
+
+#define LOG_DEBUG(...)   CLogger::Log(ELogType::Debug, __VA_ARGS__)
+#define LOG_INFO(...)    CLogger::Log(ELogType::Info, __VA_ARGS__)
+#define LOG_WARNING(...) CLogger::Log(ELogType::Warning, __VA_ARGS__)
+#define LOG_ERROR(...)   CLogger::Log(ELogType::Error, __VA_ARGS__)
+#define LOG_FATAL(...)   CLogger::Log(ELogType::Fatal, __VA_ARGS__)

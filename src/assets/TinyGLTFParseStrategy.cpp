@@ -1,8 +1,8 @@
 #include "pch.h"
 
 #include "TinyGLTFParseStrategy.h"
-#include "utils/Logger.h"
-#include "utils/Stopwatch.h"
+#include <common/Stopwatch.h>
+#include <common/Logger.h>
 #include <mikktspace.h>
 #include <tiny_gltf.h>
 

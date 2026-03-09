@@ -1,16 +1,18 @@
 #pragma once
 
-#include <common/Common.h>
+#include "Core.h"
 
 template <typename T>
 class CPasskey
 {
+  DISABLE_CLASS_COPY(CPasskey);
+
   friend T;
+
   CPasskey() = default;
   explicit CPasskey(const T *) noexcept
   {
   }
-  DISABLE_CLASS_COPY(CPasskey);
 };
 
 template <typename T>

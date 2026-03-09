@@ -4,7 +4,7 @@
 #include "render/ShaderTypes.h"
 #include "render/RenderTypes.h"
 #include "physics/Collision.h"
-#include <common/Common.h>
+#include <common/Core.h>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
 #include <vector>

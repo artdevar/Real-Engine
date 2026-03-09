@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Core.h"
-#include <common/Common.h>
+#include <common/Core.h>
 #include <common/containers/StaticArray.h>
 #include <common/containers/UnorderedVector.h>
 
