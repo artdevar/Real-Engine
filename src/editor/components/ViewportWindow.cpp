@@ -1,15 +1,22 @@
 #if DEV_STAGE
 
 #include "ViewportWindow.h"
+#include "GizmoRenderer.h"
 #include "engine/Engine.h"
 #include "interfaces/RenderPipeline.h"
+#include "interfaces/WorldEditor.h"
 #include "utils/Event.h"
+#include <common/MathTypes.h>
 #include <imgui/imgui.h>
 
 namespace editor
 {
 
-static TVector2i size{};
+CViewportWindow::CViewportWindow(IWorldEditor &_WorldEditor) :
+    m_WorldEditor(_WorldEditor),
+    m_GizmoRenderer(_WorldEditor)
+{
+}
 
 std::string CViewportWindow::GetName() const
 {
@@ -21,12 +28,13 @@ TVector2i CViewportWindow::GetSize() const
   return m_Size;
 }
 
-void CViewportWindow::Render()
+void CViewportWindow::Render(const std::optional<ecs::TEntity> &_SelectedEntity)
 {
   if (ImGui::Begin(GetName().c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
   {
     const uint32_t  TextureID = CEngine::Instance().GetRenderPipeline()->GetRenderTextureID();
     const ImVec2    Available = ImGui::GetContentRegionAvail();
+    const ImVec2    Pos       = ImGui::GetCursorScreenPos();
     const TVector2i NewSize   = TVector2i(static_cast<int>(Available.x), static_cast<int>(Available.y));
 
     if (NewSize != m_Size)
@@ -39,6 +47,12 @@ void CViewportWindow::Render()
       ImGui::Image(static_cast<ImTextureID>(static_cast<uintptr_t>(TextureID)), Available, ImVec2(0, 1), ImVec2(1, 0));
     else
       ImGui::TextUnformatted("Render texture unavailable");
+
+    if (_SelectedEntity.has_value())
+    {
+      ImGui::SetCursorScreenPos(Pos);
+      m_GizmoRenderer.Render(_SelectedEntity.value(), TRectf(Pos.x, Pos.y, Available.x, Available.y));
+    }
   }
 
   ImGui::End();

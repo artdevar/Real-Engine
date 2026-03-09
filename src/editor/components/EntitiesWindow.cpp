@@ -130,8 +130,9 @@ void CEntitiesWindow::DisplayEntitiesList()
     {
       ImGui::PushID(n);
 
-      const bool IsSelected = (CurrentEntityIndex == n);
-      if (ImGui::Selectable(m_WorldEditor.GetEntityName(Entities[n]).c_str(), IsSelected))
+      const bool        IsSelected = (CurrentEntityIndex == n);
+      const std::string EntityName = GetEntityName(Entities[n]);
+      if (ImGui::Selectable(EntityName.c_str(), IsSelected))
         SelectEntity(Entities[n]);
 
       if (IsSelected)
@@ -249,6 +250,14 @@ void CEntitiesWindow::DeselectEntity()
     event::Notify(TEventType::Editor_EntityDeselected, m_SelectedEntity.value());
     m_SelectedEntity.reset();
   }
+}
+
+std::string CEntitiesWindow::GetEntityName(ecs::TEntity _Entity) const
+{
+  if (ecs::TNameComponent *NameComponent = m_WorldEditor.GetEntityName(_Entity))
+    return NameComponent->Name;
+
+  return std::format("Entity_{}", _Entity);
 }
 
 } // namespace editor

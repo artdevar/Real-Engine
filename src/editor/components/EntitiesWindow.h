@@ -43,6 +43,8 @@ private:
   void SelectEntity(ecs::TEntity _Entity);
   void DeselectEntity();
 
+  std::string GetEntityName(ecs::TEntity _Entity) const;
+
 private:
   IWorldEditor               &m_WorldEditor;
   std::optional<ecs::TEntity> m_SelectedEntity;

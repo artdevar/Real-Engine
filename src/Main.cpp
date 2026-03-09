@@ -15,12 +15,12 @@ int main(int argc, char *argv[])
     return InitCode;
   }
 
-  LOG_INFO("Engine initialisation finished");
+  LOG_INFO("Engine initialised. Starting main loop...");
 
   const int RunCode = Engine.Run();
   Engine.Shutdown();
 
-  LOG_INFO("Engine shutdown. Code: {}", RunCode);
+  LOG_INFO("Engine shutted down. Code: {}", RunCode);
 
   return RunCode;
 }

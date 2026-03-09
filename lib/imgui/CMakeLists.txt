@@ -16,6 +16,8 @@ file(GLOB IMGUI_IMPLOT
 set(IMGUI_SRCS ${IMGUI_CORE} ${IMGUI_MISC} ${IMGUI_IMPLOT})
 list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_glfw.cpp)
 list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
+list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/ImGuizmo/ImGuizmo.cpp)
+list(APPEND IMGUI_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/ImGuizmo/ImGuizmo.h)
 
 add_library(${TARGET} STATIC ${IMGUI_SRCS})
 target_include_directories(${TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

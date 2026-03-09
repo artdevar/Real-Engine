@@ -40,7 +40,8 @@ public:
   void Collect(TFrameData &_FrameData) override;
   void Collect(CRenderQueue &_Queue) override;
 
-  std::string GetEntityName(ecs::TEntity _Entity) const override;
+  ecs::TNameComponent *GetEntityName(ecs::TEntity _Entity) const override;
+  ecs::TTransformComponent *GetTransform(ecs::TEntity _Entity) const override;
   ecs::TEntity CloneEntity(ecs::TEntity _Entity) override;
   void DestroyEntity(ecs::TEntity _Entity) override;
   ecs::CEntitySpawner CreateEntitySpawner() override;

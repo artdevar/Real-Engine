@@ -334,9 +334,9 @@ TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
       .PostProcessRenderTarget = *m_PostProcessTarget,
       .FinalRenderTarget       = m_FinalTarget.get(),
       .CameraPosition          = Camera->GetPosition(),
-      .ProjectionMatrix        = Camera->GetProjection(),
+      .ProjectionMatrix        = Camera->GetPerspectiveProjection(),
       .ViewMatrix              = Camera->GetView(),
-      .ViewProjectionMatrix    = Camera->GetProjection() * Camera->GetView(),
+      .ViewProjectionMatrix    = Camera->GetPerspectiveProjection() * Camera->GetView(),
       .LightSpaceMatrix        = CalculateLightSpaceMatrix(),
       .ShadowMap               = 0,
   };

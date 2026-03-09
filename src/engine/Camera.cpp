@@ -96,10 +96,16 @@ glm::mat4 CCamera::GetView() const
   return glm::lookAt(m_Position, m_Position + m_Forward, m_Up);
 }
 
-glm::mat4 CCamera::GetProjection() const
+glm::mat4 CCamera::GetPerspectiveProjection() const
 {
   const TVector2i Viewport = CEngine::Instance().GetViewportSize();
   return glm::perspective(glm::radians(m_FOV), Viewport.X / float(Viewport.Y), m_ZNear, m_ZFar);
+}
+
+glm::mat4 CCamera::GetOrthographicProjection() const
+{
+  const TVector2i Viewport = CEngine::Instance().GetViewportSize();
+  return glm::ortho(0.0f, static_cast<float>(Viewport.X), 0.0f, static_cast<float>(Viewport.Y), m_ZNear, m_ZFar);
 }
 
 void CCamera::OnEvent(const TEvent &_Event)

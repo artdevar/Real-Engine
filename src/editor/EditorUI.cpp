@@ -16,6 +16,7 @@
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/implot/implot.h>
+#include <imgui/ImGuizmo/ImGuizmo.h>
 #include <filesystem>
 
 namespace editor
@@ -35,7 +36,7 @@ CEditorUI::CEditorUI(IWorldEditor &_WorldEditor) :
     m_ComponentRenderer(std::make_unique<CComponentRenderer>()),
     m_ComponentDataWindow(std::make_unique<CComponentDataWindow>(_WorldEditor, *m_ComponentRenderer)),
     m_GlobalParamsWindow(std::make_unique<CGlobalParamsWindow>()),
-    m_ViewportWindow(std::make_unique<CViewportWindow>()),
+    m_ViewportWindow(std::make_unique<CViewportWindow>(_WorldEditor)),
     m_MenuBar(std::make_unique<CMenuBar>()),
     m_EntitiesWindow(std::make_unique<CEntitiesWindow>(_WorldEditor)),
     m_PerformanceWindow(std::make_unique<CPerformanceWindow>())
@@ -96,11 +97,11 @@ void CEditorUI::RenderFrame()
   RenderBegin();
 
   m_MenuBar->Render();
-  m_ViewportWindow->Render();
   m_EntitiesWindow->Render();
   m_ComponentDataWindow->Render(m_EntitiesWindow->GetSelectedEntity());
   m_GlobalParamsWindow->Render();
   m_PerformanceWindow->Render();
+  m_ViewportWindow->Render(m_EntitiesWindow->GetSelectedEntity());
 
   RenderEnd();
 }
@@ -110,6 +111,7 @@ void CEditorUI::RenderBegin()
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
+  ImGuizmo::BeginFrame();
 
   ImGuiViewport *Viewport = ImGui::GetMainViewport();
 

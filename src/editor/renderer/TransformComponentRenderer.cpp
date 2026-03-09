@@ -23,8 +23,13 @@ void TTransformComponentRenderer::Render(void *Data) noexcept
   glm::vec3 Skew;
   glm::vec4 Perspective;
 
-  const bool Decomposed = glm::decompose(TransformComponent->WorldMatrix, Scale, Rotation, Translation, Skew, Perspective);
-  assert(Decomposed);
+  bool Decomposed = glm::decompose(TransformComponent->WorldMatrix, Scale, Rotation, Translation, Skew, Perspective);
+  if (!Decomposed)
+  {
+    Translation = glm::vec3(TransformComponent->WorldMatrix[3]);
+    Rotation    = glm::quat(1, 0, 0, 0);
+    Scale       = glm::vec3(0.01f);
+  }
 
   bool ValueChanged = false;
 
@@ -58,7 +63,7 @@ void TTransformComponentRenderer::Render(void *Data) noexcept
   if (ValueChanged)
   {
     Scale                           = glm::max(Scale, glm::vec3(kMinScale));
-    TransformComponent->WorldMatrix = glm::recompose(Scale, Rotation, Translation, Skew, Perspective);
+    TransformComponent->WorldMatrix = glm::recompose(Scale, Rotation, Translation, glm::vec3(0.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
   }
 }
 

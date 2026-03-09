@@ -26,7 +26,8 @@ public:
   glm::vec3 GetForwardVector() const;
   glm::vec3 GetUpVector() const;
   glm::mat4 GetView() const;
-  glm::mat4 GetProjection() const;
+  glm::mat4 GetPerspectiveProjection() const;
+  glm::mat4 GetOrthographicProjection() const;
 
   void OnEvent(const TEvent &_Event) override;
 

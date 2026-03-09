@@ -2,10 +2,17 @@
 
 #include <ecs/IEntitiesBroker.h>
 
+namespace ecs
+{
+struct TNameComponent;
+struct TTransformComponent;
+} // namespace ecs
+
 class IWorldEditor : public ecs::IEntitiesBroker
 {
 public:
   virtual ~IWorldEditor() = default;
 
-  virtual std::string GetEntityName(ecs::TEntity _Entity) const = 0;
+  virtual ecs::TNameComponent *GetEntityName(ecs::TEntity _Entity) const     = 0;
+  virtual ecs::TTransformComponent *GetTransform(ecs::TEntity _Entity) const = 0;
 };

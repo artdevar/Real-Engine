@@ -62,12 +62,20 @@ void CWorld::Collect(CRenderQueue &_Queue)
   m_EntitiesCoordinator->GetSystem<ecs::CCollisionRenderSystem>()->Collect(_Queue);
 }
 
-std::string CWorld::GetEntityName(ecs::TEntity _Entity) const
+ecs::TNameComponent *CWorld::GetEntityName(ecs::TEntity _Entity) const
 {
   if (m_EntitiesCoordinator->DoesComponentExist<ecs::TNameComponent>(_Entity))
-    return m_EntitiesCoordinator->GetComponent<ecs::TNameComponent>(_Entity).Name;
+    return &m_EntitiesCoordinator->GetComponent<ecs::TNameComponent>(_Entity);
 
-  return std::format("Entity_{}", _Entity);
+  return nullptr;
+}
+
+ecs::TTransformComponent *CWorld::GetTransform(ecs::TEntity _Entity) const
+{
+  if (m_EntitiesCoordinator->DoesComponentExist<ecs::TTransformComponent>(_Entity))
+    return &m_EntitiesCoordinator->GetComponent<ecs::TTransformComponent>(_Entity);
+
+  return nullptr;
 }
 
 ecs::TEntity CWorld::CloneEntity(ecs::TEntity _Entity)
