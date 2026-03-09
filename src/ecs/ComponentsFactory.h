@@ -23,6 +23,18 @@ public:
   }
 
   template <typename Component>
+  requires(std::is_same_v<Component, TCollisionComponent>)
+  [[nodiscard]] static Component Create(const std::shared_ptr<CModel> &_Model)
+  {
+    assert(_Model != nullptr);
+
+    TCollisionComponent CollisionComponent;
+    CreateCollisionComponent(_Model, CollisionComponent);
+
+    return CollisionComponent;
+  }
+
+  template <typename Component>
   requires(std::is_same_v<Component, TNameComponent>)
   [[nodiscard]] static Component Create(std::string _Name)
   {
@@ -36,8 +48,10 @@ public:
   requires(std::is_same_v<Component, TSkyboxComponent>)
   [[nodiscard]] static Component Create(const std::shared_ptr<CTextureBase> &_Skybox)
   {
+    assert(_Skybox != nullptr);
+
     TSkyboxComponent SkyboxComponent;
-    CreateSkyboxComponent(_Skybox, SkyboxComponent);
+    SkyboxComponent.SkyboxTexture = _Skybox;
 
     return SkyboxComponent;
   }
@@ -65,22 +79,9 @@ public:
     return TransformComponent;
   }
 
-  template <typename Component>
-  requires(std::is_same_v<Component, TCollisionComponent>)
-  [[nodiscard]] static Component Create(const std::shared_ptr<CModel> &_Model)
-  {
-    assert(_Model != nullptr);
-
-    TCollisionComponent CollisionComponent;
-    CreateCollisionComponent(_Model, CollisionComponent);
-
-    return CollisionComponent;
-  }
-
 private:
   static void CreateModelComponent(const std::shared_ptr<CModel> &_Model, TModelComponent &_Component);
   static void CreateCollisionComponent(const std::shared_ptr<CModel> &_Model, TCollisionComponent &_Component);
-  static void CreateSkyboxComponent(const std::shared_ptr<CTextureBase> &_Skybox, TSkyboxComponent &_Component);
 };
 
 } // namespace ecs

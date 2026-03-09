@@ -51,7 +51,7 @@ public:
   TVector2i GetViewportSize() const;
   uint32_t GetRenderTextureID() const;
 
-  CDisplay *GetDisplay() const;
+  std::shared_ptr<CDisplay> GetDisplay() const;
   std::shared_ptr<CWorld> GetWorld() const;
   std::shared_ptr<CCamera> GetCamera() const;
   std::shared_ptr<CResourceManager> GetResourceManager() const;
@@ -60,7 +60,7 @@ public:
   std::shared_ptr<IRenderPipeline> GetRenderPipeline() const;
 
   float GetFrameTime() const;
-  int GetFPS() const;
+  float GetFPS() const;
   float GetApplicationRunningTime() const;
 
   void OnEvent(const TEvent &_Event) override;
@@ -91,7 +91,7 @@ private:
   float m_FrameTime;
   bool  m_RequestShutdown;
 
-  std::unique_ptr<CDisplay>         m_Display;
+  std::shared_ptr<CDisplay>         m_Display;
   std::shared_ptr<CInputManager>    m_InputManager;
   std::shared_ptr<CEventsManager>   m_EventsManager;
   std::shared_ptr<CCamera>          m_Camera;

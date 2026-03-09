@@ -67,9 +67,9 @@ void CEngine::Shutdown()
 
 int CEngine::Init()
 {
-  m_Display         = std::make_unique<CDisplay>();
-  m_InputManager    = std::make_shared<CInputManager>();
-  m_EventsManager   = std::make_shared<CEventsManager>();
+  m_Display         = CDisplay::Create();
+  m_InputManager    = CInputManager::Create();
+  m_EventsManager   = CEventsManager::Create();
   m_Camera          = CCamera::Create();
   m_World           = CWorld::Create();
   m_ResourceManager = CResourceManager::Create();
@@ -113,18 +113,14 @@ int CEngine::Run()
   std::unique_ptr<IRenderer> Renderer = std::make_unique<COpenGLRenderer>();
   Renderer->SetCamera(m_Camera);
 
-  double LastFrameTime = 0.0;
+  float LastFrameTime = 0.0f;
   while (!m_RequestShutdown && !m_Display->ShouldClose())
   {
-    const double CurrentFrameTime = glfwGetTime();
-    const float  FrameDelta       = static_cast<float>(CurrentFrameTime - LastFrameTime) * 1000.0f;
+    const double CurrentFrameTime = GetApplicationRunningTime();
+    const float  FrameDelta       = (CurrentFrameTime - LastFrameTime) * 1000.0f;
     LastFrameTime                 = CurrentFrameTime;
 
     SetFrameTime(FrameDelta);
-
-    // const int FPS = std::lround(1000.0f / FrameDelta);
-    // const std::string Title = std::format("FPS={}", FPS);
-    // m_Display->SetTitle(Title);
 
     Update(FrameDelta);
     Render(*Renderer);
@@ -172,9 +168,9 @@ float CEngine::GetFrameTime() const
   return m_FrameTime;
 }
 
-int CEngine::GetFPS() const
+float CEngine::GetFPS() const
 {
-  return static_cast<int>(1000.0f / GetFrameTime());
+  return 1000.0f / GetFrameTime();
 }
 
 float CEngine::GetApplicationRunningTime() const
@@ -202,9 +198,9 @@ std::shared_ptr<IRenderPipeline> CEngine::GetRenderPipeline() const
   return m_RenderPipeline;
 }
 
-CDisplay *CEngine::GetDisplay() const
+std::shared_ptr<CDisplay> CEngine::GetDisplay() const
 {
-  return m_Display.get();
+  return m_Display;
 }
 
 std::shared_ptr<CWorld> CEngine::GetWorld() const
@@ -293,6 +289,11 @@ void CEngine::ProcessInput(float _TimeDelta)
 
 void CEngine::DispatchKeyInput(int _Key, int _Action, int _Mods)
 {
+#if DEV_STAGE
+  if (!m_CameraDragActive)
+    return;
+#endif
+
   if (m_Camera)
     m_Camera->ProcessKeyInput(_Key, _Action, _Mods);
 }
@@ -305,13 +306,18 @@ void CEngine::DispatchMouseButton(int _Button, int _Action, int _Mods)
     if (_Action == GLFW_PRESS)
     {
       m_CameraDragActive = true;
+      m_Display->SetCursorMode(GLFW_CURSOR_DISABLED);
     }
     else if (_Action == GLFW_RELEASE)
     {
       m_CameraDragActive = false;
+      m_Display->SetCursorMode(GLFW_CURSOR_NORMAL);
       m_Camera->ResetInputState();
     }
   }
+
+  if (!m_CameraDragActive)
+    return;
 #endif
 
   if (m_Camera)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core.h"
+#include <common/Sharable.h>
 #include <common/interfaces/Updateable.h>
 #include <common/interfaces/Shutdownable.h>
 #include <common/containers/UnorderedVector.h>
@@ -10,7 +11,8 @@
 class IEventsListener;
 struct TEvent;
 
-class CEventsManager final : public IUpdateable,
+class CEventsManager final : public CSharable<CEventsManager>,
+                             public IUpdateable,
                              public IShutdownable
 {
 public:

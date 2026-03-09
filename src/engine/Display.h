@@ -5,8 +5,9 @@
 #include <functional>
 #include <string>
 #include <common/MathTypes.h>
+#include <common/Sharable.h>
 
-class CDisplay
+class CDisplay : public CSharable<CDisplay>
 {
 public:
   using ResizeCallback      = std::function<void(int, int)>;

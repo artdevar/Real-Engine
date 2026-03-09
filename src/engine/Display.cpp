@@ -230,5 +230,5 @@ void CDisplay::OnKeyPressedProxy(GLFWwindow *_Window, int _Key, int _Scancode, i
 
 void CDisplay::OnErrorOccuredProxy(int _ErrorCode, const char *_Description)
 {
-  CLogger::Log(ELogType::Error, std::format("GLFW error occured. Code: {}.\nDescription: {}.\n", _ErrorCode, _Description));
+  LOG_ERROR("[CDisplay] GLFW error occured. Code: {}.\nDescription: {}.\n", _ErrorCode, _Description);
 }

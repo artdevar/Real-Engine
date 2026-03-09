@@ -1,14 +1,12 @@
 #pragma once
 
-#include <common/Core.h>
+#include <common/Sharable.h>
 #include <glm/vec2.hpp>
 #include <optional>
 #include <unordered_set>
 
-class CInputManager
+class CInputManager : public CSharable<CInputManager>
 {
-  DISABLE_CLASS_COPY(CInputManager);
-
 public:
   CInputManager();
   ~CInputManager() = default;
