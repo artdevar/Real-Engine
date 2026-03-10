@@ -11,6 +11,7 @@ enum ERenderFlags : uint32_t
   ERenderFlags_Transparent,
   ERenderFlags_Opaque,
   ERenderFlags_Skybox,
+  ERenderFlags_EquirectangularToCubemap,
   ERenderFlags_CastShadow,
   ERenderFlags_ReceiveShadow,
   ERenderFlags_Wireframe,

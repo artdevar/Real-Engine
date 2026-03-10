@@ -9,5 +9,6 @@ enum class ERenderPassType
   PostProcess,
   Collision,
   Grid,
-  Output
+  Output,
+  EquirectangularToCubemap
 };

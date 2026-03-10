@@ -44,8 +44,11 @@ constexpr GLint ToGLFilter(ETextureFilter _Filter)
   }
 }
 
-constexpr GLint ToInternalFormat(int _Channels, bool _sRGB)
+constexpr GLint ToInternalFormat(int _Channels, bool _sRGB, bool _HDR)
 {
+  if (_HDR)
+    return GL_RGB16F;
+
   switch (_Channels)
   {
   case 1:
@@ -158,7 +161,17 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
   assert(!IsValid() && "The texture already used");
 
   TImage Image;
-  Image.Data = stbi_load(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
+  if (_Params.HDR)
+  {
+    stbi_set_flip_vertically_on_load(true);
+    Image.Data = stbi_loadf(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
+    stbi_set_flip_vertically_on_load(false);
+  }
+  else
+  {
+    Image.Data = stbi_load(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
+  }
+
   if (!Image.Data)
   {
     CLogger::Log(ELogType::Error, "[CTexture] Texture '{}' failed to load", _Path.string());
@@ -166,12 +179,11 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
   }
 
   const GLenum Format         = ToFormat(Image.Channels);
-  const GLenum InternalFormat = ToInternalFormat(Image.Channels, _Params.sRGB);
+  const GLenum InternalFormat = ToInternalFormat(Image.Channels, _Params.sRGB, _Params.HDR);
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, InternalFormat, Image.Width, Image.Height, 0, Format, GL_UNSIGNED_BYTE, Image.Data);
-  glGenerateMipmap(m_Target);
+  glTexImage2D(m_Target, 0, InternalFormat, Image.Width, Image.Height, 0, Format, _Params.HDR ? GL_FLOAT : GL_UNSIGNED_BYTE, Image.Data);
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
@@ -180,6 +192,9 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 
   if (GLAD_GL_ARB_texture_filter_anisotropic)
     glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, _Params.Anisotropy);
+
+  if (!_Params.HDR)
+    glGenerateMipmap(m_Target);
 
   if (_Params.BorderColors.has_value())
     glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
@@ -256,16 +271,52 @@ bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &Pa
 
 bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager>)
 {
-  assert(false && "Cubemap generation isn't supported yet");
-  return false;
+  if (_Params.Width <= 0 || _Params.Height <= 0)
+  {
+    CLogger::Log(ELogType::Error, "[CTexture] Invalid texture size: {}x{}", _Params.Width, _Params.Height);
+    return false;
+  }
+
+  assert(!IsValid() && "The texture already exists");
+
+  glGenTextures(1, &m_ID);
+  glBindTexture(m_Target, m_ID);
+
+  for (int i = 0; i < CUBEMAP_FACES_COUNT; ++i)
+  {
+    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, //
+                 0,                                  //
+                 _Params.InternalFormat,             //
+                 _Params.Width,                      //
+                 _Params.Height,                     //
+                 0,                                  //
+                 _Params.Format,                     //
+                 _Params.Type,                       //
+                 nullptr);
+  }
+
+  glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
+  glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
+  glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, ToGLWrap(_Params.WrapR));
+  glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
+  glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
+
+  return true;
 }
 
 bool CCubemap::Load(const std::filesystem::path &_Path, const TTextureParams &_Params)
 {
-  const auto                                Files = utils::GetFilesInDirectory(_Path);
-  CStaticArray<TImage, CUBEMAP_FACES_COUNT> Images;
-  bool                                      Success = false;
+  return LoadLegacy(_Path, _Params);
+}
 
+bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTextureParams &_Params)
+{
+  static const CStaticArray<std::string, CUBEMAP_FACES_COUNT> CUBEMAP_FACES = {"right", "left", "top", "bottom", "front", "back"};
+
+  const auto Files   = utils::GetFilesInDirectory(_Path);
+  bool       Success = false;
+
+  CStaticArray<TImage, CUBEMAP_FACES_COUNT> Images;
   for (const std::string &Face : CUBEMAP_FACES)
   {
     const auto It = std::find_if(Files.begin(), Files.end(), [&Face](const std::filesystem::path &File) {

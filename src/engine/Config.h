@@ -267,7 +267,7 @@ private:
   int   ShadowMapSize            = 4096;
   bool  AreShadowsEnabled        = true;
   bool  IsFXAAEnabled            = true;
-  bool  IsHDREnabled             = false;
+  bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = false;
   float Gamma                    = 2.2f;

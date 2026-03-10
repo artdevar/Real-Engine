@@ -49,6 +49,7 @@ private:
   void BeginFrame(IRenderer &_Renderer);
   void EndFrame(IRenderer &_Renderer);
 
+  void UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
@@ -75,6 +76,7 @@ private:
   static void RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container);
 
 private:
+  std::vector<std::shared_ptr<IRenderPass>> m_UtilityPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_ShadowPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_GeometryPasses;
   std::vector<std::shared_ptr<IRenderPass>> m_DebugPasses;

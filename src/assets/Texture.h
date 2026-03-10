@@ -32,7 +32,7 @@ protected:
 protected:
   struct TImage
   {
-    unsigned char *Data;
+    void *Data;
 
     int Width;
     int Height;
@@ -68,8 +68,6 @@ class CCubemap final : public CTextureBase
 {
   static constexpr inline int CUBEMAP_FACES_COUNT = 6;
 
-  CStaticArray<std::string, CUBEMAP_FACES_COUNT> CUBEMAP_FACES = {"right", "left", "top", "bottom", "front", "back"};
-
 public:
   CCubemap();
 
@@ -85,4 +83,5 @@ public:
 
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
+  bool LoadLegacy(const std::filesystem::path &_Path, const TTextureParams &_Params);
 };

@@ -12,6 +12,7 @@
 #include "passes/OutputRenderPass.h"
 #include "passes/CollisionRenderPass.h"
 #include "passes/GridRenderPass.h"
+#include "passes/EquirectangularToCubemapPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -62,6 +63,7 @@ void CRenderPipeline::Init(TVector2i _Viewport)
       m_DebugPasses.push_back(CGridRenderPass::Create());
   }
 
+  m_UtilityPasses.push_back(CEquirectangularToCubemapPass::Create());
   m_GeometryPasses.push_back(COpaqueRenderPass::Create());
   m_GeometryPasses.push_back(CSkyboxRenderPass::Create());
   m_GeometryPasses.push_back(CTransparentRenderPass::Create());
@@ -148,6 +150,8 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
 
   SortCommands(Commands, RenderContext);
 
+  UtilityPass(_Renderer, RenderContext, Commands);
+
   ShadowPass(_Renderer, RenderContext, Commands);
   GeometryPass(_Renderer, RenderContext, Commands);
   PostProcessPass(_Renderer, RenderContext, Commands);
@@ -176,6 +180,12 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer)
   m_LastFramePoints    = _Renderer.GetPointsCount();
 
   _Renderer.CheckErrors();
+}
+
+void CRenderPipeline::UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
+{
+  for (const std::shared_ptr<IRenderPass> &RenderPass : m_UtilityPasses)
+    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
 }
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)

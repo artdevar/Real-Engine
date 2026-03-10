@@ -87,6 +87,7 @@ struct TLightComponent
 struct TSkyboxComponent
 {
   std::shared_ptr<CTextureBase> SkyboxTexture;
+  std::shared_ptr<CTextureBase> EquirectangularTexture;
 };
 
 /////////////////////////////////////////////////////////////////

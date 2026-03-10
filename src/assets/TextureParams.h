@@ -41,6 +41,7 @@ struct TTextureParams
   int Format         = 0;
   int Type           = 0;
 
+  bool  HDR        = false;
   bool  sRGB       = false;
   float Anisotropy = 8.0f;
 

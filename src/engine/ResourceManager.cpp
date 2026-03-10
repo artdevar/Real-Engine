@@ -130,6 +130,27 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesyste
   return std::static_pointer_cast<CTextureBase>(Iter->second);
 }
 
+std::shared_ptr<CTextureBase> CResourceManager::CreateCubemap(const std::string &_Name, const TTextureParams &_Params)
+{
+  if (_Name.empty())
+  {
+    CLogger::Log(ELogType::Error, "[CResourceManager] Cubemap name is empty");
+    return nullptr;
+  }
+
+  auto Iter = m_Assets.find(_Name);
+  if (Iter == m_Assets.end())
+  {
+    std::shared_ptr<CTextureBase> Texture = std::make_shared<CCubemap>();
+    if (Texture->Generate(_Params, CPasskey(this)))
+      Iter = m_Assets.emplace(_Name, std::move(Texture)).first;
+    else
+      return nullptr;
+  }
+
+  return std::static_pointer_cast<CTextureBase>(Iter->second);
+}
+
 std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string &_Name, const TTextureParams &_Params)
 {
   if (_Name.empty())
@@ -141,7 +162,7 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string 
   auto Iter = m_Assets.find(_Name);
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
+    std::shared_ptr<CTextureBase> Texture = std::make_shared<CTexture>();
     if (Texture->Generate(_Params, CPasskey(this)))
       Iter = m_Assets.emplace(_Name, std::move(Texture)).first;
     else

@@ -152,6 +152,11 @@ public:
     glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, GL_TEXTURE_2D, _TextureID, 0);
   }
 
+  void AttachTexture(GLenum _Attachment, GLuint _TextureID, GLenum _TextureTarget)
+  {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, _TextureTarget, _TextureID, 0);
+  }
+
   void AttachRenderbuffer(GLenum _Attachment, GLuint _RenderbufferID)
   {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, _Attachment, GL_RENDERBUFFER, _RenderbufferID);

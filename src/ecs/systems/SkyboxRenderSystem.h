@@ -14,6 +14,9 @@ public:
 
 protected:
   void OnEntityAdded(ecs::TEntity _Entity) override;
+
+private:
+  bool m_Converted = false;
 };
 
 } // namespace ecs

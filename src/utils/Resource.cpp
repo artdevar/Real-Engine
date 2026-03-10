@@ -37,6 +37,11 @@ std::shared_ptr<CTextureBase> LoadCubemap(const std::filesystem::path &_Path)
   return Get()->LoadCubemap(_Path);
 }
 
+std::shared_ptr<CTextureBase> CreateCubemap(const std::string &_Name, const TTextureParams &_Params)
+{
+  return Get()->CreateCubemap(_Name, _Params);
+}
+
 std::shared_ptr<CTextureBase> CreateTexture(const std::string &_Name, const TTextureParams &_Params)
 {
   return Get()->CreateTexture(_Name, _Params);

@@ -19,21 +19,42 @@ void CSkyboxRenderSystem::Collect(CRenderQueue &_Queue)
   ecs::TEntity Entity          = m_Entities[0];
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TSkyboxComponent>(Entity);
 
-  TRenderFlags RenderFlags;
-  RenderFlags.set(ERenderFlags_Skybox);
+  if (m_Converted) [[likely]]
+  {
+    TRenderFlags RenderFlags;
+    RenderFlags.set(ERenderFlags_Skybox);
 
-  TRenderCommand Command{
-      .Material    = TMaterialD{.SkyboxTexture = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE},
-      .ModelMatrix = glm::mat4(1.0f),
-      .RenderFlags = std::move(RenderFlags),
-  };
+    TRenderCommand Command{
+        .Material    = TMaterialD{.SkyboxTexture = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE},
+        .ModelMatrix = glm::mat4(1.0f),
+        .RenderFlags = std::move(RenderFlags),
+    };
 
-  _Queue.Push(std::move(Command));
+    _Queue.Push(std::move(Command));
+  }
+  else
+  {
+    TRenderFlags RenderFlags;
+    RenderFlags.set(ERenderFlags_EquirectangularToCubemap);
+
+    TRenderCommand Command{
+        .Material    = TMaterialD{.BaseColorTexture =
+                                   SkyboxComponent.EquirectangularTexture ? SkyboxComponent.EquirectangularTexture->ID() : CTexture::INVALID_VALUE,
+                                  .SkyboxTexture = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE},
+        .ModelMatrix = glm::mat4(1.0f),
+        .RenderFlags = std::move(RenderFlags),
+    };
+
+    _Queue.Push(std::move(Command));
+
+    m_Converted = true;
+  }
 }
 
 void CSkyboxRenderSystem::OnEntityAdded(ecs::TEntity _Entity)
 {
   assert(m_Entities.Size() == 1 && "It isn't supposed to be more than 1 skybox");
+  m_Converted = false;
 }
 
 } // namespace ecs
