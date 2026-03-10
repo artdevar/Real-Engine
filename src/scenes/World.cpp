@@ -4,7 +4,7 @@
 #include "ecs/Components.h"
 #include "ecs/systems/LightingSystem.h"
 #include "ecs/systems/PhysicsSystem.h"
-#include "ecs/systems/SkyboxRenderSystem.h"
+#include "ecs/systems/EnvironmentRenderSystem.h"
 #include "ecs/systems/ModelRenderSystem.h"
 #include "ecs/systems/CollisionRenderSystem.h"
 #include "engine/Engine.h"
@@ -53,12 +53,13 @@ void CWorld::Update(float _TimeDelta)
 void CWorld::Collect(TFrameData &_FrameData)
 {
   m_EntitiesCoordinator->GetSystem<ecs::CLightingSystem>()->Collect(_FrameData);
+  m_EntitiesCoordinator->GetSystem<ecs::CEnvironmentRenderSystem>()->Collect(_FrameData);
 }
 
 void CWorld::Collect(CRenderQueue &_Queue)
 {
   m_EntitiesCoordinator->GetSystem<ecs::CModelRenderSystem>()->Collect(_Queue);
-  m_EntitiesCoordinator->GetSystem<ecs::CSkyboxRenderSystem>()->Collect(_Queue);
+  m_EntitiesCoordinator->GetSystem<ecs::CEnvironmentRenderSystem>()->Collect(_Queue);
   m_EntitiesCoordinator->GetSystem<ecs::CCollisionRenderSystem>()->Collect(_Queue);
 }
 
@@ -110,13 +111,13 @@ void CWorld::InitECS()
   m_EntitiesCoordinator->RegisterComponent<ecs::TModelComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TTransformComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TLightComponent>();
-  m_EntitiesCoordinator->RegisterComponent<ecs::TSkyboxComponent>();
+  m_EntitiesCoordinator->RegisterComponent<ecs::TEnvironmentComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TNameComponent>();
   m_EntitiesCoordinator->RegisterComponent<ecs::TCollisionComponent>();
 
   m_EntitiesCoordinator->RegisterSystem<ecs::CLightingSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CModelRenderSystem>();
-  m_EntitiesCoordinator->RegisterSystem<ecs::CSkyboxRenderSystem>();
+  m_EntitiesCoordinator->RegisterSystem<ecs::CEnvironmentRenderSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CPhysicsSystem>();
   m_EntitiesCoordinator->RegisterSystem<ecs::CCollisionRenderSystem>();
 
@@ -137,10 +138,10 @@ void CWorld::InitECS()
   }
 
   {
-    ecs::TSignature SkyboxRenderSystemSignature;
-    SkyboxRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
-    SkyboxRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TSkyboxComponent>());
-    m_EntitiesCoordinator->SetSystemSignature<ecs::CSkyboxRenderSystem>(SkyboxRenderSystemSignature);
+    ecs::TSignature EnvironmentRenderSystemSignature;
+    EnvironmentRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TNameComponent>());
+    EnvironmentRenderSystemSignature.set(m_EntitiesCoordinator->GetComponentType<ecs::TEnvironmentComponent>());
+    m_EntitiesCoordinator->SetSystemSignature<ecs::CEnvironmentRenderSystem>(EnvironmentRenderSystemSignature);
   }
 
   {

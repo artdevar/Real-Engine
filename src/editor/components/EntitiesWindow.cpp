@@ -181,44 +181,9 @@ void CEntitiesWindow::SpawnEntity(ecs::TEntityType _Type)
     if (PathToLoad.empty())
       return;
 
-    std::shared_ptr<CTextureBase> EquirectMap;
-    std::shared_ptr<CTextureBase> SkyboxTexture;
-
-    {
-      TTextureParams Params;
-      Params.HDR       = true;
-      Params.WrapS     = ETextureWrap::ClampToEdge;
-      Params.WrapT     = ETextureWrap::ClampToEdge;
-      Params.MinFilter = ETextureFilter::Linear;
-      Params.MagFilter = ETextureFilter::Linear;
-      EquirectMap      = resource::LoadTexture(PathToLoad, Params);
-    }
-
-    {
-      TTextureParams Params;
-      Params.HDR            = true;
-      Params.WrapS          = ETextureWrap::ClampToEdge;
-      Params.WrapT          = ETextureWrap::ClampToEdge;
-      Params.WrapR          = ETextureWrap::ClampToEdge;
-      Params.MinFilter      = ETextureFilter::Linear;
-      Params.MagFilter      = ETextureFilter::Linear;
-      Params.InternalFormat = GL_RGB16F;
-      Params.Format         = GL_RGB;
-      Params.Type           = GL_FLOAT;
-      Params.Width          = 512;
-      Params.Height         = 512;
-      SkyboxTexture         = resource::CreateCubemap("SKYBOX", Params);
-    }
-
-    if (!EquirectMap || !SkyboxTexture)
-    {
-      LOG_ERROR("[CEntitiesWindow] Failed to load skybox textures");
-      return;
-    }
-
-    auto &&SkyboxComponent = ecs::CComponentsFactory::Create<ecs::TSkyboxComponent>(EquirectMap, SkyboxTexture);
-    auto &&NameComponent   = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Skybox");
-    SelectEntity(m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(SkyboxComponent)).AddComponent(std::move(NameComponent)).Spawn());
+    auto &&EnvironmentComponent = ecs::CComponentsFactory::Create<ecs::TEnvironmentComponent>(PathToLoad);
+    auto &&NameComponent        = ecs::CComponentsFactory::Create<ecs::TNameComponent>("Skybox");
+    SelectEntity(m_WorldEditor.CreateEntitySpawner().AddComponent(std::move(EnvironmentComponent)).AddComponent(std::move(NameComponent)).Spawn());
 
     break;
   }

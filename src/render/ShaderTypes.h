@@ -29,6 +29,8 @@ constexpr inline GLenum TEXTURE_SHADOW_MAP_UNIT          = GL_TEXTURE20;
 constexpr inline GLint  TEXTURE_SHADOW_MAP_INDEX         = 20;
 constexpr inline GLenum TEXTURE_SKYBOX_UNIT              = GL_TEXTURE21;
 constexpr inline GLint  TEXTURE_SKYBOX_INDEX             = 21;
+constexpr inline GLenum TEXTURE_IRRADIANCE_MAP_UNIT      = GL_TEXTURE22;
+constexpr inline GLint  TEXTURE_IRRADIANCE_MAP_INDEX     = 22;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 
@@ -46,3 +48,45 @@ struct TShaderLighting
 };
 
 //
+
+constexpr float CUBE_VERTICES[] = {-1.0f, 1.0f,  -1.0f, //
+                                   -1.0f, -1.0f, -1.0f, //
+                                   1.0f,  -1.0f, -1.0f, //
+                                   1.0f,  -1.0f, -1.0f, //
+                                   1.0f,  1.0f,  -1.0f, //
+                                   -1.0f, 1.0f,  -1.0f, //
+
+                                   -1.0f, -1.0f, 1.0f,  //
+                                   -1.0f, -1.0f, -1.0f, //
+                                   -1.0f, 1.0f,  -1.0f, //
+                                   -1.0f, 1.0f,  -1.0f, //
+                                   -1.0f, 1.0f,  1.0f,  //
+                                   -1.0f, -1.0f, 1.0f,  //
+
+                                   1.0f,  -1.0f, -1.0f, //
+                                   1.0f,  -1.0f, 1.0f,  //
+                                   1.0f,  1.0f,  1.0f,  //
+                                   1.0f,  1.0f,  1.0f,  //
+                                   1.0f,  1.0f,  -1.0f, //
+                                   1.0f,  -1.0f, -1.0f, //
+
+                                   -1.0f, -1.0f, 1.0f, //
+                                   -1.0f, 1.0f,  1.0f, //
+                                   1.0f,  1.0f,  1.0f, //
+                                   1.0f,  1.0f,  1.0f, //
+                                   1.0f,  -1.0f, 1.0f, //
+                                   -1.0f, -1.0f, 1.0f, //
+
+                                   -1.0f, 1.0f,  -1.0f, //
+                                   1.0f,  1.0f,  -1.0f, //
+                                   1.0f,  1.0f,  1.0f,  //
+                                   1.0f,  1.0f,  1.0f,  //
+                                   -1.0f, 1.0f,  1.0f,  //
+                                   -1.0f, 1.0f,  -1.0f, //
+
+                                   -1.0f, -1.0f, -1.0f, //
+                                   -1.0f, -1.0f, 1.0f,  //
+                                   1.0f,  -1.0f, -1.0f, //
+                                   1.0f,  -1.0f, -1.0f, //
+                                   -1.0f, -1.0f, 1.0f,  //
+                                   1.0f,  -1.0f, 1.0f};

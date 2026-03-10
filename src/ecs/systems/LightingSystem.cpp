@@ -12,7 +12,7 @@ void CLightingSystem::Collect(TFrameData &_FrameData)
   {
     auto &Light = m_Coordinator->GetComponent<TLightComponent>(Entity);
 
-    _FrameData.Lights.emplace_back(TLight{
+    _FrameData.Lights.emplace_back(TFrameData::TLight{
         .Type      = Light.Type,
         .Direction = Light.Direction,
         .Color     = Light.Color,

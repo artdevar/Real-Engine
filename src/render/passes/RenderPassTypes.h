@@ -10,5 +10,6 @@ enum class ERenderPassType
   Collision,
   Grid,
   Output,
-  EquirectangularToCubemap
+  EquirectangularToCubemap,
+  IrradianceConvolution
 };

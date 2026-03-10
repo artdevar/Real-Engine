@@ -4,6 +4,7 @@
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
 #include "render/Buffer.h"
+#include "render/FrameData.h"
 #include "passes/RenderPassTypes.h"
 #include <events/EventsListener.h>
 #include <common/Sharable.h>
@@ -19,7 +20,6 @@ class CRenderQueue;
 class CTextureBase;
 struct TRenderContext;
 struct TRenderTarget;
-struct TFrameData;
 struct TRenderCommand;
 
 class CRenderPipeline final : public CSharable<CRenderPipeline>,
@@ -56,10 +56,10 @@ private:
   void PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
 
-  void SetLightingData(const std::vector<TLight> &_Lighting);
+  void SetLightingData(const std::vector<TFrameData::TLight> &_Lighting);
   glm::mat4 CalculateLightSpaceMatrix() const;
 
-  TRenderContext CreateRenderContext(IRenderer &_Renderer);
+  TRenderContext CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer);
   std::unique_ptr<TRenderTarget> CreateRenderTarget(const std::string &_Name, TVector2i _Size);
 
 private:

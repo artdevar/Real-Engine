@@ -12,6 +12,7 @@ enum ERenderFlags : uint32_t
   ERenderFlags_Opaque,
   ERenderFlags_Skybox,
   ERenderFlags_EquirectangularToCubemap,
+  ERenderFlags_IrradianceConvolution,
   ERenderFlags_CastShadow,
   ERenderFlags_ReceiveShadow,
   ERenderFlags_Wireframe,
@@ -21,7 +22,7 @@ enum ERenderFlags : uint32_t
 
 using TRenderFlags = std::bitset<ERenderFlags_Count>;
 
-struct TMaterialD
+struct TMaterial
 {
   uint32_t   BaseColorTexture;
   int32_t    BaseColorTextureTexCoordIndex;
@@ -31,7 +32,6 @@ struct TMaterialD
   int32_t    MetallicRoughnessTextureTexCoordIndex;
   uint32_t   EmissiveTexture;
   int32_t    EmissiveTextureTexCoordIndex;
-  uint32_t   SkyboxTexture;
   glm::vec4  BaseColorFactor;
   glm::vec3  EmissiveFactor;
   float      MetallicFactor;
@@ -41,9 +41,17 @@ struct TMaterialD
   bool       IsDoubleSided;
 };
 
+struct TEnvironment
+{
+  uint32_t SkyboxTexture;
+  uint32_t EquirectangularMap;
+  uint32_t IrradianceMap;
+};
+
 struct TRenderCommand
 {
-  TMaterialD     Material;
+  TMaterial      Material;
+  TEnvironment   Environment;
   TSharedVAO     VAO;
   glm::mat4      ModelMatrix;
   uint32_t       IndicesCount;

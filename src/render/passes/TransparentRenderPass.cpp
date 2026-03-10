@@ -25,6 +25,17 @@ void CTransparentRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
+
+  if (_RenderContext.IrradianceMap != CCubemap::INVALID_VALUE)
+  {
+    CCubemap::Bind(TEXTURE_IRRADIANCE_MAP_UNIT, _RenderContext.IrradianceMap);
+    _Renderer.SetUniform("u_IrradianceMap", TEXTURE_IRRADIANCE_MAP_INDEX);
+    _Renderer.SetUniform("u_HasIrradianceMap", true);
+  }
+  else
+  {
+    _Renderer.SetUniform("u_HasIrradianceMap", false);
+  }
 }
 
 void CTransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)

@@ -84,10 +84,11 @@ struct TLightComponent
 
 ////////////////////////////////////////////////////////////////////
 
-struct TSkyboxComponent
+struct TEnvironmentComponent
 {
   std::shared_ptr<CTextureBase> SkyboxTexture;
-  std::shared_ptr<CTextureBase> EquirectangularTexture;
+  std::shared_ptr<CTextureBase> EquirectangularMap;
+  std::shared_ptr<CTextureBase> IrradianceMap;
 };
 
 /////////////////////////////////////////////////////////////////

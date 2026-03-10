@@ -35,10 +35,12 @@ struct TMaterial
   bool  IsDoubleSided;
 };
 
-uniform TMaterial u_Material;
-uniform sampler2D u_ShadowMap;
-uniform mat4      u_LightSpaceMatrix;
-uniform vec3      u_ViewPos;
+uniform TMaterial   u_Material;
+uniform sampler2D   u_ShadowMap;
+uniform samplerCube u_IrradianceMap;
+uniform bool        u_HasIrradianceMap;
+uniform mat4        u_LightSpaceMatrix;
+uniform vec3        u_ViewPos;
 
 in vec3 io_Normal;
 in vec3 io_FragPos;
@@ -85,6 +87,11 @@ float GeometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 vec3 FresnelSchlick(float cosTheta, vec3 F0)
 {
   return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+  return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
 float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
@@ -152,7 +159,7 @@ void main()
   // === Fresnel base reflectance ===
   vec3 F0 = vec3(0.04);
   F0      = mix(F0, albedo, metallic);
-  vec3 F  = FresnelSchlick(max(dot(H, V), 0.0), F0);
+  vec3 F  = fresnelSchlickRoughness(max(dot(H, V), 0.0), F0, roughness);
 
   // === Cook-Torrance BRDF ===
   float NDF = DistributionGGX(N, H, roughness);
@@ -167,7 +174,9 @@ void main()
   vec3 kD = vec3(1.0) - kS;
   kD     *= 1.0 - metallic;
 
-  vec3 diffuse = kD * albedo / PI;
+  vec3 irradiance = u_HasIrradianceMap ? texture(u_IrradianceMap, N).rgb : vec3(0.5) * albedo;
+  vec3 diffuse    = irradiance * albedo;
+  vec3 ambient    = kD * diffuse;
 
   // Emissive
   vec3 emissive = texture(u_Material.EmissiveTexture, emissiveTexCoords).rgb * u_Material.EmissiveFactor;
@@ -179,9 +188,6 @@ void main()
   vec3 radiance = LightDirectional.Color * LightDirectional.Intensity;
 
   vec3 Lo = (1.0 - shadow) * (diffuse + specular) * radiance * NdotL;
-
-  // Ambient (very basic, no IBL yet)
-  vec3 ambient = vec3(0.5) * albedo;
 
   vec3  color = ambient + Lo + emissive;
   float alpha = (u_Material.AlphaMode == 0) ? 1.0 : baseColorSample.a;

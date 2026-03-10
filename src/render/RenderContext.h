@@ -18,4 +18,5 @@ struct TRenderContext
   glm::mat4 ViewProjectionMatrix;
   glm::mat4 LightSpaceMatrix;
   uint32_t  ShadowMap;
+  uint32_t  IrradianceMap;
 };

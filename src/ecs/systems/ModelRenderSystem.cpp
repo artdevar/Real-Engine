@@ -33,7 +33,7 @@ void CModelRenderSystem::Collect(CRenderQueue &_Queue)
 
       TRenderCommand Command{
           .Material =
-              TMaterialD{
+              TMaterial{
                   .BaseColorTexture                      = GetTextureID(Material.BaseColorTexture),
                   .BaseColorTextureTexCoordIndex         = Material.BaseColorTexture.TexCoordIndex,
                   .NormalTexture                         = GetTextureID(Material.NormalTexture),
@@ -42,7 +42,6 @@ void CModelRenderSystem::Collect(CRenderQueue &_Queue)
                   .MetallicRoughnessTextureTexCoordIndex = Material.MetallicRoughnessTexture.TexCoordIndex,
                   .EmissiveTexture                       = GetTextureID(Material.EmissiveTexture),
                   .EmissiveTextureTexCoordIndex          = Material.EmissiveTexture.TexCoordIndex,
-                  .SkyboxTexture                         = CCubemap::INVALID_VALUE,
                   .BaseColorFactor                       = Material.BaseColorFactor,
                   .EmissiveFactor                        = Material.EmissiveFactor,
                   .MetallicFactor                        = Material.MetallicFactor,

@@ -13,6 +13,7 @@
 #include "passes/CollisionRenderPass.h"
 #include "passes/GridRenderPass.h"
 #include "passes/EquirectangularToCubemapPass.h"
+#include "passes/IrradianceConvolutionPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -42,6 +43,7 @@ void CRenderPipeline::Shutdown()
 {
   m_SceneTarget.reset();
   m_PostProcessTarget.reset();
+  m_FinalTarget.reset();
 }
 
 void CRenderPipeline::Init(TVector2i _Viewport)
@@ -64,6 +66,8 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   }
 
   m_UtilityPasses.push_back(CEquirectangularToCubemapPass::Create());
+  m_UtilityPasses.push_back(CIrradianceConvolutionPass::Create());
+
   m_GeometryPasses.push_back(COpaqueRenderPass::Create());
   m_GeometryPasses.push_back(CSkyboxRenderPass::Create());
   m_GeometryPasses.push_back(CTransparentRenderPass::Create());
@@ -146,7 +150,7 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
   SetLightingData(FrameData.Lights);
 
   std::vector<TRenderCommand> Commands      = _Queue.StealCommands();
-  TRenderContext              RenderContext = CreateRenderContext(_Renderer);
+  TRenderContext              RenderContext = CreateRenderContext(FrameData, _Renderer);
 
   SortCommands(Commands, RenderContext);
 
@@ -296,12 +300,12 @@ std::span<TRenderCommand> CRenderPipeline::FilterCommands(const std::shared_ptr<
   return std::span<TRenderCommand>(_Commands.begin(), It);
 }
 
-void CRenderPipeline::SetLightingData(const std::vector<TLight> &_Lighting)
+void CRenderPipeline::SetLightingData(const std::vector<TFrameData::TLight> &_Lighting)
 {
   TShaderLighting ShaderLighting;
   std::memset(&ShaderLighting, 0, sizeof(TShaderLighting));
 
-  for (const TLight &Light : _Lighting)
+  for (const auto &Light : _Lighting)
   {
     switch (Light.Type)
     {
@@ -335,7 +339,7 @@ glm::mat4 CRenderPipeline::CalculateLightSpaceMatrix() const
   return LightProjection * LightView;
 }
 
-TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
+TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer)
 {
   const auto &Camera = _Renderer.GetCamera();
 
@@ -349,6 +353,7 @@ TRenderContext CRenderPipeline::CreateRenderContext(IRenderer &_Renderer)
       .ViewProjectionMatrix    = Camera->GetPerspectiveProjection() * Camera->GetView(),
       .LightSpaceMatrix        = CalculateLightSpaceMatrix(),
       .ShadowMap               = 0,
+      .IrradianceMap           = FrameData.Environment.IrradianceMap,
   };
 }
 

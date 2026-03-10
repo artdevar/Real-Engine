@@ -45,13 +45,13 @@ public:
   }
 
   template <typename Component>
-  requires(std::is_same_v<Component, TSkyboxComponent>)
-  [[nodiscard]] static Component Create(const std::shared_ptr<CTextureBase> &_EquirectMap, const std::shared_ptr<CTextureBase> &_Skybox)
+  requires(std::is_same_v<Component, TEnvironmentComponent>)
+  [[nodiscard]] static Component Create(const std::filesystem::path &_Path)
   {
-    assert(_EquirectMap != nullptr);
+    assert(!_Path.empty());
 
-    TSkyboxComponent SkyboxComponent;
-    CreateSkyboxComponent(_EquirectMap, _Skybox, SkyboxComponent);
+    TEnvironmentComponent SkyboxComponent;
+    CreateEnvironmentComponent(_Path, SkyboxComponent);
 
     return SkyboxComponent;
   }
@@ -82,9 +82,7 @@ public:
 private:
   static void CreateModelComponent(const std::shared_ptr<CModel> &_Model, TModelComponent &_Component);
   static void CreateCollisionComponent(const std::shared_ptr<CModel> &_Model, TCollisionComponent &_Component);
-  static void CreateSkyboxComponent(const std::shared_ptr<CTextureBase> &_EquirectMap,
-                                    const std::shared_ptr<CTextureBase> &_Skybox,
-                                    TSkyboxComponent                    &_Component);
+  static void CreateEnvironmentComponent(const std::filesystem::path &_Path, TEnvironmentComponent &_Component);
 };
 
 } // namespace ecs

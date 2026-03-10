@@ -72,13 +72,3 @@ enum class ELightType : uint8_t
   Point,
   Spotlight
 };
-
-struct TLight
-{
-  ELightType Type;
-
-  glm::vec3 Direction = glm::vec3(0.0f);
-  glm::vec3 Color     = glm::vec3(1.0f);
-
-  float Intensity = 1.0f;
-};

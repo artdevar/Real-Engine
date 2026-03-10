@@ -9,13 +9,13 @@ namespace editor
 {
 ecs::TTypeID TSkyboxComponentRenderer::GetComponentTypeID() noexcept
 {
-  return ecs::utils::GetComponentTypeID<ecs::TSkyboxComponent>();
+  return ecs::utils::GetComponentTypeID<ecs::TEnvironmentComponent>();
 }
 
 void TSkyboxComponentRenderer::Render(void *Data) noexcept
 {
-  auto *Component = static_cast<ecs::TSkyboxComponent *>(Data);
-  ImGui::Text("Path: %s", Component->SkyboxTexture ? Component->SkyboxTexture->GetPath().string().c_str() : "Not loaded");
+  auto *Component = static_cast<ecs::TEnvironmentComponent *>(Data);
+  ImGui::Text("Path: %s", Component->EquirectangularMap ? Component->EquirectangularMap->GetPath().string().c_str() : "Not loaded");
 }
 
 } // namespace editor
