@@ -17,21 +17,20 @@ This project is built with **GCC 15.2.1**. From time to time I fix compilation f
 - GCC >= 13 (or Clang >= 15)
 
 ### Build Steps
-1. Clone the repository and install dependencies (see CMakeLists.txt for details).
-2. Create a build directory:
+1. Create a build directory:
    ```sh
    mkdir build
    cd build
    ```
-3. Configure the project:
+2. Configure the project:
    ```sh
    cmake ..
    ```
-4. Build the executable:
+3. Build the executable:
    ```sh
    make -j
    ```
-5. Run the engine:
+4. Run the engine:
    ```sh
    ./Real_Engine
    ```
