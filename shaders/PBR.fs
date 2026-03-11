@@ -23,6 +23,9 @@ struct TMaterial
   sampler2D NormalTexture;
   int       NormalTextureTexCoordIndex;
 
+  sampler2D OcclusionTexture;
+  int       OcclusionTextureTexCoordIndex;
+
   sampler2D EmissiveTexture;
   int       EmissiveTextureTexCoordIndex;
 
@@ -30,6 +33,7 @@ struct TMaterial
   vec3  EmissiveFactor;
   float MetallicFactor;
   float RoughnessFactor;
+  float OcclusionStrength;
   float AlphaCutoff;
   int   AlphaMode;
   bool  IsDoubleSided;
@@ -126,6 +130,7 @@ void main()
   vec2 normalTexCoords            = io_TexCoords[u_Material.NormalTextureTexCoordIndex];
   vec2 emissiveTexCoords          = io_TexCoords[u_Material.EmissiveTextureTexCoordIndex];
   vec2 metallicRoughnessTexCoords = io_TexCoords[u_Material.MetallicRoughnessTextureTexCoordIndex];
+  vec2 occlusionTexCoords         = io_TexCoords[u_Material.OcclusionTextureTexCoordIndex];
 
   // Base Color
   vec4 baseColorSample = texture(u_Material.BaseColorTexture, baseColorTexCoords) * u_Material.BaseColorFactor;
@@ -159,9 +164,10 @@ void main()
   vec3 F0 = vec3(0.04);
   F0      = mix(F0, albedo, metallic);
 
-  float shadow   = CalculateShadow(io_FragLightPos, L, N);
-  vec3  emissive = texture(u_Material.EmissiveTexture, emissiveTexCoords).rgb * u_Material.EmissiveFactor;
-  vec3  radiance = LightDirectional.Color * LightDirectional.Intensity;
+  float shadow    = CalculateShadow(io_FragLightPos, L, N);
+  float occlusion = texture(u_Material.OcclusionTexture, occlusionTexCoords).r * u_Material.OcclusionStrength;
+  vec3  emissive  = texture(u_Material.EmissiveTexture, emissiveTexCoords).rgb * u_Material.EmissiveFactor;
+  vec3  radiance  = LightDirectional.Color * LightDirectional.Intensity;
 
   float NDF = DistributionGGX(N, H, roughness);
   float G   = GeometrySmith(N, V, L, roughness);
@@ -183,7 +189,7 @@ void main()
 
   vec3 irradiance = texture(u_IrradianceMap, N).rgb;
   vec3 diffuse    = irradiance * albedo;
-  vec3 ambient    = kD * diffuse;
+  vec3 ambient    = kD * diffuse * occlusion;
 
   float alpha = (u_Material.AlphaMode == 0) ? 1.0 : baseColorSample.a;
 

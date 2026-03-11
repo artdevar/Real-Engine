@@ -30,12 +30,15 @@ struct TMaterial
   int32_t    NormalTextureTexCoordIndex;
   uint32_t   MetallicRoughnessTexture;
   int32_t    MetallicRoughnessTextureTexCoordIndex;
+  uint32_t   OcclusionTexture;
+  int32_t    OcclusionTextureTexCoordIndex;
   uint32_t   EmissiveTexture;
   int32_t    EmissiveTextureTexCoordIndex;
   glm::vec4  BaseColorFactor;
   glm::vec3  EmissiveFactor;
   float      MetallicFactor;
   float      RoughnessFactor;
+  float      OcclusionStrength;
   float      AlphaCutoff;
   EAlphaMode AlphaMode;
   bool       IsDoubleSided;

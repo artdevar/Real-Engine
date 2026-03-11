@@ -9,6 +9,7 @@ enum class ETextureType
   BasicColor,
   Normal,
   Roughness,
+  Occlusion,
   Emissive
 };
 

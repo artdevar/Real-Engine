@@ -112,12 +112,14 @@ static void ParseMaterials(const TModelData &_ModelData, TModelComponent &_Compo
     Material.EmissiveFactor                  = SrcMaterial.EmissiveFactor;
     Material.MetallicFactor                  = SrcMaterial.MetallicFactor;
     Material.RoughnessFactor                 = SrcMaterial.RoughnessFactor;
+    Material.OcclusionStrength               = SrcMaterial.OcclusionStrength;
     Material.IsDoubleSided                   = SrcMaterial.IsDoubleSided;
     Material.AlphaCutoff                     = SrcMaterial.AlphaCutoff;
     Material.AlphaMode                       = SrcMaterial.AlphaMode;
     Material.BaseColorTexture                = LoadTexture(_ModelData, SrcMaterial.BaseColorTexture, ETextureType::BasicColor);
     Material.MetallicRoughnessTexture        = LoadTexture(_ModelData, SrcMaterial.MetallicRoughnessTexture, ETextureType::Roughness);
     Material.NormalTexture                   = LoadTexture(_ModelData, SrcMaterial.NormalTexture, ETextureType::Normal);
+    Material.OcclusionTexture                = LoadTexture(_ModelData, SrcMaterial.OcclusionTexture, ETextureType::Occlusion);
     Material.EmissiveTexture                 = LoadTexture(_ModelData, SrcMaterial.EmissiveTexture, ETextureType::Emissive);
   }
 }
@@ -208,12 +210,14 @@ void CComponentsFactory::CreateModelComponent(const std::shared_ptr<CModel> &_Mo
     Material.EmissiveFactor                   = glm::vec3(0.0f);
     Material.MetallicFactor                   = 1.0f;
     Material.RoughnessFactor                  = 1.0f;
-    Material.IsDoubleSided                    = false;
+    Material.OcclusionStrength                = 1.0f;
     Material.AlphaCutoff                      = 0.5f;
     Material.AlphaMode                        = EAlphaMode::Opaque;
+    Material.IsDoubleSided                    = false;
     Material.BaseColorTexture.Texture         = resource::GetDefaultTexture(ETextureType::BasicColor);
     Material.MetallicRoughnessTexture.Texture = resource::GetDefaultTexture(ETextureType::Roughness);
     Material.NormalTexture.Texture            = resource::GetDefaultTexture(ETextureType::Normal);
+    Material.OcclusionTexture.Texture         = resource::GetDefaultTexture(ETextureType::Occlusion);
     Material.EmissiveTexture.Texture          = resource::GetDefaultTexture(ETextureType::Emissive);
   }
   else

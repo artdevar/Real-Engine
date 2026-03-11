@@ -177,13 +177,15 @@ std::filesystem::path CResourceManager::GetDefaultTexturePath(ETextureType _Text
   switch (_TextureType)
   {
   case ETextureType::BasicColor:
-    return CConfig::Instance().GetTexturesDir() / "basic.jpg";
+    return CConfig::Instance().GetTexturesDir() / "white.jpg";
   case ETextureType::Normal:
     return CConfig::Instance().GetTexturesDir() / "normal.png";
+  case ETextureType::Occlusion:
+    return CConfig::Instance().GetTexturesDir() / "white.jpg";
   case ETextureType::Roughness:
     return CConfig::Instance().GetTexturesDir() / "roughness.jpg";
   case ETextureType::Emissive:
-    return CConfig::Instance().GetTexturesDir() / "emissive.jpg";
+    return CConfig::Instance().GetTexturesDir() / "black.jpg";
   default:
     return CConfig::Instance().GetTexturesDir() / "missing.jpg";
   }

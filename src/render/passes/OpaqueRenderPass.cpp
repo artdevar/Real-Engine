@@ -39,19 +39,23 @@ void COpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
     CTexture::Bind(TEXTURE_NORMAL_UNIT, Command->Material.NormalTexture);
     CTexture::Bind(TEXTURE_EMISSIVE_UNIT, Command->Material.EmissiveTexture);
     CTexture::Bind(TEXTURE_METALLIC_ROUGHNESS_UNIT, Command->Material.MetallicRoughnessTexture);
+    CTexture::Bind(TEXTURE_OCCLUSION_UNIT, Command->Material.OcclusionTexture);
 
     _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
     _Renderer.SetUniform("u_Material.NormalTexture", TEXTURE_NORMAL_INDEX);
     _Renderer.SetUniform("u_Material.EmissiveTexture", TEXTURE_EMISSIVE_INDEX);
     _Renderer.SetUniform("u_Material.MetallicRoughnessTexture", TEXTURE_METALLIC_ROUGHNESS_INDEX);
+    _Renderer.SetUniform("u_Material.OcclusionTexture", TEXTURE_OCCLUSION_INDEX);
     _Renderer.SetUniform("u_Material.BaseColorTextureTexCoordIndex", Command->Material.BaseColorTextureTexCoordIndex);
     _Renderer.SetUniform("u_Material.NormalTextureTexCoordIndex", Command->Material.NormalTextureTexCoordIndex);
     _Renderer.SetUniform("u_Material.EmissiveTextureTexCoordIndex", Command->Material.EmissiveTextureTexCoordIndex);
     _Renderer.SetUniform("u_Material.MetallicRoughnessTextureTexCoordIndex", Command->Material.MetallicRoughnessTextureTexCoordIndex);
+    _Renderer.SetUniform("u_Material.OcclusionTextureTexCoordIndex", Command->Material.OcclusionTextureTexCoordIndex);
     _Renderer.SetUniform("u_Material.BaseColorFactor", Command->Material.BaseColorFactor);
     _Renderer.SetUniform("u_Material.EmissiveFactor", Command->Material.EmissiveFactor);
     _Renderer.SetUniform("u_Material.MetallicFactor", Command->Material.MetallicFactor);
     _Renderer.SetUniform("u_Material.RoughnessFactor", Command->Material.RoughnessFactor);
+    _Renderer.SetUniform("u_Material.OcclusionStrength", Command->Material.OcclusionStrength);
     _Renderer.SetUniform("u_Material.IsDoubleSided", Command->Material.IsDoubleSided);
     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Command->Material.AlphaMode));
     _Renderer.SetUniform("u_Material.AlphaCutoff", Command->Material.AlphaCutoff);

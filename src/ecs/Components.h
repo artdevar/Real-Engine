@@ -56,14 +56,16 @@ struct TModelComponent
     TTexture   BaseColorTexture;
     TTexture   MetallicRoughnessTexture;
     TTexture   NormalTexture;
+    TTexture   OcclusionTexture;
     TTexture   EmissiveTexture;
-    glm::vec4  BaseColorFactor = glm::vec4(1.0f);
-    glm::vec3  EmissiveFactor  = glm::vec3(0.0f);
-    float      MetallicFactor  = 1.0f;
-    float      RoughnessFactor = 1.0f;
-    float      AlphaCutoff     = 0.5f;
-    EAlphaMode AlphaMode       = EAlphaMode::Opaque;
-    bool       IsDoubleSided   = false;
+    glm::vec4  BaseColorFactor   = glm::vec4(1.0f);
+    glm::vec3  EmissiveFactor    = glm::vec3(0.0f);
+    float      MetallicFactor    = 1.0f;
+    float      RoughnessFactor   = 1.0f;
+    float      OcclusionStrength = 1.0f;
+    float      AlphaCutoff       = 0.5f;
+    EAlphaMode AlphaMode         = EAlphaMode::Opaque;
+    bool       IsDoubleSided     = false;
   };
 
   std::vector<TPrimitiveData> Primitives;

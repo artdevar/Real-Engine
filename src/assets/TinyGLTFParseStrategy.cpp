@@ -362,6 +362,13 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
       Material.NormalTexture.TexCoordIndex = SourceMaterial.normalTexture.texCoord;
     }
 
+    if (SourceMaterial.occlusionTexture.index >= 0)
+    {
+      Material.OcclusionTexture.ImageIndex    = _Source.textures[SourceMaterial.occlusionTexture.index].source;
+      Material.OcclusionTexture.SamplerIndex  = _Source.textures[SourceMaterial.occlusionTexture.index].sampler;
+      Material.OcclusionTexture.TexCoordIndex = SourceMaterial.occlusionTexture.texCoord;
+    }
+
     if (SourceMaterial.emissiveTexture.index >= 0)
     {
       Material.EmissiveTexture.ImageIndex    = _Source.textures[SourceMaterial.emissiveTexture.index].source;
@@ -375,6 +382,7 @@ void CTinyGLTFParseStrategy::ParseMaterials(const tinygltf::Model &_Source, TMod
     Material.EmissiveFactor                   = glm::vec3(EmissiveFactor[0], EmissiveFactor[1], EmissiveFactor[2]);
     Material.MetallicFactor                   = static_cast<float>(PBR.metallicFactor);
     Material.RoughnessFactor                  = static_cast<float>(PBR.roughnessFactor);
+    Material.OcclusionStrength                = static_cast<float>(SourceMaterial.occlusionTexture.strength);
     Material.AlphaCutoff                      = static_cast<float>(SourceMaterial.alphaCutoff);
     Material.AlphaMode                        = ToModelAlphaMode(SourceMaterial.alphaMode);
     Material.IsDoubleSided                    = SourceMaterial.doubleSided;
