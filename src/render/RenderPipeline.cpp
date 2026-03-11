@@ -145,14 +145,12 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
 
 void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer)
 {
-  BeginFrame(_Renderer);
-
-  SetLightingData(FrameData.Lights);
-
   std::vector<TRenderCommand> Commands      = _Queue.StealCommands();
   TRenderContext              RenderContext = CreateRenderContext(FrameData, _Renderer);
 
+  BeginFrame(_Renderer, RenderContext);
   SortCommands(Commands, RenderContext);
+  SetLightingData(FrameData.Lights);
 
   UtilityPass(_Renderer, RenderContext, Commands);
 
@@ -166,11 +164,18 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
   EndFrame(_Renderer);
 }
 
-void CRenderPipeline::BeginFrame(IRenderer &_Renderer)
+void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
 {
   _Renderer.OnFrameBegin();
-  _Renderer.SetViewport(CEngine::Instance().GetViewportSize());
+
+  _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
+
+  if (_RenderContext.FinalRenderTarget)
+    _RenderContext.FinalRenderTarget->FrameBuffer.Bind();
+  else
+    CFrameBuffer::BindDefault();
+
   _Renderer.ClearColor({0.2f, 0.2f, 0.2f, 1.0f});
 }
 
@@ -194,8 +199,6 @@ void CRenderPipeline::UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderC
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
-
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_ShadowPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
 }
@@ -203,8 +206,6 @@ void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderCo
 void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
-
-  _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_GeometryPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -247,7 +248,7 @@ void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderCo
   if (_RenderContext.FinalRenderTarget)
     _RenderContext.FinalRenderTarget->FrameBuffer.Bind();
   else
-    _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+    CFrameBuffer::BindDefault();
 
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_OutputPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
@@ -265,11 +266,17 @@ void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPa
   if (!_RenderPass->IsAvailable())
     return;
 
-  std::span<TRenderCommand> CommandsSpan = FilterCommands(_RenderPass, _Commands);
+  std::vector<const TRenderCommand *> Commands;
+  if (_RenderPass->NeedsCommands())
+  {
+    Commands = FilterCommands(_RenderPass, _Commands);
+    if (Commands.empty())
+      return;
+  }
 
-  _RenderPass->PreExecute(_Renderer, _RenderContext, CommandsSpan);
-  _RenderPass->Execute(_Renderer, _RenderContext, CommandsSpan);
-  _RenderPass->PostExecute(_Renderer, _RenderContext, CommandsSpan);
+  _RenderPass->PreExecute(_Renderer, _RenderContext, Commands);
+  _RenderPass->Execute(_Renderer, _RenderContext, Commands);
+  _RenderPass->PostExecute(_Renderer, _RenderContext, Commands);
 }
 
 void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext)
@@ -291,13 +298,18 @@ void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const
   });
 }
 
-std::span<TRenderCommand> CRenderPipeline::FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass, std::vector<TRenderCommand> &_Commands)
+std::vector<const TRenderCommand *> CRenderPipeline::FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
+                                                                    const std::vector<TRenderCommand>  &_Commands)
 {
-  auto It = std::stable_partition(_Commands.begin(), _Commands.end(), [&_RenderPass](const TRenderCommand &Command) {
-    return _RenderPass->Accepts(Command);
-  });
+  std::vector<const TRenderCommand *> FilteredCommands;
 
-  return std::span<TRenderCommand>(_Commands.begin(), It);
+  for (const TRenderCommand &Command : _Commands)
+  {
+    if (_RenderPass->Accepts(Command))
+      FilteredCommands.push_back(&Command);
+  }
+
+  return FilteredCommands;
 }
 
 void CRenderPipeline::SetLightingData(const std::vector<TFrameData::TLight> &_Lighting)

@@ -22,7 +22,7 @@ CSkyboxRenderPass::CSkyboxRenderPass() :
   m_VBO.Unbind();
 }
 
-void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LEQUAL);
@@ -34,13 +34,13 @@ void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetUniform("u_Projection", _RenderContext.ProjectionMatrix);
 }
 
-void CSkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CSkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_VAO.Bind();
 
-  for (const TRenderCommand &Command : _Commands)
+  for (const TRenderCommand *Command : _Commands)
   {
-    CCubemap::Bind(TEXTURE_SKYBOX_UNIT, Command.Environment.SkyboxTexture);
+    CCubemap::Bind(TEXTURE_SKYBOX_UNIT, Command->Environment.SkyboxTexture);
     _Renderer.SetUniform("u_Cubemap", TEXTURE_SKYBOX_INDEX);
 
     _Renderer.DrawArrays(EPrimitiveMode::Triangles, ARRAY_SIZE(CUBE_VERTICES) / 3);
@@ -49,7 +49,7 @@ void CSkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
   m_VAO.Unbind();
 }
 
-void CSkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CSkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthMask(true);
   _Renderer.SetDepthFunc(GL_LESS);
@@ -63,4 +63,9 @@ bool CSkyboxRenderPass::Accepts(const TRenderCommand &_Command) const
 bool CSkyboxRenderPass::IsAvailable() const
 {
   return m_Shader != nullptr;
+}
+
+bool CSkyboxRenderPass::NeedsCommands() const
+{
+  return true;
 }

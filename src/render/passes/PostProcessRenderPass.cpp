@@ -9,18 +9,6 @@
 #include "engine/Config.h"
 #include "utils/Resource.h"
 
-static constexpr float QUAD_VERTICES[] = {
-    // positions        // texcoords
-
-    -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, //
-    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, //
-    1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, //
-
-    -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, //
-    1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, //
-    1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
-};
-
 CPostProcessRenderPass::CPostProcessRenderPass() :
     m_Shader(resource::LoadShader("PostProcess")),
     m_VAO(),
@@ -39,7 +27,7 @@ CPostProcessRenderPass::CPostProcessRenderPass() :
   m_VAO.Unbind();
 }
 
-void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthTest(false);
   _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
@@ -47,7 +35,7 @@ void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
   m_VAO.Bind();
 }
 
-void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
   _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
@@ -60,19 +48,24 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }
 
-void CPostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CPostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_VAO.Unbind();
 }
 
 bool CPostProcessRenderPass::Accepts(const TRenderCommand &_Command) const
 {
-  return !_Command.RenderFlags.test(ERenderFlags_Wireframe);
+  return false;
 }
 
 bool CPostProcessRenderPass::IsAvailable() const
 {
   return m_Shader != nullptr;
+}
+
+bool CPostProcessRenderPass::NeedsCommands() const
+{
+  return false;
 }
 
 void CPostProcessRenderPass::OnEvent(const TEvent &_Event)

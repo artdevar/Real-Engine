@@ -55,20 +55,20 @@ CCollisionRenderPass::CCollisionRenderPass() :
   m_VAO.Unbind();
 }
 
-void CCollisionRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CCollisionRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthTest(false);
   _Renderer.SetCullFace(ECullMode::None);
   _Renderer.SetShader(m_Shader);
 }
 
-void CCollisionRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CCollisionRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_VAO.Bind();
 
-  for (const TRenderCommand &Command : _Commands)
+  for (const TRenderCommand *Command : _Commands)
   {
-    _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command.ModelMatrix);
+    _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command->ModelMatrix);
     _Renderer.SetUniform("u_Color", m_WireframeColor);
 
     _Renderer.DrawArrays(EPrimitiveMode::Lines, ARRAY_SIZE(WIREFRAME_VERTICES));
@@ -77,7 +77,7 @@ void CCollisionRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Render
   m_VAO.Unbind();
 }
 
-void CCollisionRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CCollisionRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
 }
 
@@ -89,6 +89,11 @@ bool CCollisionRenderPass::Accepts(const TRenderCommand &_Command) const
 bool CCollisionRenderPass::IsAvailable() const
 {
   return m_Shader != nullptr;
+}
+
+bool CCollisionRenderPass::NeedsCommands() const
+{
+  return true;
 }
 
 void CCollisionRenderPass::OnEvent(const TEvent &_Event)

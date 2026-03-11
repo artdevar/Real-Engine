@@ -60,7 +60,7 @@ CGridRenderPass::CGridRenderPass() :
   m_VAO.Unbind();
 }
 
-void CGridRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CGridRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthMask(false);
@@ -71,7 +71,7 @@ void CGridRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderCo
   _Renderer.SetShader(m_Shader);
 }
 
-void CGridRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CGridRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_VAO.Bind();
 
@@ -86,7 +86,7 @@ void CGridRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderConte
   m_VAO.Unbind();
 }
 
-void CGridRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CGridRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthMask(true);
 }
@@ -99,4 +99,9 @@ bool CGridRenderPass::Accepts(const TRenderCommand &_Command) const
 bool CGridRenderPass::IsAvailable() const
 {
   return m_Shader != nullptr;
+}
+
+bool CGridRenderPass::NeedsCommands() const
+{
+  return false;
 }

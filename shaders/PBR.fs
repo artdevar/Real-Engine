@@ -38,7 +38,6 @@ struct TMaterial
 uniform TMaterial   u_Material;
 uniform sampler2D   u_ShadowMap;
 uniform samplerCube u_IrradianceMap;
-uniform bool        u_HasIrradianceMap;
 uniform mat4        u_LightSpaceMatrix;
 uniform vec3        u_ViewPos;
 

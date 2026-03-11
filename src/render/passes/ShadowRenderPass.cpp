@@ -27,7 +27,7 @@ CShadowRenderPass::~CShadowRenderPass()
   DestroyDepthMap();
 }
 
-void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_OldViewport = _Renderer.GetViewport();
   TVector2i NewViewport(m_ShadowMapSize, m_ShadowMapSize);
@@ -45,29 +45,29 @@ void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
 }
 
-void CShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  for (const TRenderCommand &Command : _Commands)
+  for (const TRenderCommand *Command : _Commands)
   {
-    _Renderer.SetUniform("u_Model", Command.ModelMatrix);
+    _Renderer.SetUniform("u_Model", Command->ModelMatrix);
 
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command.Material.BaseColorTexture);
+    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
     _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
-    _Renderer.SetUniform("u_Material.AlphaCutoff", Command.Material.AlphaCutoff);
-    _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Command.Material.AlphaMode));
+    _Renderer.SetUniform("u_Material.AlphaCutoff", Command->Material.AlphaCutoff);
+    _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Command->Material.AlphaMode));
 
-    Command.VAO->Bind();
+    Command->VAO->Bind();
 
-    if (Command.IndexType != EIndexType::Absent)
-      _Renderer.DrawElements(Command.PrimitiveMode, Command.IndicesCount, Command.IndexType);
+    if (Command->IndexType != EIndexType::Absent)
+      _Renderer.DrawElements(Command->PrimitiveMode, Command->IndicesCount, Command->IndexType);
     else
-      _Renderer.DrawArrays(Command.PrimitiveMode, Command.IndicesCount);
+      _Renderer.DrawArrays(Command->PrimitiveMode, Command->IndicesCount);
 
-    Command.VAO->Unbind();
+    Command->VAO->Unbind();
   }
 }
 
-void CShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CShadowRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _RenderContext.ShadowMap = m_DepthMap->ID();
   m_DepthMapFBO.Unbind();
@@ -81,6 +81,11 @@ bool CShadowRenderPass::Accepts(const TRenderCommand &_Command) const
 bool CShadowRenderPass::IsAvailable() const
 {
   return m_Shader != nullptr && m_DepthMap && m_DepthMap->IsValid();
+}
+
+bool CShadowRenderPass::NeedsCommands() const
+{
+  return true;
 }
 
 std::shared_ptr<CTextureBase> CShadowRenderPass::CreateDepthMap(TVector2i _Size)

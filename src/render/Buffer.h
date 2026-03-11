@@ -177,6 +177,11 @@ public:
     glBindFramebuffer(GL_READ_FRAMEBUFFER, INVALID_BUFFER);
   }
 
+  static void BindDefault()
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, INVALID_BUFFER);
+  }
+
 protected:
   void GenerateBuffer()
   {

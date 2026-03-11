@@ -35,7 +35,7 @@ CIrradianceConvolutionPass::CIrradianceConvolutionPass() :
   m_Views[5]   = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 }
 
-void CIrradianceConvolutionPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CIrradianceConvolutionPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthTest(true);
   _Renderer.SetDepthFunc(GL_LEQUAL);
@@ -44,20 +44,20 @@ void CIrradianceConvolutionPass::PreExecute(IRenderer &_Renderer, TRenderContext
   _Renderer.SetShader(m_Shader);
 }
 
-void CIrradianceConvolutionPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CIrradianceConvolutionPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_VAO.Bind();
   _Renderer.SetUniform("u_Projection", m_Projection);
 
-  for (const TRenderCommand &Command : _Commands)
+  for (const TRenderCommand *Command : _Commands)
   {
-    CCubemap::Bind(TEXTURE_SKYBOX_UNIT, Command.Environment.SkyboxTexture);
+    CCubemap::Bind(TEXTURE_SKYBOX_UNIT, Command->Environment.SkyboxTexture);
     _Renderer.SetUniform("u_EnvironmentMap", TEXTURE_SKYBOX_INDEX);
 
     m_FBO.Bind();
     for (int i = 0; i < CUBEMAP_FACES; ++i)
     {
-      m_FBO.AttachTexture(GL_COLOR_ATTACHMENT0, Command.Environment.IrradianceMap, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
+      m_FBO.AttachTexture(GL_COLOR_ATTACHMENT0, Command->Environment.IrradianceMap, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i);
       _Renderer.SetUniform("u_View", m_Views[i]);
       _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
       _Renderer.DrawArrays(EPrimitiveMode::Triangles, ARRAY_SIZE(CUBE_VERTICES) / 3);
@@ -68,7 +68,7 @@ void CIrradianceConvolutionPass::Execute(IRenderer &_Renderer, TRenderContext &_
   m_VAO.Unbind();
 }
 
-void CIrradianceConvolutionPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, std::span<TRenderCommand> _Commands)
+void CIrradianceConvolutionPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthFunc(GL_LESS);
 }
@@ -81,4 +81,9 @@ bool CIrradianceConvolutionPass::Accepts(const TRenderCommand &_Command) const
 bool CIrradianceConvolutionPass::IsAvailable() const
 {
   return m_Shader != nullptr;
+}
+
+bool CIrradianceConvolutionPass::NeedsCommands() const
+{
+  return true;
 }

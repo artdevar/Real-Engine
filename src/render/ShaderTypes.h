@@ -90,3 +90,15 @@ constexpr float CUBE_VERTICES[] = {-1.0f, 1.0f,  -1.0f, //
                                    1.0f,  -1.0f, -1.0f, //
                                    -1.0f, -1.0f, 1.0f,  //
                                    1.0f,  -1.0f, 1.0f};
+
+constexpr float QUAD_VERTICES[] = {
+    // positions        // texcoords
+
+    -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, //
+    -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, //
+    1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, //
+
+    -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, //
+    1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, //
+    1.0f,  1.0f,  0.0f, 1.0f, 1.0f,
+};

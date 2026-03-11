@@ -46,7 +46,7 @@ public:
   uint32_t GetRenderTextureID() const override;
 
 private:
-  void BeginFrame(IRenderer &_Renderer);
+  void BeginFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext);
   void EndFrame(IRenderer &_Renderer);
 
   void UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
@@ -65,7 +65,8 @@ private:
 private:
   static std::string GetRenderTextureName();
   static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
-  static std::span<TRenderCommand> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass, std::vector<TRenderCommand> &_Commands);
+  static std::vector<const TRenderCommand *> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
+                                                            const std::vector<TRenderCommand>  &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
   static void DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
                            IRenderer                          &_Renderer,
