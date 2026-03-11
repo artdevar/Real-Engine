@@ -269,7 +269,7 @@ private:
   bool  IsFXAAEnabled            = true;
   bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;
-  bool  IsGammaCorrectionEnabled = false;
+  bool  IsGammaCorrectionEnabled = true;
   float Gamma                    = 2.2f;
 
   // Debug

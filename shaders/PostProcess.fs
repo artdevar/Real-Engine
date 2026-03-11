@@ -35,6 +35,10 @@ vec3 CalculateFXAA(vec3 color)
   float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
   float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
 
+  float lumaRange = lumaMax - lumaMin;
+  if (lumaRange < 0.031)
+    return rgbM;
+
   vec2 dir;
   dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
   dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
@@ -55,21 +59,35 @@ vec3 CalculateFXAA(vec3 color)
     return rgbB;
 }
 
+vec3 ToneMapACES(vec3 x)
+{
+  const float a = 2.51;
+  const float b = 0.03;
+  const float c = 2.43;
+  const float d = 0.59;
+  const float e = 0.14;
+
+  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
 void main()
 {
   vec3 texel = texture(Texture, io_TexCoords).rgb;
 
-  vec4 color;
+  vec3 color;
   if (IsFXAAEnabled)
-    color = vec4(CalculateFXAA(texel), 1.0);
+    color = CalculateFXAA(texel);
   else
-    color = vec4(texel, 1.0);
+    color = texel;
 
   if (IsHDR)
-    color = vec4(vec3(1.0) - exp(-color.rgb * Exposure), 1.0);
+  {
+    color *= Exposure;
+    color  = ToneMapACES(color);
+  }
 
   if (IsGammaCorrectionEnabled)
     color.rgb = pow(color.rgb, vec3(1.0 / Gamma));
 
-  o_FragColor = color;
+  o_FragColor = vec4(color, 1.0);
 }
