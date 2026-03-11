@@ -89,12 +89,12 @@ vec3 FresnelSchlick(float cosTheta, vec3 F0)
   return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
   return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
 }
 
-float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
+float CalculateShadow(vec4 fragLightPos, vec3 lightDir, vec3 normal)
 {
   float shadow      = 0.0;
   vec3  lightCoords = fragLightPos.xyz / fragLightPos.w;
@@ -104,7 +104,7 @@ float CalculateShadow(vec4 fragLightPos, vec3 lightDir)
 
     float closestDepth = texture(u_ShadowMap, lightCoords.xy).r;
     float currentDepth = lightCoords.z;
-    float bias         = max(0.0005 * (1.0 - dot(normalize(io_Normal), lightDir)), 0.00005);
+    float bias         = max(0.0005 * (1.0 - dot(normalize(normal), lightDir)), 0.00005);
 
     vec2 texelSize = 1.0 / textureSize(u_ShadowMap, 0);
     for (int x = -1; x <= 1; ++x)
@@ -128,7 +128,7 @@ void main()
   vec2 emissiveTexCoords          = io_TexCoords[u_Material.EmissiveTextureTexCoordIndex];
   vec2 metallicRoughnessTexCoords = io_TexCoords[u_Material.MetallicRoughnessTextureTexCoordIndex];
 
-  // === Base Color ===
+  // Base Color
   vec4 baseColorSample = texture(u_Material.BaseColorTexture, baseColorTexCoords) * u_Material.BaseColorFactor;
 
   if (u_Material.AlphaMode == 1 && baseColorSample.a < u_Material.AlphaCutoff)
@@ -136,14 +136,14 @@ void main()
 
   vec3 albedo = baseColorSample.rgb;
 
-  // === Metallic & Roughness ===
+  // Metallic & Roughness
   vec4 mrSample = texture(u_Material.MetallicRoughnessTexture, metallicRoughnessTexCoords);
 
   float metallic  = mrSample.b * u_Material.MetallicFactor;
   float roughness = mrSample.g * u_Material.RoughnessFactor;
   roughness       = clamp(roughness, 0.04, 1.0);
 
-  // === Normal Mapping ===
+  // Normal Mapping
   vec3 N = texture(u_Material.NormalTexture, normalTexCoords).rgb;
   N      = normalize(io_TBN * (N * 2.0 - 1.0));
 
@@ -153,44 +153,41 @@ void main()
   vec3 V = normalize(u_ViewPos - io_FragPos);
   vec3 L = normalize(-LightDirectional.Direction);
   vec3 H = normalize(V + L);
+  vec3 R = reflect(-V, N);
 
   float NdotL = max(dot(N, L), 0.0);
 
-  // === Fresnel base reflectance ===
   vec3 F0 = vec3(0.04);
   F0      = mix(F0, albedo, metallic);
-  vec3 F  = fresnelSchlickRoughness(max(dot(H, V), 0.0), F0, roughness);
 
-  // === Cook-Torrance BRDF ===
+  float shadow   = CalculateShadow(io_FragLightPos, L, N);
+  vec3  emissive = texture(u_Material.EmissiveTexture, emissiveTexCoords).rgb * u_Material.EmissiveFactor;
+  vec3  radiance = LightDirectional.Color * LightDirectional.Intensity;
+
   float NDF = DistributionGGX(N, H, roughness);
   float G   = GeometrySmith(N, V, L, roughness);
+  vec3  F   = FresnelSchlickRoughness(max(dot(H, V), 0.0), F0, roughness);
 
   vec3  numerator   = NDF * G * F;
   float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
   vec3  specular    = numerator / denominator;
 
-  // Energy conservation
   vec3 kS = F;
   vec3 kD = vec3(1.0) - kS;
   kD     *= 1.0 - metallic;
 
-  vec3 irradiance = u_HasIrradianceMap ? texture(u_IrradianceMap, N).rgb : vec3(0.5) * albedo;
+  vec3 Lo = (1.0 - shadow) * (kD * albedo / PI + specular) * radiance * NdotL;
+
+  kS  = FresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+  kD  = 1.0 - kS;
+  kD *= 1.0 - metallic;
+
+  vec3 irradiance = texture(u_IrradianceMap, N).rgb;
   vec3 diffuse    = irradiance * albedo;
   vec3 ambient    = kD * diffuse;
 
-  // Emissive
-  vec3 emissive = texture(u_Material.EmissiveTexture, emissiveTexCoords).rgb * u_Material.EmissiveFactor;
-
-  // Shadow
-  float shadow = CalculateShadow(io_FragLightPos, L);
-
-  // Rest
-  vec3 radiance = LightDirectional.Color * LightDirectional.Intensity;
-
-  vec3 Lo = (1.0 - shadow) * (diffuse + specular) * radiance * NdotL;
-
-  vec3  color = ambient + Lo + emissive;
   float alpha = (u_Material.AlphaMode == 0) ? 1.0 : baseColorSample.a;
 
+  vec3 color  = ambient + Lo + emissive;
   o_FragColor = vec4(color, alpha);
 }
