@@ -20,7 +20,9 @@ struct TEvent
                                   TVector3f,      //
                                   TVector4i,      //
                                   TVector4f,      //
-                                  TColor>;
+                                  TColor,         //
+                                  TRecti,         //
+                                  TRectf>;
 
   TEventData Value;
   TEventType Type;
