@@ -4,6 +4,7 @@
 #include "interfaces/GeneratableTexture.h"
 #include "interfaces/TextureAsset.h"
 #include <common/containers/StaticArray.h>
+#include <common/MathTypes.h>
 
 class CTextureBase : public ITextureAsset,
                      public IGeneratableTexture
@@ -21,6 +22,8 @@ public:
   GLuint ID() const;
   bool IsValid() const;
 
+  TVector2i GetSize() const;
+
   static constexpr inline GLuint INVALID_VALUE = 0u;
 
 protected:
@@ -29,7 +32,6 @@ protected:
   static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
   static void Unbind(GLenum _Target);
 
-protected:
   struct TImage
   {
     void *Data;
@@ -39,8 +41,10 @@ protected:
     int Channels;
   };
 
+protected:
   GLuint       m_ID;
   const GLenum m_Target;
+  TVector2i    m_Size;
 };
 
 //

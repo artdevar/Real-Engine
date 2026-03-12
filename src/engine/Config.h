@@ -70,6 +70,14 @@ public:
       event::Notify(TEventType::Config_GammaChanged, _Gamma);
     }
   }
+  void SetSSAOEnabled(bool _Enabled)
+  {
+    if (IsSSAOEnabled != _Enabled)
+    {
+      IsSSAOEnabled = _Enabled;
+      event::Notify(TEventType::Config_SSAOEnabledChanged, _Enabled);
+    }
+  }
   void SetGizmoEnabled(bool _Enabled)
   {
     if (IsGizmoEnabled != _Enabled)
@@ -194,6 +202,11 @@ public:
   {
     return Gamma;
   }
+  bool GetSSAOEnabled() const
+  {
+    return IsSSAOEnabled;
+  }
+
   bool GetGizmoEnabled() const
   {
     return IsGizmoEnabled;
@@ -241,6 +254,10 @@ public:
     return LightSpaceMatrix_OrthRightTop;
   }
 
+  std::filesystem::path GetProjectRoot() const
+  {
+    return PROJECT_ROOT;
+  }
   std::filesystem::path GetShadersDir() const
   {
     return SHADERS_DIR;
@@ -271,6 +288,7 @@ private:
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;
   float Gamma                    = 2.2f;
+  bool  IsSSAOEnabled            = true;
 
   // Debug
   bool   IsGizmoEnabled     = true;

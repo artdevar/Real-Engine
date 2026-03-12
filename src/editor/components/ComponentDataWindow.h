@@ -24,7 +24,7 @@ public:
 
   std::string GetName() const override
   {
-    return "Properties";
+    return "Components";
   }
 
   TVector2i GetSize() const override

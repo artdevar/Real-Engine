@@ -132,6 +132,11 @@ bool CTextureBase::IsValid() const
   return m_ID != INVALID_VALUE;
 }
 
+TVector2i CTextureBase::GetSize() const
+{
+  return m_Size;
+}
+
 CTextureBase::CTextureBase(GLenum _Target) :
     m_ID(INVALID_VALUE),
     m_Target(_Target)
@@ -201,9 +206,8 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 
   stbi_image_free(Image.Data);
 
-#if DEV_STAGE
   m_Path = _Path;
-#endif
+  m_Size = TVector2i(Image.Width, Image.Height);
 
   return true;
 }
@@ -232,6 +236,9 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 
   if (_Params.BorderColors.has_value())
     glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
+
+  m_Size = TVector2i(_Params.Width, _Params.Height);
+  m_Path = "Generated Texture";
 
   return true;
 }
@@ -301,6 +308,9 @@ bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
+  m_Size = TVector2i(_Params.Width, _Params.Height);
+  m_Path = "Generated Cubemap";
+
   return true;
 }
 
@@ -353,6 +363,8 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, ToGLWrap(_Params.WrapR));
 
+    m_Size = TVector2i(Images[0].Width, Images[0].Height);
+
     CLogger::Log(ELogType::Info, "[CCubemap] Texture '{}' loaded successfully", _Path.string());
   }
   else
@@ -363,9 +375,7 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
   for (TImage &Image : Images)
     stbi_image_free(Image.Data);
 
-#if DEV_STAGE
   m_Path = _Path;
-#endif
 
   return Success;
 }

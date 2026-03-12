@@ -24,7 +24,9 @@ void CComponentDataWindow::Render(const std::optional<ecs::TEntity> &_SelectedEn
   {
     if (!_SelectedEntity.has_value())
     {
+      ImGui::Indent();
       ImGui::TextUnformatted("Select an entity to inspect.");
+      ImGui::Unindent();
     }
     else
     {

@@ -1,4 +1,6 @@
 #include "Path.h"
+#include "engine/Config.h"
+#include <filesystem>
 
 namespace utils
 {
@@ -17,4 +19,11 @@ std::vector<std::filesystem::path> GetFilesInDirectory(const std::filesystem::pa
 
   return Files;
 }
+
+std::filesystem::path GetRelativePath(const std::filesystem::path &_FullPath)
+{
+  const auto RelativePath = std::filesystem::relative(_FullPath, CConfig::Instance().GetProjectRoot());
+  return !RelativePath.empty() ? RelativePath : _FullPath;
+}
+
 } // namespace utils

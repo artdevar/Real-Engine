@@ -13,7 +13,6 @@ public:
 
   virtual bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) = 0;
 
-#if DEV_STAGE
   std::filesystem::path GetPath() const
   {
     return m_Path;
@@ -21,5 +20,4 @@ public:
 
 protected:
   std::filesystem::path m_Path;
-#endif
 };

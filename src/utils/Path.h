@@ -6,4 +6,6 @@
 namespace utils
 {
 std::vector<std::filesystem::path> GetFilesInDirectory(const std::filesystem::path &_Directory);
-}
+
+std::filesystem::path GetRelativePath(const std::filesystem::path &_FullPath);
+} // namespace utils
