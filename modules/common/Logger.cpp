@@ -2,7 +2,7 @@
 #include <cassert>
 #include <format>
 #include <fstream>
-#include <iostream>
+#include <print>
 
 CStaticArray<CLogger::LogCallback, CLogger::CallbacksAmount> CLogger::LogCallbacks;
 ELogType                                                     CLogger::Verbosity = ELogType::Debug;
@@ -32,7 +32,7 @@ bool CLogger::IsLoggable(ELogType _Type)
 
 void CLogger::LogToConsole(const std::string &_Log)
 {
-  std::cout << _Log;
+  std::print("{}", _Log);
 }
 
 void CLogger::LogToFile(const std::string &_Log)
