@@ -2,10 +2,11 @@
 
 #include "pch.h"
 #include "Shader.h"
+#include "utils/Path.h"
 #include <common/Logger.h>
-#include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <fstream>
 #include <sstream>
 
 static inline bool operator<(const std::string &_L, const std::string_view &_R)
@@ -205,7 +206,7 @@ void CShader::Validate()
   {
     char ErrorLog[512] = {'\0'};
     glGetProgramInfoLog(NewProgram, 512, NULL, ErrorLog);
-    CLogger::Log(ELogType::Error, "[CShader] Hot reload linkage error for '{}':\n{}", m_BasePath.string(), ErrorLog);
+    CLogger::Log(ELogType::Error, "[CShader] Hot reload linkage error for '{}':\n{}", utils::GetRelativePath(m_BasePath.string()).string(), ErrorLog);
     glDeleteProgram(NewProgram);
     return;
   }
@@ -220,7 +221,7 @@ void CShader::Validate()
   if (OldProgram != INVALID_VALUE)
     UnloadShader(OldProgram);
 
-  CLogger::Log(ELogType::Debug, "[CShader] Hot reloaded '{}'", m_BasePath.string());
+  CLogger::Log(ELogType::Debug, "[CShader] Hot reloaded '{}'", utils::GetRelativePath(m_BasePath.string()).string());
 #endif
 }
 
