@@ -1,16 +1,12 @@
 #pragma once
 
-#include "interfaces/Renderer.h"
 #include <events/EventsListener.h>
 #include <common/interfaces/Updateable.h>
 #include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
 #include <common/Core.h>
-#include <cstdint>
 #include <memory>
-#include <string>
-#include <vector>
 
 class CWorld;
 class CShader;
@@ -21,6 +17,7 @@ class CDisplay;
 class CInputManager;
 class CEventsManager;
 class IRenderPipeline;
+class IRenderer;
 
 namespace editor
 {

@@ -18,7 +18,6 @@
 #include "assets/Texture.h"
 #include "engine/Camera.h"
 #include "engine/Config.h"
-#include "engine/Engine.h"
 #include "interfaces/Renderer.h"
 #include "render/RenderContext.h"
 #include "utils/Resource.h"
@@ -137,6 +136,8 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
     m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), NewViewport);
     if (m_FinalTarget)
       m_FinalTarget = CreateRenderTarget(GetRenderTextureName(), NewViewport);
+
+    resource::UnloadUnusedAssets();
 
     break;
   }
@@ -375,14 +376,11 @@ std::unique_ptr<TRenderTarget> CRenderPipeline::CreateRenderTarget(const std::st
 
   RenderTarget->Size  = _Size;
   RenderTarget->Color = CreateRenderTexture(_Name, _Size);
-
-  RenderTarget->Depth.Bind();
-  RenderTarget->Depth.AllocateStorage(GL_DEPTH_COMPONENT, _Size.X, _Size.Y);
-  RenderTarget->Depth.Unbind();
+  RenderTarget->Depth = CreateDepthTexture(_Name + "_DEPTH", _Size);
 
   RenderTarget->FrameBuffer.Bind();
   RenderTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, RenderTarget->Color->ID());
-  RenderTarget->FrameBuffer.AttachRenderbuffer(GL_DEPTH_ATTACHMENT, RenderTarget->Depth.ID());
+  RenderTarget->FrameBuffer.AttachTexture(GL_DEPTH_ATTACHMENT, RenderTarget->Depth->ID());
   RenderTarget->FrameBuffer.Unbind();
 
   return RenderTarget;
@@ -399,7 +397,23 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
-  return resource::RecreateTexture(_Name, TextureParams);
+  return resource::CreateTexture(_Name, TextureParams);
+}
+
+std::shared_ptr<CTextureBase> CRenderPipeline::CreateDepthTexture(const std::string &_Name, TVector2i _Size)
+{
+  TTextureParams TextureParams;
+  TextureParams.Width          = _Size.X;
+  TextureParams.Height         = _Size.Y;
+  TextureParams.InternalFormat = GL_DEPTH_COMPONENT24;
+  TextureParams.Format         = GL_DEPTH_COMPONENT;
+  TextureParams.Type           = GL_FLOAT;
+  TextureParams.MinFilter      = ETextureFilter::Nearest;
+  TextureParams.MagFilter      = ETextureFilter::Nearest;
+  TextureParams.WrapS          = ETextureWrap::ClampToEdge;
+  TextureParams.WrapT          = ETextureWrap::ClampToEdge;
+
+  return resource::CreateTexture(_Name, TextureParams);
 }
 
 std::string CRenderPipeline::GetRenderTextureName()

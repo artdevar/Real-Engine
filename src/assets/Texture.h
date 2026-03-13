@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glad/glad.h>
 #include "interfaces/GeneratableTexture.h"
 #include "interfaces/TextureAsset.h"
 #include <common/containers/StaticArray.h>
@@ -16,21 +15,21 @@ public:
 
   void Shutdown() override;
 
-  void Bind(GLenum _TextureUnit);
+  void Bind(unsigned _TextureUnit);
   void Unbind();
 
-  GLuint ID() const;
+  unsigned ID() const;
   bool IsValid() const;
 
   TVector2i GetSize() const;
 
-  static constexpr inline GLuint INVALID_VALUE = 0u;
+  static constexpr inline unsigned INVALID_VALUE = 0u;
 
 protected:
-  CTextureBase(GLenum _Target);
+  CTextureBase(unsigned _Target);
 
-  static void Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID);
-  static void Unbind(GLenum _Target);
+  static void Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID);
+  static void Unbind(unsigned _Target);
 
   struct TImage
   {
@@ -42,9 +41,9 @@ protected:
   };
 
 protected:
-  GLuint       m_ID;
-  const GLenum m_Target;
-  TVector2i    m_Size;
+  unsigned       m_ID;
+  const unsigned m_Target;
+  TVector2i      m_Size;
 };
 
 //
@@ -59,10 +58,10 @@ public:
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
-  static void Bind(GLenum _TextureUnit, GLuint _TextureID);
+  static void Bind(unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind();
 
-  static constexpr inline GLenum TARGET = GL_TEXTURE_2D;
+  static const unsigned TARGET;
 
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
@@ -80,10 +79,10 @@ public:
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
-  static void Bind(GLenum _TextureUnit, GLuint _TextureID);
+  static void Bind(unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind();
 
-  static constexpr inline GLenum TARGET = GL_TEXTURE_CUBE_MAP;
+  static const unsigned TARGET;
 
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);

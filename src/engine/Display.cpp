@@ -72,9 +72,11 @@ int CDisplay::Init(const std::string &_Title)
 
   glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
   glfwSwapInterval(1); // VSYNC
+
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);
   glEnable(GL_MULTISAMPLE);
+  glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);

@@ -7,7 +7,7 @@
 struct TRenderTarget
 {
   using TColorHandle = std::shared_ptr<CTextureBase>;
-  using TDepthHandle = CRenderBuffer;
+  using TDepthHandle = std::shared_ptr<CTextureBase>;
 
   CFrameBuffer FrameBuffer;
 

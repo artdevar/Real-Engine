@@ -3,7 +3,8 @@
 in vec2  io_TexCoords;
 out vec4 o_FragColor;
 
-uniform sampler2D Texture;
+uniform sampler2D ColorTexture;
+uniform sampler2D DepthTexture;
 uniform vec2      InverseScreenSize;
 uniform bool      IsFXAAEnabled;
 uniform bool      IsHDR;
@@ -16,14 +17,38 @@ float Luma(vec3 color)
   return dot(color, vec3(0.299, 0.587, 0.114));
 }
 
+vec3 ToneMapACES(vec3 x)
+{
+  const float a = 2.51;
+  const float b = 0.03;
+  const float c = 2.43;
+  const float d = 0.59;
+  const float e = 0.14;
+
+  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
+vec3 SampleColor(vec2 uv)
+{
+  vec3 c = texture(ColorTexture, uv).rgb;
+
+  if (IsHDR)
+  {
+    c *= Exposure;
+    c  = ToneMapACES(c);
+  }
+
+  return c;
+}
+
 vec3 CalculateFXAA(vec3 color)
 {
   vec2 texel = InverseScreenSize;
 
-  vec3 rgbNW = texture(Texture, io_TexCoords + vec2(-texel.x, -texel.y)).rgb;
-  vec3 rgbNE = texture(Texture, io_TexCoords + vec2(texel.x, -texel.y)).rgb;
-  vec3 rgbSW = texture(Texture, io_TexCoords + vec2(-texel.x, texel.y)).rgb;
-  vec3 rgbSE = texture(Texture, io_TexCoords + vec2(texel.x, texel.y)).rgb;
+  vec3 rgbNW = SampleColor(io_TexCoords + vec2(-texel.x, -texel.y));
+  vec3 rgbNE = SampleColor(io_TexCoords + vec2(texel.x, -texel.y));
+  vec3 rgbSW = SampleColor(io_TexCoords + vec2(-texel.x, texel.y));
+  vec3 rgbSE = SampleColor(io_TexCoords + vec2(texel.x, texel.y));
   vec3 rgbM  = color;
 
   float lumaNW = Luma(rgbNW);
@@ -48,8 +73,8 @@ vec3 CalculateFXAA(vec3 color)
 
   dir = clamp(dir * rcpDirMin, vec2(-8.0), vec2(8.0)) * texel;
 
-  vec3 rgbA = 0.5 * (texture(Texture, io_TexCoords + dir * (1.0 / 3.0 - 0.5)).rgb + texture(Texture, io_TexCoords + dir * (2.0 / 3.0 - 0.5)).rgb);
-  vec3 rgbB = rgbA * 0.5 + 0.25 * (texture(Texture, io_TexCoords + dir * -0.5).rgb + texture(Texture, io_TexCoords + dir * 0.5).rgb);
+  vec3 rgbA = 0.5 * (SampleColor(io_TexCoords + dir * (1.0 / 3.0 - 0.5)) + SampleColor(io_TexCoords + dir * (2.0 / 3.0 - 0.5)));
+  vec3 rgbB = rgbA * 0.5 + 0.25 * (SampleColor(io_TexCoords + dir * -0.5) + SampleColor(io_TexCoords + dir * 0.5));
 
   float lumaB = Luma(rgbB);
 
@@ -59,31 +84,24 @@ vec3 CalculateFXAA(vec3 color)
     return rgbB;
 }
 
-vec3 ToneMapACES(vec3 x)
-{
-  const float a = 2.51;
-  const float b = 0.03;
-  const float c = 2.43;
-  const float d = 0.59;
-  const float e = 0.14;
-
-  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
-}
-
 void main()
 {
-  vec3 texel = texture(Texture, io_TexCoords).rgb;
-
-  vec3 color;
-  if (IsFXAAEnabled)
-    color = CalculateFXAA(texel);
-  else
-    color = texel;
+  vec3 color = texture(ColorTexture, io_TexCoords).rgb;
 
   if (IsHDR)
   {
     color *= Exposure;
     color  = ToneMapACES(color);
+  }
+
+  if (IsFXAAEnabled)
+  {
+    float depth = texture(DepthTexture, io_TexCoords).r;
+    if (depth < 1.0)
+    {
+      vec3 fxaaColor = CalculateFXAA(color);
+      color          = mix(color, fxaaColor, 0.8);
+    }
   }
 
   if (IsGammaCorrectionEnabled)

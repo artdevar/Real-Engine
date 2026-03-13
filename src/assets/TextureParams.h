@@ -35,6 +35,8 @@ struct TTextureParams
 {
   static constexpr inline int BordersCount = 4;
 
+  void *Data = nullptr;
+
   int Width  = 0;
   int Height = 0;
 

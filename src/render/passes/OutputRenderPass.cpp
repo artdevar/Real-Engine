@@ -18,7 +18,7 @@ COutputRenderPass::COutputRenderPass() :
   m_VAO.Bind();
   m_VBO.Bind();
   m_VBO.Assign(QUAD_VERTICES, sizeof(QUAD_VERTICES));
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float), (void *)0);
+  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float));
   m_VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, false, 5 * sizeof(float), (void *)(3 * sizeof(float)));
   m_VAO.Unbind();
 }

@@ -13,7 +13,7 @@ CPostProcessRenderPass::CPostProcessRenderPass() :
     m_Shader(resource::LoadShader("PostProcess")),
     m_VAO(),
     m_VBO(GL_STATIC_DRAW),
-    m_IsFxaaEnabled(CConfig::Instance().GetFXAAEnabled()),
+    m_IsFXAAEnabled(CConfig::Instance().GetFXAAEnabled()),
     m_IsHDREnabled(CConfig::Instance().GetHDREnabled()),
     m_IsGammaCorrectionEnabled(CConfig::Instance().GetGammaCorrectionEnabled()),
     m_HDRExposure(CConfig::Instance().GetHDRExposure()),
@@ -38,9 +38,12 @@ void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
 void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
-  _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
+  CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.SceneRenderTarget.Depth->ID());
+
+  _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
+  _Renderer.SetUniform("DepthTexture", TEXTURE_DEPTH_MAP_INDEX);
   _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
-  _Renderer.SetUniform("IsFXAAEnabled", m_IsFxaaEnabled);
+  _Renderer.SetUniform("IsFXAAEnabled", m_IsFXAAEnabled);
   _Renderer.SetUniform("IsHDR", m_IsHDREnabled);
   _Renderer.SetUniform("IsGammaCorrectionEnabled", m_IsGammaCorrectionEnabled);
   _Renderer.SetUniform("Exposure", m_HDRExposure);
@@ -73,7 +76,7 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
   switch (_Event.Type)
   {
   case TEventType::Config_FXAAEnabledChanged:
-    m_IsFxaaEnabled = _Event.GetValue<bool>();
+    m_IsFXAAEnabled = _Event.GetValue<bool>();
     break;
   case TEventType::Config_HDREnabledChanged:
     m_IsHDREnabled = _Event.GetValue<bool>();

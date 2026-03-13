@@ -85,11 +85,7 @@ int CEngine::Init()
   SubscribeToCallbacks();
   SubscribeToEvents();
 
-#if DEV_STAGE
   m_Display->SetCursorMode(GLFW_CURSOR_NORMAL);
-#else
-  m_Display->SetCursorMode(GLFW_CURSOR_DISABLED);
-#endif
 
   m_ResourceManager->Init();
 

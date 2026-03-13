@@ -1,38 +1,38 @@
 #pragma once
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <variant>
 
-using UniformType = std::variant<GLint, GLuint, GLfloat, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
+using UniformType = std::variant<int, unsigned, float, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
 
-constexpr inline GLuint ATTRIB_LOC_POSITION    = 0;
-constexpr inline GLuint ATTRIB_LOC_NORMAL      = 1;
-constexpr inline GLuint ATTRIB_LOC_TANGENT     = 2;
-constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_0 = 3;
-constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_1 = 4;
-constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_2 = 5;
-constexpr inline GLuint ATTRIB_LOC_TEXCOORDS_3 = 6;
+constexpr inline unsigned ATTRIB_LOC_POSITION    = 0;
+constexpr inline unsigned ATTRIB_LOC_NORMAL      = 1;
+constexpr inline unsigned ATTRIB_LOC_TANGENT     = 2;
+constexpr inline unsigned ATTRIB_LOC_TEXCOORDS_0 = 3;
+constexpr inline unsigned ATTRIB_LOC_TEXCOORDS_1 = 4;
+constexpr inline unsigned ATTRIB_LOC_TEXCOORDS_2 = 5;
+constexpr inline unsigned ATTRIB_LOC_TEXCOORDS_3 = 6;
 
-constexpr inline GLuint BINDING_TRANSFORM_BUFFER = 0;
-constexpr inline GLuint BINDING_LIGHTING_BUFFER  = 1;
+constexpr inline unsigned BINDING_LIGHTING_BUFFER = 1;
 
-constexpr inline GLenum TEXTURE_BASIC_COLOR_UNIT         = GL_TEXTURE1;
-constexpr inline GLint  TEXTURE_BASIC_COLOR_INDEX        = 1;
-constexpr inline GLenum TEXTURE_NORMAL_UNIT              = GL_TEXTURE2;
-constexpr inline GLint  TEXTURE_NORMAL_INDEX             = 2;
-constexpr inline GLenum TEXTURE_EMISSIVE_UNIT            = GL_TEXTURE3;
-constexpr inline GLint  TEXTURE_EMISSIVE_INDEX           = 3;
-constexpr inline GLenum TEXTURE_METALLIC_ROUGHNESS_UNIT  = GL_TEXTURE4;
-constexpr inline GLint  TEXTURE_METALLIC_ROUGHNESS_INDEX = 4;
-constexpr inline GLenum TEXTURE_OCCLUSION_UNIT           = GL_TEXTURE5;
-constexpr inline GLint  TEXTURE_OCCLUSION_INDEX          = 5;
-constexpr inline GLenum TEXTURE_SHADOW_MAP_UNIT          = GL_TEXTURE20;
-constexpr inline GLint  TEXTURE_SHADOW_MAP_INDEX         = 20;
-constexpr inline GLenum TEXTURE_SKYBOX_UNIT              = GL_TEXTURE21;
-constexpr inline GLint  TEXTURE_SKYBOX_INDEX             = 21;
-constexpr inline GLenum TEXTURE_IRRADIANCE_MAP_UNIT      = GL_TEXTURE22;
-constexpr inline GLint  TEXTURE_IRRADIANCE_MAP_INDEX     = 22;
+extern const unsigned TEXTURE_BASIC_COLOR_UNIT;
+extern const int      TEXTURE_BASIC_COLOR_INDEX;
+extern const unsigned TEXTURE_NORMAL_UNIT;
+extern const int      TEXTURE_NORMAL_INDEX;
+extern const unsigned TEXTURE_EMISSIVE_UNIT;
+extern const int      TEXTURE_EMISSIVE_INDEX;
+extern const unsigned TEXTURE_METALLIC_ROUGHNESS_UNIT;
+extern const int      TEXTURE_METALLIC_ROUGHNESS_INDEX;
+extern const unsigned TEXTURE_OCCLUSION_UNIT;
+extern const int      TEXTURE_OCCLUSION_INDEX;
+extern const unsigned TEXTURE_DEPTH_MAP_UNIT;
+extern const int      TEXTURE_DEPTH_MAP_INDEX;
+extern const unsigned TEXTURE_SHADOW_MAP_UNIT;
+extern const int      TEXTURE_SHADOW_MAP_INDEX;
+extern const unsigned TEXTURE_SKYBOX_UNIT;
+extern const int      TEXTURE_SKYBOX_INDEX;
+extern const unsigned TEXTURE_IRRADIANCE_MAP_UNIT;
+extern const int      TEXTURE_IRRADIANCE_MAP_INDEX;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 

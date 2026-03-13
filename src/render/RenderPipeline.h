@@ -65,6 +65,7 @@ private:
 private:
   static std::string GetRenderTextureName();
   static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
+  static std::shared_ptr<CTextureBase> CreateDepthTexture(const std::string &_Name, TVector2i _Size);
   static std::vector<const TRenderCommand *> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
                                                             const std::vector<TRenderCommand>  &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);

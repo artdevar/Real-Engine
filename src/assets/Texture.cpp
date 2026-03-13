@@ -1,3 +1,4 @@
+#include <glad/glad.h>
 #include "Texture.h"
 #include "utils/Path.h"
 #include <common/Logger.h>
@@ -145,6 +146,8 @@ CTextureBase::CTextureBase(GLenum _Target) :
 
 // CTexture
 
+const unsigned CTexture::TARGET = GL_TEXTURE_2D;
+
 CTexture::CTexture() :
     CTextureBase(TARGET)
 {
@@ -224,7 +227,7 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, _Params.InternalFormat, _Params.Width, _Params.Height, 0, _Params.Format, _Params.Type, NULL);
+  glTexImage2D(m_Target, 0, _Params.InternalFormat, _Params.Width, _Params.Height, 0, _Params.Format, _Params.Type, _Params.Data);
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
@@ -254,6 +257,8 @@ void CTexture::Unbind()
 }
 
 // CCubemap
+
+const unsigned CCubemap::TARGET = GL_TEXTURE_CUBE_MAP;
 
 CCubemap::CCubemap() :
     CTextureBase(TARGET)

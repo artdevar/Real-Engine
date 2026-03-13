@@ -1,7 +1,5 @@
 #pragma once
 
-#include <glad/glad.h>
-#include <glm/fwd.hpp>
 #include "render/ShaderTypes.h"
 #include "interfaces/Asset.h"
 
@@ -17,27 +15,26 @@ public:
   void Shutdown() override;
   bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) override;
 
-  GLuint GetID() const;
+  unsigned GetID() const;
   void Use() const;
   bool IsValid() const;
 
   void SetUniform(std::string_view _Name, const UniformType &_Value);
-  void SetUniformBlockBinding(std::string_view _BlockName, GLuint _UniformBlockBinding);
+  void SetUniformBlockBinding(std::string_view _BlockName, unsigned _UniformBlockBinding);
 
   void Validate();
 
 private:
   bool IsUsed() const;
 
-  static GLuint LoadShader(const std::filesystem::path &_Path, GLenum _ShaderType);
-  static void UnloadShader(GLuint _ShaderID);
+  static unsigned LoadShader(const std::filesystem::path &_Path, unsigned _ShaderType);
+  static void UnloadShader(unsigned _ShaderID);
 
 private:
-  static constexpr inline GLuint INVALID_VALUE            = 0u;
-  static constexpr inline GLint  INVALID_UNIFORM_LOCATION = -1;
+  static constexpr inline unsigned INVALID_VALUE = 0u;
 
-  GLuint                                    m_ID;
-  std::map<std::string, GLint, std::less<>> m_UniformsCache;
+  unsigned                                     m_ID;
+  std::map<std::string, unsigned, std::less<>> m_UniformsCache;
 
 #if SHADERS_HOT_RELOAD
   std::filesystem::path           m_BasePath;

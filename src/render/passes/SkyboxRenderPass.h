@@ -2,7 +2,6 @@
 
 #include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
-#include "render/RenderContext.h"
 #include "render/Buffer.h"
 #include <common/Sharable.h>
 

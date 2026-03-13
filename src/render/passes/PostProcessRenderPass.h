@@ -49,7 +49,7 @@ private:
   CVertexArray  m_VAO;
   CVertexBuffer m_VBO;
 
-  bool  m_IsFxaaEnabled;
+  bool  m_IsFXAAEnabled;
   bool  m_IsHDREnabled;
   bool  m_IsGammaCorrectionEnabled;
   float m_HDRExposure;
