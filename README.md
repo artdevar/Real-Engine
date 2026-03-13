@@ -1,7 +1,6 @@
 # Real Engine
 
-I practice OpenGL here, and maybe someday it will develop into something big.
-For now, only GLTF models are supported.
+Real Engine is my personal project where I aim to create a game engine from scratch. This project serves as a platform for me to practice OpenGL, explore graphical programming, and experiment with building a robust and scalable software architecture.
 
 ![Preview](preview.png)
 
