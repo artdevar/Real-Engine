@@ -42,7 +42,7 @@ static constexpr float WIREFRAME_VERTICES[] = {
 
 CCollisionRenderPass::CCollisionRenderPass() :
     m_Shader(resource::LoadShader("Wireframe")),
-    m_WireframeColor(glm::ToVec4(CConfig::Instance().GetWireframeColor())),
+    m_WireframeColor(glm::make_vec4(CConfig::Instance().GetWireframeColor())),
     m_VAO(),
     m_VBO(GL_STATIC_DRAW)
 {
@@ -102,7 +102,7 @@ void CCollisionRenderPass::OnEvent(const TEvent &_Event)
   {
   case TEventType::Config_WireframeColorChanged:
     const TColor WireframeColor = _Event.GetValue<TColor>();
-    m_WireframeColor            = glm::ToVec4(WireframeColor);
+    m_WireframeColor            = glm::make_vec4(WireframeColor);
     break;
   }
 }

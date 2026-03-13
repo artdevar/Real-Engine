@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <map>
 #include <span>
 
 class IRenderer;
@@ -45,6 +46,8 @@ public:
   uint32_t GetPointsCount() const override;
   uint32_t GetRenderTextureID() const override;
 
+  float GetRenderPassTime(ERenderPassType _Type) const override;
+
 private:
   void BeginFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext);
   void EndFrame(IRenderer &_Renderer);
@@ -62,6 +65,12 @@ private:
   TRenderContext CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer);
   std::unique_ptr<TRenderTarget> CreateRenderTarget(const std::string &_Name, TVector2i _Size);
 
+  void RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container);
+  void DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
+                    IRenderer                          &_Renderer,
+                    TRenderContext                     &_RenderContext,
+                    const std::vector<TRenderCommand>  &_Commands);
+
 private:
   static std::string GetRenderTextureName();
   static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
@@ -69,13 +78,8 @@ private:
   static std::vector<const TRenderCommand *> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
                                                             const std::vector<TRenderCommand>  &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
-  static void DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
-                           IRenderer                          &_Renderer,
-                           TRenderContext                     &_RenderContext,
-                           std::vector<TRenderCommand>        &_Commands);
 
   static bool DoesRenderPassExists(ERenderPassType Type, const std::vector<std::shared_ptr<IRenderPass>> &_Container);
-  static void RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container);
 
 private:
   std::vector<std::shared_ptr<IRenderPass>> m_UtilityPasses;
@@ -98,4 +102,6 @@ private:
   uint32_t m_LastFrameTriangles;
   uint32_t m_LastFrameLines;
   uint32_t m_LastFramePoints;
+
+  std::map<ERenderPassType, float> m_RenderPassTimes;
 };

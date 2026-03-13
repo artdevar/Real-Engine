@@ -6,6 +6,9 @@
 #include <optional>
 #include <format>
 
+namespace utils
+{
+
 class CStopwatch final
 {
   DISABLE_CLASS_COPY(CStopwatch);
@@ -41,8 +44,10 @@ private:
   ClockType                  m_Start;
 };
 
-#if PRODUCTION
-#define MEASURE_ZONE(Message) void(0);
+} // namespace utils
+
+#if DEV_STAGE
+#define MEASURE_ZONE(Message) utils::CStopwatch stopwatch_##__LINE__(Message);
 #else
-#define MEASURE_ZONE(Message) CStopwatch stopwatch_##__LINE__(Message);
+#define MEASURE_ZONE(Message) void(0);
 #endif

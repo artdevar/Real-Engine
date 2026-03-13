@@ -21,7 +21,7 @@ private:
   void UpdateHistory(float _FPS, float _FrameTime, float _Time);
 
 private:
-  constexpr static size_t MAX_HISTORY = 500;
+  constexpr static size_t MAX_HISTORY = 1000;
 
   TVector2i m_Size;
 

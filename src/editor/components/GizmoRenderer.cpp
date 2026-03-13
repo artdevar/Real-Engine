@@ -18,8 +18,14 @@ CGizmoRenderer::CGizmoRenderer(IWorldEditor &_WorldEditor) :
 
 void CGizmoRenderer::Render(ecs::TEntity _Entity, TRectf _ViewportRect)
 {
-  if (ImGui::GetIO().MouseWheel != 0.0f)
-    m_CurrentOperation = (m_CurrentOperation + 1) % m_Operations.GetActualSize();
+  if (ImGui::IsWindowHovered())
+  {
+    const float MouseWheel = ImGui::GetIO().MouseWheel;
+    if (MouseWheel > 0.0f)
+      m_CurrentOperation = (m_CurrentOperation + 1) % m_Operations.GetActualSize();
+    else if (MouseWheel < 0.0f)
+      m_CurrentOperation = (m_CurrentOperation - 1 + m_Operations.GetActualSize()) % m_Operations.GetActualSize();
+  }
 
   ecs::TTransformComponent *Transform = m_WorldEditor.GetTransform(_Entity);
   if (!Transform)

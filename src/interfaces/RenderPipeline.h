@@ -7,6 +7,7 @@
 class IRenderer;
 class CRenderQueue;
 struct TFrameData;
+enum class ERenderPassType;
 
 class IRenderPipeline : public IShutdownable
 {
@@ -15,6 +16,8 @@ public:
 
   virtual void Init(TVector2i _Viewport)                                                 = 0;
   virtual void Render(TFrameData &FrameData, CRenderQueue &_Queue, IRenderer &_Renderer) = 0;
+
+  virtual float GetRenderPassTime(ERenderPassType _Type) const = 0;
 
   virtual uint32_t GetDrawCallsCount() const  = 0;
   virtual uint32_t GetVerticesCount() const   = 0;

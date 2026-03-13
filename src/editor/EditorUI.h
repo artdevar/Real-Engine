@@ -20,6 +20,7 @@ class CGlobalParamsWindow;
 class CComponentRenderer;
 class CViewportWindow;
 class CPerformanceWindow;
+class COverviewWindow;
 
 class CEditorUI : public CSharable<CEditorUI>,
                   public IEventsListener,
@@ -54,6 +55,7 @@ private:
   std::unique_ptr<CMenuBar>             m_MenuBar;
   std::unique_ptr<CEntitiesWindow>      m_EntitiesWindow;
   std::unique_ptr<CPerformanceWindow>   m_PerformanceWindow;
+  std::unique_ptr<COverviewWindow>      m_OverviewWindow;
 };
 
 } // namespace editor

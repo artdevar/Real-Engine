@@ -22,6 +22,8 @@
 #include "render/RenderContext.h"
 #include "utils/Resource.h"
 #include <common/Logger.h>
+#include <common/Stopwatch.h>
+#include <common/Clock.h>
 #include <glm/gtx/norm.hpp>
 
 CRenderPipeline::CRenderPipeline() :
@@ -261,23 +263,32 @@ void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderCo
 void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
                                    IRenderer                          &_Renderer,
                                    TRenderContext                     &_RenderContext,
-                                   std::vector<TRenderCommand>        &_Commands)
+                                   const std::vector<TRenderCommand>  &_Commands)
 {
-
   if (!_RenderPass->IsAvailable())
+  {
+    m_RenderPassTimes[_RenderPass->GetType()] = 0.0f;
     return;
+  }
 
   std::vector<const TRenderCommand *> Commands;
   if (_RenderPass->NeedsCommands())
   {
     Commands = FilterCommands(_RenderPass, _Commands);
     if (Commands.empty())
+    {
+      m_RenderPassTimes[_RenderPass->GetType()] = 0.0f;
       return;
+    }
   }
+
+  utils::CClock Clock;
 
   _RenderPass->PreExecute(_Renderer, _RenderContext, Commands);
   _RenderPass->Execute(_Renderer, _RenderContext, Commands);
   _RenderPass->PostExecute(_Renderer, _RenderContext, Commands);
+
+  m_RenderPassTimes[_RenderPass->GetType()] = Clock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext)
@@ -459,6 +470,15 @@ uint32_t CRenderPipeline::GetPointsCount() const
   return m_LastFramePoints;
 }
 
+float CRenderPipeline::GetRenderPassTime(ERenderPassType _Type) const
+{
+  auto It = m_RenderPassTimes.find(_Type);
+  if (It != m_RenderPassTimes.end())
+    return It->second;
+
+  return 0.0f;
+}
+
 bool CRenderPipeline::DoesRenderPassExists(ERenderPassType Type, const std::vector<std::shared_ptr<IRenderPass>> &_Container)
 {
   return std::any_of(_Container.begin(), _Container.end(), [Type](const std::shared_ptr<IRenderPass> &RenderPass) {
@@ -474,4 +494,6 @@ void CRenderPipeline::RemoveRenderPass(ERenderPassType Type, std::vector<std::sh
 
   if (It != _Container.end())
     _Container.erase(It, _Container.end());
+
+  m_RenderPassTimes.erase(Type);
 }

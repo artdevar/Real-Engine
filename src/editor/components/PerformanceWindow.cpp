@@ -8,26 +8,12 @@
 #include <algorithm>
 #include <numeric>
 
-namespace
-{
-
-std::string FormatCount(int _Count)
-{
-  if (_Count >= 1'000'000)
-    return std::format("{:.1f}M", static_cast<float>(_Count) / 1'000'000.0f);
-  if (_Count >= 1'000)
-    return std::format("{:.1f}K", static_cast<float>(_Count) / 1'000.0f);
-  return std::to_string(_Count);
-}
-
-} // namespace
-
 namespace editor
 {
 
 std::string CPerformanceWindow::GetName() const
 {
-  return "Overview";
+  return "Performance";
 }
 
 TVector2i CPerformanceWindow::GetSize() const
@@ -82,19 +68,6 @@ void CPerformanceWindow::Render()
       ImGui::Text("Max: %.2f", m_MaxFrameTime);
       ImGui::Text("Avg: %.2f", m_AvgFrameTime);
       ImGui::Columns(1);
-    }
-
-    if (ImGui::CollapsingHeader("Render data"))
-    {
-      if (const auto Pipeline = Engine.GetRenderPipeline())
-      {
-        ImGui::Text("Draw calls: %s", FormatCount(Pipeline->GetDrawCallsCount()).c_str());
-        ImGui::Text("Vertices submitted: %s", FormatCount(Pipeline->GetVerticesCount()).c_str());
-        ImGui::Text("Indices submitted: %s", FormatCount(Pipeline->GetIndicesCount()).c_str());
-        ImGui::Text("Triangles: %s", FormatCount(Pipeline->GetTrianglesCount()).c_str());
-        ImGui::Text("Lines: %s", FormatCount(Pipeline->GetLinesCount()).c_str());
-        ImGui::Text("Points: %s", FormatCount(Pipeline->GetPointsCount()).c_str());
-      }
     }
   }
 

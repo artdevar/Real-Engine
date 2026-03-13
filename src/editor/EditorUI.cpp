@@ -6,6 +6,7 @@
 #include "components/GlobalParamsWindow.h"
 #include "components/ViewportWindow.h"
 #include "components/PerformanceWindow.h"
+#include "components/OverviewWindow.h"
 #include "renderer/ComponentRenderer.h"
 #include "interfaces/WorldEditor.h"
 #include "engine/Config.h"
@@ -39,7 +40,8 @@ CEditorUI::CEditorUI(IWorldEditor &_WorldEditor) :
     m_ViewportWindow(std::make_unique<CViewportWindow>(_WorldEditor)),
     m_MenuBar(std::make_unique<CMenuBar>()),
     m_EntitiesWindow(std::make_unique<CEntitiesWindow>(_WorldEditor)),
-    m_PerformanceWindow(std::make_unique<CPerformanceWindow>())
+    m_PerformanceWindow(std::make_unique<CPerformanceWindow>()),
+    m_OverviewWindow(std::make_unique<COverviewWindow>())
 {
 }
 
@@ -101,6 +103,7 @@ void CEditorUI::RenderFrame()
   m_ComponentDataWindow->Render(m_EntitiesWindow->GetSelectedEntity());
   m_GlobalParamsWindow->Render();
   m_PerformanceWindow->Render();
+  m_OverviewWindow->Render();
   m_ViewportWindow->Render(m_EntitiesWindow->GetSelectedEntity());
 
   RenderEnd();
@@ -142,13 +145,15 @@ void CEditorUI::RenderBegin()
     ImGuiID LeftNodeID     = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Left, 0.22f, nullptr, &DockSpaceID);
     ImGuiID SceneNodeID    = ImGui::DockBuilderSplitNode(LeftNodeID, ImGuiDir_Up, 0.4f, nullptr, &LeftNodeID);
     ImGuiID RightNodeID    = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Right, 0.25f, nullptr, &DockSpaceID);
-    ImGuiID RightTopNodeID = ImGui::DockBuilderSplitNode(RightNodeID, ImGuiDir_Up, 0.4f, nullptr, &RightNodeID);
+    ImGuiID RightTopNodeID = ImGui::DockBuilderSplitNode(RightNodeID, ImGuiDir_Up, 0.5f, nullptr, &RightNodeID);
+    ImGuiID BotNodeID      = ImGui::DockBuilderSplitNode(DockSpaceID, ImGuiDir_Down, 0.25f, nullptr, &DockSpaceID);
 
     ImGui::DockBuilderDockWindow(m_EntitiesWindow->GetName().c_str(), SceneNodeID);
     ImGui::DockBuilderDockWindow(m_ComponentDataWindow->GetName().c_str(), LeftNodeID);
     ImGui::DockBuilderDockWindow(m_GlobalParamsWindow->GetName().c_str(), RightTopNodeID);
-    ImGui::DockBuilderDockWindow(m_PerformanceWindow->GetName().c_str(), RightNodeID);
+    ImGui::DockBuilderDockWindow(m_OverviewWindow->GetName().c_str(), RightNodeID);
     ImGui::DockBuilderDockWindow(m_ViewportWindow->GetName().c_str(), DockSpaceID);
+    ImGui::DockBuilderDockWindow(m_PerformanceWindow->GetName().c_str(), BotNodeID);
 
     ImGui::DockBuilderFinish(DockSpaceID);
 
