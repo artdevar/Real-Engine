@@ -9,6 +9,7 @@
 #include "passes/TransparentRenderPass.h"
 #include "passes/ShadowRenderPass.h"
 #include "passes/PostProcessRenderPass.h"
+#include "passes/BloomRenderPass.h"
 #include "passes/OutputRenderPass.h"
 #include "passes/CollisionRenderPass.h"
 #include "passes/GridRenderPass.h"
@@ -53,6 +54,7 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   const bool ShadowsEnabled   = CConfig::Instance().GetShadowsEnabled();
   const bool GridEnabled      = CConfig::Instance().GetGridEnabled();
   const bool WireframeEnabled = CConfig::Instance().GetWireframeEnabled();
+  const bool BloomEnabled     = CConfig::Instance().GetBloomEnabled();
 
   if (ShadowsEnabled)
     m_ShadowPasses.push_back(CShadowRenderPass::Create());
@@ -72,7 +74,11 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   m_GeometryPasses.push_back(COpaqueRenderPass::Create());
   m_GeometryPasses.push_back(CSkyboxRenderPass::Create());
   m_GeometryPasses.push_back(CTransparentRenderPass::Create());
+
+  if (BloomEnabled)
+    m_PostProcessPasses.push_back(CBloomRenderPass::Create(_Viewport));
   m_PostProcessPasses.push_back(CPostProcessRenderPass::Create());
+
   m_OutputPasses.push_back(COutputRenderPass::Create());
 
   m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), _Viewport);
@@ -89,6 +95,7 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   event::Subscribe(TEventType::Config_ShadowsEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_GridEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_WireframeEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_BloomEnabledChanged, GetWeakPtr());
 }
 
 void CRenderPipeline::OnEvent(const TEvent &_Event)
@@ -218,12 +225,8 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
 
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
-
   for (const std::shared_ptr<IRenderPass> &RenderPass : m_PostProcessPasses)
     DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
-
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 }
 
 void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)

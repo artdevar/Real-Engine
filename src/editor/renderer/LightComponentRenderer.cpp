@@ -19,7 +19,7 @@ void TLightComponentRenderer::Render(void *Data) noexcept
   switch (Component->Type)
   {
   case ELightType::Directional: {
-    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(Component->Direction), 0.2f);
+    ImGui::DragFloat3("Direction##LightDir", glm::value_ptr(Component->Direction), 0.1f);
     ImGui::Separator();
 
     ImGui::ColorEdit3("Color##LightColor", glm::value_ptr(Component->Color),

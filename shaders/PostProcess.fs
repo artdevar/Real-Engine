@@ -5,10 +5,13 @@ out vec4 o_FragColor;
 
 uniform sampler2D ColorTexture;
 uniform sampler2D DepthTexture;
+uniform sampler2D BloomTexture;
 uniform vec2      InverseScreenSize;
 uniform bool      IsFXAAEnabled;
 uniform bool      IsHDR;
 uniform float     Exposure;
+uniform bool      IsBloomEnabled;
+uniform float     BloomIntensity;
 uniform bool      IsGammaCorrectionEnabled;
 uniform float     Gamma;
 
@@ -87,6 +90,12 @@ vec3 CalculateFXAA(vec3 color)
 void main()
 {
   vec3 color = texture(ColorTexture, io_TexCoords).rgb;
+
+  if (IsBloomEnabled)
+  {
+    vec3 bloom = texture(BloomTexture, io_TexCoords).rgb;
+    color     += bloom * BloomIntensity;
+  }
 
   if (IsHDR)
   {

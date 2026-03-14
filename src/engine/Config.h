@@ -102,6 +102,30 @@ public:
       event::Notify(TEventType::Config_WireframeEnabledChanged, _Enabled);
     }
   }
+  void SetBloomEnabled(bool _Enabled)
+  {
+    if (IsBloomEnabled != _Enabled)
+    {
+      IsBloomEnabled = _Enabled;
+      event::Notify(TEventType::Config_BloomEnabledChanged, _Enabled);
+    }
+  }
+  void SetBloomThreshold(float _Threshold)
+  {
+    if (!math::AreEqual(BloomThreshold, _Threshold))
+    {
+      BloomThreshold = _Threshold;
+      event::Notify(TEventType::Config_BloomThresholdChanged, _Threshold);
+    }
+  }
+  void SetBloomIntensity(float _Intensity)
+  {
+    if (!math::AreEqual(BloomIntensity, _Intensity))
+    {
+      BloomIntensity = _Intensity;
+      event::Notify(TEventType::Config_BloomIntensityChanged, _Intensity);
+    }
+  }
   void SetWireframeColor(const TColor &_Color)
   {
     if (WireframeColor != _Color)
@@ -198,6 +222,18 @@ public:
   {
     return IsGammaCorrectionEnabled;
   }
+  bool GetBloomEnabled() const
+  {
+    return IsBloomEnabled;
+  }
+  float GetBloomThreshold() const
+  {
+    return BloomThreshold;
+  }
+  float GetBloomIntensity() const
+  {
+    return BloomIntensity;
+  }
   float GetGamma() const
   {
     return Gamma;
@@ -288,6 +324,9 @@ private:
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;
   float Gamma                    = 2.2f;
+  bool  IsBloomEnabled           = true;
+  float BloomThreshold           = 1.0f;
+  float BloomIntensity           = 1.0f;
   bool  IsSSAOEnabled            = true;
 
   // Debug

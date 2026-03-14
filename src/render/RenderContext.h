@@ -19,4 +19,5 @@ struct TRenderContext
   glm::mat4 LightSpaceMatrix;
   uint32_t  ShadowMap;
   uint32_t  IrradianceMap;
+  uint32_t  BloomMap;
 };

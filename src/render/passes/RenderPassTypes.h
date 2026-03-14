@@ -11,5 +11,6 @@ enum class ERenderPassType
   Grid,
   Output,
   EquirectangularToCubemap,
-  IrradianceConvolution
+  IrradianceConvolution,
+  Bloom
 };

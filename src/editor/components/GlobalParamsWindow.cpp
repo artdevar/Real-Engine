@@ -47,6 +47,20 @@ void CGlobalParamsWindow::Render()
       float Gamma = CConfig::Instance().GetGamma();
       if (ImGui::DragFloat("Gamma", &Gamma, 0.1f, 0.01f, 10.0f))
         CConfig::Instance().SetGamma(Gamma);
+
+      ImGui::Separator();
+
+      bool BloomEnabled = CConfig::Instance().GetBloomEnabled();
+      if (ImGui::Checkbox("Bloom", &BloomEnabled))
+        CConfig::Instance().SetBloomEnabled(BloomEnabled);
+
+      float BloomThreshold = CConfig::Instance().GetBloomThreshold();
+      if (ImGui::DragFloat("Bloom threshold", &BloomThreshold, 0.1f, 0.0f, 10.0f))
+        CConfig::Instance().SetBloomThreshold(BloomThreshold);
+
+      float BloomIntensity = CConfig::Instance().GetBloomIntensity();
+      if (ImGui::DragFloat("Bloom intensity", &BloomIntensity, 0.1f, 0.0f, 10.0f))
+        CConfig::Instance().SetBloomIntensity(BloomIntensity);
     }
 
     if (ImGui::CollapsingHeader("Debug"))

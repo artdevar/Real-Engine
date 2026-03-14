@@ -27,3 +27,6 @@ const int      TEXTURE_SKYBOX_INDEX = 21;
 
 const unsigned TEXTURE_IRRADIANCE_MAP_UNIT  = GL_TEXTURE22;
 const int      TEXTURE_IRRADIANCE_MAP_INDEX = 22;
+
+const unsigned TEXTURE_BLOOM_UNIT  = GL_TEXTURE23;
+const int      TEXTURE_BLOOM_INDEX = 23;

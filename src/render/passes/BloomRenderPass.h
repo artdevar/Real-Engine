@@ -3,14 +3,16 @@
 #include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
 #include "render/Buffer.h"
-#include <events/EventsListener.h>
+#include <common/MathTypes.h>
 #include <common/Sharable.h>
+#include <events/EventsListener.h>
 
 class CShader;
+class CTextureBase;
 
-class CPostProcessRenderPass : public CSharable<CPostProcessRenderPass>,
-                               public IEventsListener,
-                               public IRenderPass
+class CBloomRenderPass : public CSharable<CBloomRenderPass>,
+                         public IEventsListener,
+                         public IRenderPass
 {
 public:
   template <typename... Args>
@@ -22,11 +24,11 @@ public:
   }
 
 public:
-  explicit CPostProcessRenderPass();
+  explicit CBloomRenderPass(TVector2i _Viewport);
 
   ERenderPassType GetType() const override
   {
-    return ERenderPassType::PostProcess;
+    return ERenderPassType::Bloom;
   }
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const CommandsList &_Commands) override;
@@ -39,21 +41,20 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CPostProcessRenderPass>::Create;
+  using CSharable<CBloomRenderPass>::Create;
 
   void SubscribeToEvents();
+  void InitTextures(TVector2i _Size);
 
 private:
-  std::shared_ptr<CShader> m_Shader;
+  std::shared_ptr<CShader> m_DownsampleShader;
+  std::shared_ptr<CShader> m_BlurShader;
+
+  std::shared_ptr<CTextureBase> m_PingPongColor[2];
+  CFrameBuffer                  m_PingPongFBO[2];
 
   CVertexArray  m_VAO;
   CVertexBuffer m_VBO;
 
-  bool  m_IsFXAAEnabled;
-  bool  m_IsHDREnabled;
-  bool  m_IsBloomEnabled;
-  bool  m_IsGammaCorrectionEnabled;
-  float m_HDRExposure;
-  float m_BloomIntensity;
-  float m_Gamma;
+  float m_Threshold;
 };
