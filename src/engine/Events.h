@@ -25,6 +25,7 @@ enum class TEventType
   Config_BloomEnabledChanged,
   Config_BloomThresholdChanged,
   Config_BloomIntensityChanged,
+  Config_BloomBlurPassesChanged,
   Config_LightSpaceMatrixZNearChanged,
   Config_LightSpaceMatrixZFarChanged,
   Config_LightSpaceMatrixOrthLeftBotChanged,

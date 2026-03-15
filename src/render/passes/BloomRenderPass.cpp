@@ -9,13 +9,18 @@
 #include "engine/Config.h"
 #include "utils/Resource.h"
 
+float CBloomRenderPass::m_Threshold  = 1.0f;
+int   CBloomRenderPass::m_BlurPasses = 10;
+
 CBloomRenderPass::CBloomRenderPass(TVector2i _Viewport) :
     m_DownsampleShader(resource::LoadShader("BloomDownsample")),
     m_BlurShader(resource::LoadShader("BloomBlur")),
     m_VAO(),
-    m_VBO(GL_STATIC_DRAW),
-    m_Threshold(CConfig::Instance().GetBloomThreshold())
+    m_VBO(GL_STATIC_DRAW)
 {
+  m_Threshold  = CConfig::Instance().GetBloomThreshold();
+  m_BlurPasses = CConfig::Instance().GetBloomBlurPasses();
+
   m_VAO.Bind();
   m_VBO.Bind();
   m_VBO.Assign(QUAD_VERTICES, sizeof(QUAD_VERTICES));
@@ -34,23 +39,23 @@ void CBloomRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderC
 
 void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  m_PingPongFBO[0].Bind();
+  m_BloomFBO.Bind();
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color));
-  _Renderer.SetViewport(m_PingPongColor[0]->GetSize());
+  _Renderer.SetViewport(m_BloomColor->GetSize());
   _Renderer.SetShader(m_DownsampleShader);
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("Threshold", m_Threshold);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
-  m_PingPongFBO[0].Unbind();
+  m_BloomFBO.Unbind();
 
   _Renderer.SetShader(m_BlurShader);
   bool Horizontal = true;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < m_BlurPasses; i++)
   {
     m_PingPongFBO[Horizontal].Bind();
 
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, i == 0 ? m_PingPongColor[0]->ID() : m_PingPongColor[!Horizontal]->ID());
+    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, i == 0 ? m_BloomColor->ID() : m_PingPongColor[!Horizontal]->ID());
     _Renderer.SetUniform("Image", TEXTURE_BASIC_COLOR_INDEX);
     _Renderer.SetUniform("Horizontal", Horizontal);
 
@@ -58,13 +63,13 @@ void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
 
     Horizontal = !Horizontal;
   }
+  _RenderContext.BloomMap = m_PingPongColor[!Horizontal]->ID();
 }
 
 void CBloomRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_VAO.Unbind();
   CFrameBuffer::BindDefault();
-  _RenderContext.BloomMap = m_PingPongColor[0]->ID();
 }
 
 bool CBloomRenderPass::Accepts(const TRenderCommand &_Command) const
@@ -86,14 +91,17 @@ void CBloomRenderPass::OnEvent(const TEvent &_Event)
 {
   switch (_Event.Type)
   {
-  case TEventType::Config_BloomThresholdChanged:
-    m_Threshold = _Event.GetValue<float>();
-    break;
   case TEventType::ViewportResized: {
     const TVector2i NewViewport = _Event.GetValue<TVector2i>();
     InitTextures(NewViewport);
     break;
   }
+  case TEventType::Config_BloomThresholdChanged:
+    m_Threshold = _Event.GetValue<float>();
+    break;
+  case TEventType::Config_BloomBlurPassesChanged:
+    m_BlurPasses = _Event.GetValue<int>();
+    break;
   default:
     break;
   }
@@ -102,6 +110,7 @@ void CBloomRenderPass::OnEvent(const TEvent &_Event)
 void CBloomRenderPass::SubscribeToEvents()
 {
   event::Subscribe(TEventType::Config_BloomThresholdChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_BloomBlurPassesChanged, GetWeakPtr());
   event::Subscribe(TEventType::ViewportResized, GetWeakPtr());
 }
 
@@ -124,4 +133,8 @@ void CBloomRenderPass::InitTextures(TVector2i _Size)
     m_PingPongColor[i] = resource::RecreateTexture("BLOOM_COLOR_" + std::to_string(i + 1), Params);
     m_PingPongFBO[i].AttachTexture(GL_COLOR_ATTACHMENT0, m_PingPongColor[i]->ID());
   }
+
+  m_BloomFBO.Bind();
+  m_BloomColor = resource::RecreateTexture("BLOOM_COLOR", Params);
+  m_BloomFBO.AttachTexture(GL_COLOR_ATTACHMENT0, m_BloomColor->ID());
 }

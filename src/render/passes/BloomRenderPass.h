@@ -50,11 +50,15 @@ private:
   std::shared_ptr<CShader> m_DownsampleShader;
   std::shared_ptr<CShader> m_BlurShader;
 
-  std::shared_ptr<CTextureBase> m_PingPongColor[2];
+  CFrameBuffer                  m_BloomFBO;
+  std::shared_ptr<CTextureBase> m_BloomColor;
+
   CFrameBuffer                  m_PingPongFBO[2];
+  std::shared_ptr<CTextureBase> m_PingPongColor[2];
 
   CVertexArray  m_VAO;
   CVertexBuffer m_VBO;
 
-  float m_Threshold;
+  static float m_Threshold;
+  static int   m_BlurPasses;
 };

@@ -61,6 +61,10 @@ void CGlobalParamsWindow::Render()
       float BloomIntensity = CConfig::Instance().GetBloomIntensity();
       if (ImGui::DragFloat("Bloom intensity", &BloomIntensity, 0.1f, 0.0f, 10.0f))
         CConfig::Instance().SetBloomIntensity(BloomIntensity);
+
+      int BloomBlurPasses = CConfig::Instance().GetBloomBlurPasses();
+      if (ImGui::DragInt("Bloom blur passes", &BloomBlurPasses, 1, 0, 100))
+        CConfig::Instance().SetBloomBlurPasses(BloomBlurPasses);
     }
 
     if (ImGui::CollapsingHeader("Debug"))
@@ -83,7 +87,7 @@ void CGlobalParamsWindow::Render()
 
       TColor WireframeColor       = CConfig::Instance().GetWireframeColor();
       float  WireframeColorArr[4] = {WireframeColor.R, WireframeColor.G, WireframeColor.B, WireframeColor.A};
-      if (ImGui::ColorEdit4("Wireframe color", WireframeColorArr, ImGuiColorEditFlags_Float))
+      if (ImGui::ColorEdit4("Wireframe color", WireframeColorArr, ImGuiColorEditFlags_Float | ImGuiColorEditFlags_NoInputs))
         CConfig::Instance().SetWireframeColor(TColor(WireframeColorArr[0], WireframeColorArr[1], WireframeColorArr[2], WireframeColorArr[3]));
     }
 

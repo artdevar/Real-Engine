@@ -126,6 +126,14 @@ public:
       event::Notify(TEventType::Config_BloomIntensityChanged, _Intensity);
     }
   }
+  void SetBloomBlurPasses(int _Passes)
+  {
+    if (BloomBlurPasses != _Passes)
+    {
+      BloomBlurPasses = _Passes;
+      event::Notify(TEventType::Config_BloomBlurPassesChanged, _Passes);
+    }
+  }
   void SetWireframeColor(const TColor &_Color)
   {
     if (WireframeColor != _Color)
@@ -234,6 +242,10 @@ public:
   {
     return BloomIntensity;
   }
+  int GetBloomBlurPasses() const
+  {
+    return BloomBlurPasses;
+  }
   float GetGamma() const
   {
     return Gamma;
@@ -327,6 +339,7 @@ private:
   bool  IsBloomEnabled           = true;
   float BloomThreshold           = 1.0f;
   float BloomIntensity           = 1.0f;
+  int   BloomBlurPasses          = 10;
   bool  IsSSAOEnabled            = true;
 
   // Debug
