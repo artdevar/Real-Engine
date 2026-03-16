@@ -11,8 +11,6 @@
 
 CPostProcessRenderPass::CPostProcessRenderPass() :
     m_Shader(resource::LoadShader("PostProcess")),
-    m_VAO(),
-    m_VBO(GL_STATIC_DRAW),
     m_IsFXAAEnabled(CConfig::Instance().GetFXAAEnabled()),
     m_IsHDREnabled(CConfig::Instance().GetHDREnabled()),
     m_IsBloomEnabled(CConfig::Instance().GetBloomEnabled()),
@@ -21,12 +19,6 @@ CPostProcessRenderPass::CPostProcessRenderPass() :
     m_BloomIntensity(CConfig::Instance().GetBloomIntensity()),
     m_Gamma(CConfig::Instance().GetGamma())
 {
-  m_VAO.Bind();
-  m_VBO.Bind();
-  m_VBO.Assign(QUAD_VERTICES, sizeof(QUAD_VERTICES));
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float), (void *)0);
-  m_VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, false, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-  m_VAO.Unbind();
 }
 
 void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
@@ -35,13 +27,13 @@ void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
   _Renderer.SetDepthTest(false);
   _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
-  m_VAO.Bind();
+  _RenderContext.QuadVAO.Bind();
 }
 
 void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
+  CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
-  CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.SceneRenderTarget.Depth->ID());
   CTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
 
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
@@ -60,7 +52,7 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
 
 void CPostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  m_VAO.Unbind();
+  _RenderContext.QuadVAO.Unbind();
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 }
 

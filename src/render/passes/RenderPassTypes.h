@@ -12,5 +12,6 @@ enum class ERenderPassType
   Output,
   EquirectangularToCubemap,
   IrradianceConvolution,
-  Bloom
+  Bloom,
+  TAA
 };

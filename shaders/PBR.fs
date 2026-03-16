@@ -41,6 +41,7 @@ struct TMaterial
 
 uniform TMaterial   u_Material;
 uniform sampler2D   u_ShadowMap;
+uniform bool        u_IsShadowMapEnabled;
 uniform samplerCube u_IrradianceMap;
 uniform mat4        u_LightSpaceMatrix;
 uniform vec3        u_ViewPos;
@@ -50,8 +51,11 @@ in vec3 io_FragPos;
 in vec4 io_FragLightPos;
 in mat3 io_TBN;
 in vec2 io_TexCoords[4];
+in vec4 io_CurrPosition;
+in vec4 io_PrevPosition;
 
-out vec4 o_FragColor;
+layout(location = 0) out vec4 o_FragColor;
+layout(location = 1) out vec2 o_Velocity;
 
 const float PI = 3.14159265359;
 
@@ -99,6 +103,9 @@ vec3 FresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 
 float CalculateShadow(vec4 fragLightPos, vec3 lightDir, vec3 normal)
 {
+  if (!u_IsShadowMapEnabled)
+    return 0.0;
+
   float shadow      = 0.0;
   vec3  lightCoords = fragLightPos.xyz / fragLightPos.w;
   if (lightCoords.z <= 1.0)
@@ -195,4 +202,8 @@ void main()
 
   vec3 color  = ambient + Lo + emissive;
   o_FragColor = vec4(color, alpha);
+
+  vec2 newPos = (io_CurrPosition.xy / io_CurrPosition.w) * 0.5 + 0.5;
+  vec2 oldPos = (io_PrevPosition.xy / io_PrevPosition.w) * 0.5 + 0.5;
+  o_Velocity  = newPos - oldPos;
 }

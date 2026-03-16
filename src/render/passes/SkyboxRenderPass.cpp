@@ -9,17 +9,8 @@
 #include "utils/Resource.h"
 
 CSkyboxRenderPass::CSkyboxRenderPass() :
-    m_Shader(resource::LoadShader("Skybox")),
-    m_VAO(),
-    m_VBO(GL_STATIC_DRAW)
+    m_Shader(resource::LoadShader("Skybox"))
 {
-  m_VAO.Bind();
-  m_VBO.Bind();
-  m_VBO.Assign(CUBE_VERTICES, sizeof(CUBE_VERTICES));
-
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 3 * sizeof(float));
-  m_VAO.Unbind();
-  m_VBO.Unbind();
 }
 
 void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
@@ -32,12 +23,11 @@ void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_View", glm::mat4(glm::mat3(_RenderContext.ViewMatrix)));
   _Renderer.SetUniform("u_Projection", _RenderContext.ProjectionMatrix);
+  _RenderContext.CubeVAO.Bind();
 }
 
 void CSkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  m_VAO.Bind();
-
   for (const TRenderCommand *Command : _Commands)
   {
     CCubemap::Bind(TEXTURE_SKYBOX_UNIT, Command->Environment.SkyboxTexture);
@@ -45,12 +35,11 @@ void CSkyboxRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
 
     _Renderer.DrawArrays(EPrimitiveMode::Triangles, ARRAY_SIZE(CUBE_VERTICES) / 3);
   }
-
-  m_VAO.Unbind();
 }
 
 void CSkyboxRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
+  _RenderContext.CubeVAO.Unbind();
   _Renderer.SetDepthMask(true);
   _Renderer.SetDepthFunc(GL_LESS);
 }

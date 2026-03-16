@@ -13,25 +13,34 @@ out vec3 io_FragPos;
 out vec4 io_FragLightPos;
 out mat3 io_TBN;
 out vec2 io_TexCoords[4];
+out vec4 io_CurrPosition;
+out vec4 io_PrevPosition;
 
 uniform mat4 u_Model;
+uniform mat4 u_CurrentVP;
+uniform mat4 u_JitteredCurrentVP;
+uniform mat4 u_PreviousVP;
 uniform mat4 u_MVP;
 uniform mat4 u_LightSpaceMatrix;
 
 void main()
 {
+  vec4 worldPos   = u_Model * vec4(aPos, 1.0);
+  io_CurrPosition = u_CurrentVP * worldPos;
+  io_PrevPosition = u_PreviousVP * worldPos;
+
   vec3 T = normalize(vec3(u_Model * vec4(aTangent, 0.0)));
   vec3 N = normalize(vec3(u_Model * vec4(aNormal, 0.0)));
   T      = normalize(T - dot(T, N) * N);
   vec3 B = cross(N, T);
 
   io_TBN          = mat3(T, B, N);
-  io_FragPos      = vec3(u_Model * vec4(aPos, 1.0));
+  io_FragPos      = vec3(worldPos);
   io_Normal       = mat3(u_Model) * aNormal;
   io_FragLightPos = u_LightSpaceMatrix * vec4(io_FragPos, 1.0);
   io_TexCoords[0] = aTexCoords_0;
   io_TexCoords[1] = aTexCoords_1;
   io_TexCoords[2] = aTexCoords_2;
   io_TexCoords[3] = aTexCoords_3;
-  gl_Position     = u_MVP * vec4(aPos, 1.0);
+  gl_Position     = u_JitteredCurrentVP * worldPos;
 }

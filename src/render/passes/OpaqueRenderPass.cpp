@@ -22,6 +22,10 @@ void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
+  _Renderer.SetUniform("u_JitteredCurrentVP", _RenderContext.JitteredViewProjectionMatrix);
+  _Renderer.SetUniform("u_CurrentVP", _RenderContext.ViewProjectionMatrix);
+  _Renderer.SetUniform("u_PreviousVP", _RenderContext.PreviousViewProjectionMatrix);
+  _Renderer.SetUniform("u_IsShadowMapEnabled", _RenderContext.ShadowMap != CTexture::INVALID_VALUE);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   _Renderer.SetUniform("u_IrradianceMap", TEXTURE_IRRADIANCE_MAP_INDEX);
   CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
@@ -33,7 +37,7 @@ void COpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
   for (const TRenderCommand *Command : _Commands)
   {
     _Renderer.SetUniform("u_Model", Command->ModelMatrix);
-    _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command->ModelMatrix);
+    _Renderer.SetUniform("u_MVP", _RenderContext.JitteredViewProjectionMatrix * Command->ModelMatrix);
 
     CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
     CTexture::Bind(TEXTURE_NORMAL_UNIT, Command->Material.NormalTexture);

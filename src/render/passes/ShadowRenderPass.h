@@ -26,7 +26,6 @@ public:
 
 public:
   explicit CShadowRenderPass();
-  ~CShadowRenderPass();
 
   ERenderPassType GetType() const override
   {

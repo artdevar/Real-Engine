@@ -157,15 +157,30 @@ public:
     glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, _TextureTarget, _TextureID, 0);
   }
 
-  void AttachRenderbuffer(GLenum _Attachment, GLuint _RenderbufferID)
+  void DetachTexture(GLenum _Attachment)
+  {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, GL_TEXTURE_2D, INVALID_BUFFER, 0);
+  }
+
+  void AttachRenderBuffer(GLenum _Attachment, GLuint _RenderbufferID)
   {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, _Attachment, GL_RENDERBUFFER, _RenderbufferID);
+  }
+
+  void DetachRenderBuffer(GLenum _Attachment)
+  {
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, _Attachment, GL_RENDERBUFFER, INVALID_BUFFER);
   }
 
   void DisableColorBuffer()
   {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
+  }
+
+  void SetDrawBuffers(const GLenum *_Buffers, GLsizei _Count)
+  {
+    glDrawBuffers(_Count, _Buffers);
   }
 
   static void Blit(GLuint _ReadBufferID, GLuint _DrawBufferID, GLsizei _Width, GLsizei _Height, GLbitfield _Mask, GLenum _Filter)

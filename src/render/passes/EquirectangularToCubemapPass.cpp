@@ -10,21 +10,12 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 CEquirectangularToCubemapPass::CEquirectangularToCubemapPass() :
-    m_Shader(resource::LoadShader("EquirectangularToCubemap")),
-    m_VAO(),
-    m_VBO(GL_STATIC_DRAW)
+    m_Shader(resource::LoadShader("EquirectangularToCubemap"))
 {
-  m_VAO.Bind();
-  m_VBO.Bind();
-  m_VBO.Assign(CUBE_VERTICES, sizeof(CUBE_VERTICES));
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 3 * sizeof(float));
-  m_VAO.Unbind();
-  m_VBO.Unbind();
-
   m_FBO.Bind();
   m_RBO.Bind();
   m_RBO.AllocateStorage(GL_DEPTH_COMPONENT24, 512, 512);
-  m_FBO.AttachRenderbuffer(GL_DEPTH_ATTACHMENT, m_RBO.ID());
+  m_FBO.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, m_RBO.ID());
 
   m_Projection = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
   m_Views[0]   = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f));
@@ -42,11 +33,11 @@ void CEquirectangularToCubemapPass::PreExecute(IRenderer &_Renderer, TRenderCont
   _Renderer.SetCullFace(ECullMode::None);
   _Renderer.SetViewport({512, 512});
   _Renderer.SetShader(m_Shader);
+  _RenderContext.CubeVAO.Bind();
 }
 
 void CEquirectangularToCubemapPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  m_VAO.Bind();
   _Renderer.SetUniform("u_Projection", m_Projection);
 
   for (const TRenderCommand *Command : _Commands)
@@ -64,12 +55,11 @@ void CEquirectangularToCubemapPass::Execute(IRenderer &_Renderer, TRenderContext
     }
     m_FBO.Unbind();
   }
-
-  m_VAO.Unbind();
 }
 
 void CEquirectangularToCubemapPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
+  _RenderContext.CubeVAO.Unbind();
   _Renderer.SetDepthFunc(GL_LESS);
 }
 

@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <variant>
 
+class CVertexArray;
+
 using UniformType = std::variant<int, unsigned, float, glm::mat3, glm::mat4, glm::vec2, glm::vec3, glm::vec4>;
 
 constexpr inline unsigned ATTRIB_LOC_POSITION    = 0;
@@ -35,6 +37,10 @@ extern const unsigned TEXTURE_IRRADIANCE_MAP_UNIT;
 extern const int      TEXTURE_IRRADIANCE_MAP_INDEX;
 extern const unsigned TEXTURE_BLOOM_UNIT;
 extern const int      TEXTURE_BLOOM_INDEX;
+extern const unsigned TEXTURE_VELOCITY_UNIT;
+extern const int      TEXTURE_VELOCITY_INDEX;
+extern const unsigned TEXTURE_TAA_HISTORY_UNIT;
+extern const int      TEXTURE_TAA_HISTORY_INDEX;
 
 constexpr inline int MAX_POINT_LIGHTS = 5;
 

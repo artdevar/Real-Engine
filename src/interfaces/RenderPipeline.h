@@ -2,7 +2,6 @@
 
 #include <common/interfaces/Shutdownable.h>
 #include <common/MathTypes.h>
-#include <cstdint>
 
 class IRenderer;
 class CRenderQueue;

@@ -38,6 +38,22 @@ public:
       event::Notify(TEventType::Config_FXAAEnabledChanged, _Enabled);
     }
   }
+  void SetTAAEnabled(bool _Enabled)
+  {
+    if (IsTAAEnabled != _Enabled)
+    {
+      IsTAAEnabled = _Enabled;
+      event::Notify(TEventType::Config_TAAEnabledChanged, _Enabled);
+    }
+  }
+  void SetTAAJitterSampleCount(int _Count)
+  {
+    if (TAAJitterSampleCount != _Count)
+    {
+      TAAJitterSampleCount = _Count;
+      event::Notify(TEventType::Config_TAAJitterSampleCountChanged, _Count);
+    }
+  }
   void SetHDREnabled(bool _Enabled)
   {
     if (IsHDREnabled != _Enabled)
@@ -218,6 +234,14 @@ public:
   {
     return IsFXAAEnabled;
   }
+  bool GetTAAEnabled() const
+  {
+    return IsTAAEnabled;
+  }
+  int GetTAAJitterSampleCount() const
+  {
+    return TAAJitterSampleCount;
+  }
   bool GetHDREnabled() const
   {
     return IsHDREnabled;
@@ -331,7 +355,9 @@ private:
   // Render
   int   ShadowMapSize            = 4096;
   bool  AreShadowsEnabled        = true;
-  bool  IsFXAAEnabled            = true;
+  bool  IsFXAAEnabled            = false;
+  bool  IsTAAEnabled             = true;
+  int   TAAJitterSampleCount     = 16;
   bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;

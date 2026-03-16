@@ -1,5 +1,6 @@
 #include <glad/glad.h>
 #include "ShaderTypes.h"
+#include "render/Buffer.h"
 
 const unsigned TEXTURE_BASIC_COLOR_UNIT  = GL_TEXTURE1;
 const int      TEXTURE_BASIC_COLOR_INDEX = 1;
@@ -30,3 +31,9 @@ const int      TEXTURE_IRRADIANCE_MAP_INDEX = 22;
 
 const unsigned TEXTURE_BLOOM_UNIT  = GL_TEXTURE23;
 const int      TEXTURE_BLOOM_INDEX = 23;
+
+const unsigned TEXTURE_VELOCITY_UNIT  = GL_TEXTURE24;
+const int      TEXTURE_VELOCITY_INDEX = 24;
+
+const unsigned TEXTURE_TAA_HISTORY_UNIT  = GL_TEXTURE25;
+const int      TEXTURE_TAA_HISTORY_INDEX = 25;

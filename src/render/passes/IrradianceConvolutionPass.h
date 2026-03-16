@@ -33,9 +33,6 @@ private:
 
   std::shared_ptr<CShader> m_Shader;
 
-  CVertexArray  m_VAO;
-  CVertexBuffer m_VBO;
-
   CFrameBuffer  m_FBO;
   CRenderBuffer m_RBO;
 

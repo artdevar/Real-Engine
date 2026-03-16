@@ -6,13 +6,13 @@
 
 struct TRenderTarget
 {
-  using TColorHandle = std::shared_ptr<CTextureBase>;
-  using TDepthHandle = std::shared_ptr<CTextureBase>;
+  using TTexture     = std::shared_ptr<CTextureBase>;
+  using TDepthHandle = std::variant<TTexture, CRenderBuffer>;
 
   CFrameBuffer FrameBuffer;
+  TVector2i    Size;
 
-  TColorHandle Color;
   TDepthHandle Depth;
-
-  TVector2i Size;
+  TTexture     Color;
+  TTexture     Velocity;
 };

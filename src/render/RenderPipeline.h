@@ -3,9 +3,9 @@
 #include "interfaces/RenderPipeline.h"
 #include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
-#include "render/Buffer.h"
 #include "render/FrameData.h"
 #include "passes/RenderPassTypes.h"
+#include "render/Buffer.h"
 #include <events/EventsListener.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
@@ -13,12 +13,13 @@
 #include <vector>
 #include <memory>
 #include <map>
-#include <span>
 
 class IRenderer;
 class IRenderPass;
 class CRenderQueue;
 class CTextureBase;
+class CVertexArray;
+class CVertexBuffer;
 struct TRenderContext;
 struct TRenderTarget;
 struct TRenderCommand;
@@ -27,6 +28,26 @@ class CRenderPipeline final : public CSharable<CRenderPipeline>,
                               public IEventsListener,
                               public IRenderPipeline
 {
+  struct TBuffers
+  {
+    CVertexArray  VAO;
+    CVertexBuffer VBO = CVertexBuffer(GL_STATIC_DRAW);
+  };
+
+  struct TRenderPass
+  {
+    TRenderPass(std::shared_ptr<IRenderPass> _Pass, bool _IsEnabled) :
+        Pass(std::move(_Pass)),
+        IsEnabled(_IsEnabled)
+    {
+    }
+
+    std::shared_ptr<IRenderPass> Pass;
+    bool                         IsEnabled;
+  };
+
+  using TRenderPassesList = std::vector<TRenderPass>;
+
 public:
   CRenderPipeline();
   ~CRenderPipeline();
@@ -50,7 +71,7 @@ public:
 
 private:
   void BeginFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext);
-  void EndFrame(IRenderer &_Renderer);
+  void EndFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext);
 
   void UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
   void ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands);
@@ -63,9 +84,9 @@ private:
   glm::mat4 CalculateLightSpaceMatrix() const;
 
   TRenderContext CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer);
-  std::unique_ptr<TRenderTarget> CreateRenderTarget(const std::string &_Name, TVector2i _Size);
+  void InitRenderTargets(TVector2i _Viewport);
+  void InitCommonVAOs();
 
-  void RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container);
   void DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
                     IRenderer                          &_Renderer,
                     TRenderContext                     &_RenderContext,
@@ -75,23 +96,28 @@ private:
   static std::string GetRenderTextureName();
   static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
   static std::shared_ptr<CTextureBase> CreateDepthTexture(const std::string &_Name, TVector2i _Size);
+  static std::shared_ptr<CTextureBase> CreateVelocityTexture(const std::string &_Name, TVector2i _Size);
   static std::vector<const TRenderCommand *> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
                                                             const std::vector<TRenderCommand>  &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
-
-  static bool DoesRenderPassExists(ERenderPassType Type, const std::vector<std::shared_ptr<IRenderPass>> &_Container);
+  static bool IsRenderPassEnabled(ERenderPassType _Type, const TRenderPassesList &_Passes);
+  static void SetRenderPassEnabled(ERenderPassType _Type, bool _Enabled, TRenderPassesList &_Passes);
+  static glm::vec2 GenerateHaltonJitter(uint32_t _Index);
 
 private:
-  std::vector<std::shared_ptr<IRenderPass>> m_UtilityPasses;
-  std::vector<std::shared_ptr<IRenderPass>> m_ShadowPasses;
-  std::vector<std::shared_ptr<IRenderPass>> m_GeometryPasses;
-  std::vector<std::shared_ptr<IRenderPass>> m_DebugPasses;
-  std::vector<std::shared_ptr<IRenderPass>> m_PostProcessPasses;
-  std::vector<std::shared_ptr<IRenderPass>> m_OutputPasses;
+  TRenderPassesList m_UtilityPasses;
+  TRenderPassesList m_ShadowPasses;
+  TRenderPassesList m_GeometryPasses;
+  TRenderPassesList m_DebugPasses;
+  TRenderPassesList m_PostProcessPasses;
+  TRenderPassesList m_OutputPasses;
 
   std::unique_ptr<TRenderTarget> m_SceneTarget;
   std::unique_ptr<TRenderTarget> m_PostProcessTarget;
   std::unique_ptr<TRenderTarget> m_FinalTarget;
+
+  TBuffers m_QuadBuffer;
+  TBuffers m_CubeBuffer;
 
   TShaderLighting m_Lighting;
   CUniformBuffer  m_LightingUBO;
@@ -104,4 +130,11 @@ private:
   uint32_t m_LastFramePoints;
 
   std::map<ERenderPassType, float> m_RenderPassTimes;
+
+  glm::mat4 m_PrevViewProjectionMatrix;
+  glm::vec2 m_CurrentJitter;
+  glm::vec2 m_PreviousJitter;
+  uint32_t  m_JitterFrameIndex;
+  int32_t   m_JitterSampleCount;
+  bool      m_IsTAAEnabled;
 };

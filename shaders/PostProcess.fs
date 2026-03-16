@@ -109,7 +109,7 @@ void main()
     if (depth < 1.0)
     {
       vec3 fxaaColor = CalculateFXAA(color);
-      color          = mix(color, fxaaColor, 0.8);
+      color          = mix(color, fxaaColor, IsBloomEnabled ? 0.5 : 1.0);
     }
   }
 

@@ -4,12 +4,14 @@
 #include "interfaces/RenderPass.h"
 #include <events/EventsListener.h>
 #include <common/Sharable.h>
+#include <common/MathTypes.h>
 
 class CShader;
+struct TRenderTarget;
 
-class CPostProcessRenderPass : public CSharable<CPostProcessRenderPass>,
-                               public IEventsListener,
-                               public IRenderPass
+class CTAARenderPass : public CSharable<CTAARenderPass>,
+                       public IEventsListener,
+                       public IRenderPass
 {
 public:
   template <typename... Args>
@@ -21,11 +23,11 @@ public:
   }
 
 public:
-  explicit CPostProcessRenderPass();
+  explicit CTAARenderPass(TVector2i _Viewport);
 
   ERenderPassType GetType() const override
   {
-    return ERenderPassType::PostProcess;
+    return ERenderPassType::TAA;
   }
 
   void PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const CommandsList &_Commands) override;
@@ -38,18 +40,14 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CPostProcessRenderPass>::Create;
+  using CSharable<CTAARenderPass>::Create;
 
   void SubscribeToEvents();
+  void InitHistoryTargets(const TVector2i &_Viewport);
 
 private:
-  std::shared_ptr<CShader> m_Shader;
+  std::shared_ptr<CShader>       m_Shader;
+  std::shared_ptr<TRenderTarget> m_HistoryTargets[2];
 
-  bool  m_IsFXAAEnabled;
-  bool  m_IsHDREnabled;
-  bool  m_IsBloomEnabled;
-  bool  m_IsGammaCorrectionEnabled;
-  float m_HDRExposure;
-  float m_BloomIntensity;
-  float m_Gamma;
+  int32_t m_HistoryIndex;
 };

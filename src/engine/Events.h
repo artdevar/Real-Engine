@@ -13,6 +13,8 @@ enum class TEventType
   Config_ShadowsEnabledChanged,
   Config_ShadowsMapSizeChanged,
   Config_FXAAEnabledChanged,
+  Config_TAAEnabledChanged,
+  Config_TAAJitterSampleCountChanged,
   Config_HDREnabledChanged,
   Config_HDRExposureChanged,
   Config_GammaCorrectionEnabledChanged,

@@ -1,5 +1,7 @@
 #pragma once
 
+#if DEV_STAGE
+
 #include "Core.h"
 #include "Logger.h"
 #include <chrono>
@@ -46,7 +48,6 @@ private:
 
 } // namespace utils
 
-#if DEV_STAGE
 #define MEASURE_ZONE(Message) utils::CStopwatch stopwatch_##__LINE__(Message);
 #else
 #define MEASURE_ZONE(Message) void(0);

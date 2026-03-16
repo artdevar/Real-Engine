@@ -22,11 +22,6 @@ CShadowRenderPass::CShadowRenderPass() :
   m_DepthMapFBO.Unbind();
 }
 
-CShadowRenderPass::~CShadowRenderPass()
-{
-  DestroyDepthMap();
-}
-
 void CShadowRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   m_OldViewport = _Renderer.GetViewport();
@@ -104,15 +99,6 @@ std::shared_ptr<CTextureBase> CShadowRenderPass::CreateDepthMap(TVector2i _Size)
   return resource::RecreateTexture(SHADOW_MAP_NAME, DepthMapParams);
 }
 
-void CShadowRenderPass::DestroyDepthMap()
-{
-  m_DepthMap.reset();
-
-  m_DepthMapFBO.Bind();
-  m_DepthMapFBO.AttachTexture(GL_DEPTH_ATTACHMENT, CTexture::INVALID_VALUE);
-  m_DepthMapFBO.Unbind();
-}
-
 void CShadowRenderPass::SubscribeToEvents()
 {
   event::Subscribe(TEventType::Config_ShadowsMapSizeChanged, GetWeakPtr());
@@ -126,7 +112,6 @@ void CShadowRenderPass::OnEvent(const TEvent &_Event)
     const int NewSize = _Event.GetValue<int>();
     if (NewSize != m_ShadowMapSize)
     {
-      DestroyDepthMap();
       m_ShadowMapSize = NewSize;
 
       m_DepthMap = CreateDepthMap(TVector2i(m_ShadowMapSize, m_ShadowMapSize));

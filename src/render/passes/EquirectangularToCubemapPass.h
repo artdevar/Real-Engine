@@ -32,10 +32,8 @@ public:
 private:
   static constexpr inline int CUBEMAP_FACES = 6;
 
-  std::shared_ptr<CShader> m_Shader;
-
-  CVertexArray  m_VAO;
-  CVertexBuffer m_VBO;
+  std::shared_ptr<CShader>      m_Shader;
+  std::shared_ptr<CVertexArray> m_VAO;
 
   CFrameBuffer  m_FBO;
   CRenderBuffer m_RBO;

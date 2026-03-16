@@ -14,19 +14,10 @@ int   CBloomRenderPass::m_BlurPasses = 10;
 
 CBloomRenderPass::CBloomRenderPass(TVector2i _Viewport) :
     m_DownsampleShader(resource::LoadShader("BloomDownsample")),
-    m_BlurShader(resource::LoadShader("BloomBlur")),
-    m_VAO(),
-    m_VBO(GL_STATIC_DRAW)
+    m_BlurShader(resource::LoadShader("BloomBlur"))
 {
   m_Threshold  = CConfig::Instance().GetBloomThreshold();
   m_BlurPasses = CConfig::Instance().GetBloomBlurPasses();
-
-  m_VAO.Bind();
-  m_VBO.Bind();
-  m_VBO.Assign(QUAD_VERTICES, sizeof(QUAD_VERTICES));
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float));
-  m_VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, false, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-  m_VAO.Unbind();
 
   InitTextures(_Viewport);
 }
@@ -34,7 +25,7 @@ CBloomRenderPass::CBloomRenderPass(TVector2i _Viewport) :
 void CBloomRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _Renderer.SetDepthTest(false);
-  m_VAO.Bind();
+  _RenderContext.QuadVAO.Bind();
 }
 
 void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
@@ -68,7 +59,7 @@ void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
 
 void CBloomRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  m_VAO.Unbind();
+  _RenderContext.QuadVAO.Unbind();
   CFrameBuffer::BindDefault();
 }
 

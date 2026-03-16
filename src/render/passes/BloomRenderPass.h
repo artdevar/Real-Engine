@@ -56,9 +56,6 @@ private:
   CFrameBuffer                  m_PingPongFBO[2];
   std::shared_ptr<CTextureBase> m_PingPongColor[2];
 
-  CVertexArray  m_VAO;
-  CVertexBuffer m_VBO;
-
   static float m_Threshold;
   static int   m_BlurPasses;
 };

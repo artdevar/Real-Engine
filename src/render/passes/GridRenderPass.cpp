@@ -54,9 +54,7 @@ CGridRenderPass::CGridRenderPass() :
   m_VAO.Bind();
   m_VBO.Bind();
   m_VBO.Assign(Grid);
-
   m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float));
-
   m_VAO.Unbind();
 }
 

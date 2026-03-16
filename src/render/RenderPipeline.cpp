@@ -15,6 +15,7 @@
 #include "passes/GridRenderPass.h"
 #include "passes/EquirectangularToCubemapPass.h"
 #include "passes/IrradianceConvolutionPass.h"
+#include "passes/TAARenderPass.h"
 #include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -26,6 +27,7 @@
 #include <common/Stopwatch.h>
 #include <common/Clock.h>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 CRenderPipeline::CRenderPipeline() :
     m_Lighting({}),
@@ -35,7 +37,13 @@ CRenderPipeline::CRenderPipeline() :
     m_LastFrameIndices(0),
     m_LastFrameTriangles(0),
     m_LastFrameLines(0),
-    m_LastFramePoints(0)
+    m_LastFramePoints(0),
+    m_PrevViewProjectionMatrix(glm::mat4(1.0f)),
+    m_CurrentJitter(0.0f),
+    m_PreviousJitter(0.0f),
+    m_JitterFrameIndex(0),
+    m_JitterSampleCount(8),
+    m_IsTAAEnabled(false)
 {
 }
 
@@ -56,98 +64,98 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   const bool WireframeEnabled = CConfig::Instance().GetWireframeEnabled();
   const bool BloomEnabled     = CConfig::Instance().GetBloomEnabled();
 
-  if (ShadowsEnabled)
-    m_ShadowPasses.push_back(CShadowRenderPass::Create());
+  m_IsTAAEnabled      = CConfig::Instance().GetTAAEnabled();
+  m_JitterSampleCount = CConfig::Instance().GetTAAJitterSampleCount();
 
-  if (EditorEnabled)
-  {
-    if (WireframeEnabled)
-      m_DebugPasses.push_back(CCollisionRenderPass::Create());
+  m_ShadowPasses.emplace_back(CShadowRenderPass::Create(), ShadowsEnabled);
 
-    if (GridEnabled)
-      m_DebugPasses.push_back(CGridRenderPass::Create());
-  }
+  m_UtilityPasses.emplace_back(CEquirectangularToCubemapPass::Create(), true);
+  m_UtilityPasses.emplace_back(CIrradianceConvolutionPass::Create(), true);
 
-  m_UtilityPasses.push_back(CEquirectangularToCubemapPass::Create());
-  m_UtilityPasses.push_back(CIrradianceConvolutionPass::Create());
+  m_GeometryPasses.emplace_back(COpaqueRenderPass::Create(), true);
+  m_GeometryPasses.emplace_back(CSkyboxRenderPass::Create(), true);
+  m_GeometryPasses.emplace_back(CTransparentRenderPass::Create(), true);
 
-  m_GeometryPasses.push_back(COpaqueRenderPass::Create());
-  m_GeometryPasses.push_back(CSkyboxRenderPass::Create());
-  m_GeometryPasses.push_back(CTransparentRenderPass::Create());
+  m_PostProcessPasses.emplace_back(CTAARenderPass::Create(_Viewport), m_IsTAAEnabled);
+  m_PostProcessPasses.emplace_back(CBloomRenderPass::Create(_Viewport), BloomEnabled);
+  m_PostProcessPasses.emplace_back(CPostProcessRenderPass::Create(), true);
 
-  if (BloomEnabled)
-    m_PostProcessPasses.push_back(CBloomRenderPass::Create(_Viewport));
-  m_PostProcessPasses.push_back(CPostProcessRenderPass::Create());
+  m_DebugPasses.emplace_back(CCollisionRenderPass::Create(), WireframeEnabled);
+  m_DebugPasses.emplace_back(CGridRenderPass::Create(), GridEnabled);
 
-  m_OutputPasses.push_back(COutputRenderPass::Create());
-
-  m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), _Viewport);
-  m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), _Viewport);
-  if (EditorEnabled)
-    m_FinalTarget = CreateRenderTarget(GetRenderTextureName(), _Viewport);
+  m_OutputPasses.emplace_back(COutputRenderPass::Create(), true);
 
   m_LightingUBO.Bind();
   m_LightingUBO.Reserve(sizeof(TShaderLighting));
   m_LightingUBO.BindToBase(BINDING_LIGHTING_BUFFER);
   m_LightingUBO.Unbind();
 
+  InitRenderTargets(_Viewport);
+  InitCommonVAOs();
+
   event::Subscribe(TEventType::ViewportResized, GetWeakPtr());
   event::Subscribe(TEventType::Config_ShadowsEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_GridEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_WireframeEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_BloomEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_TAAEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_TAAJitterSampleCountChanged, GetWeakPtr());
 }
 
 void CRenderPipeline::OnEvent(const TEvent &_Event)
 {
   switch (_Event.Type)
   {
+  case TEventType::ViewportResized: {
+    const TVector2i NewViewport = _Event.GetValue<TVector2i>();
+    InitRenderTargets(NewViewport);
+    break;
+  }
   case TEventType::Config_ShadowsEnabledChanged: {
-    const bool ShadowsEnabled       = DoesRenderPassExists(ERenderPassType::Shadow, m_ShadowPasses);
-    const bool NeedToEnableShadows  = _Event.GetValue<bool>() && !ShadowsEnabled;
-    const bool NeedToDisableShadows = !_Event.GetValue<bool>() && ShadowsEnabled;
-
-    if (NeedToEnableShadows)
-      m_ShadowPasses.push_back(CShadowRenderPass::Create());
-    else if (NeedToDisableShadows)
-      RemoveRenderPass(ERenderPassType::Shadow, m_ShadowPasses);
-
+    SetRenderPassEnabled(ERenderPassType::Shadow, _Event.GetValue<bool>(), m_ShadowPasses);
     break;
   }
   case TEventType::Config_GridEnabledChanged: {
-    const bool GridEnabled       = DoesRenderPassExists(ERenderPassType::Grid, m_DebugPasses);
-    const bool NeedToEnableGrid  = _Event.GetValue<bool>() && !GridEnabled;
-    const bool NeedToDisableGrid = !_Event.GetValue<bool>() && GridEnabled;
-
-    if (NeedToEnableGrid)
-      m_DebugPasses.push_back(CGridRenderPass::Create());
-    else if (NeedToDisableGrid)
-      RemoveRenderPass(ERenderPassType::Grid, m_DebugPasses);
-
+    SetRenderPassEnabled(ERenderPassType::Grid, _Event.GetValue<bool>(), m_DebugPasses);
     break;
   }
   case TEventType::Config_WireframeEnabledChanged: {
-    const bool WireframeEnabled       = DoesRenderPassExists(ERenderPassType::Collision, m_DebugPasses);
-    const bool NeedToEnableWireframe  = _Event.GetValue<bool>() && !WireframeEnabled;
-    const bool NeedToDisableWireframe = !_Event.GetValue<bool>() && WireframeEnabled;
+    SetRenderPassEnabled(ERenderPassType::Collision, _Event.GetValue<bool>(), m_DebugPasses);
+    break;
+  }
+  case TEventType::Config_BloomEnabledChanged: {
+    SetRenderPassEnabled(ERenderPassType::Bloom, _Event.GetValue<bool>(), m_PostProcessPasses);
+    break;
+  }
+  case TEventType::Config_TAAEnabledChanged: {
+    const bool TAAEnabled       = IsRenderPassEnabled(ERenderPassType::TAA, m_PostProcessPasses);
+    const bool NeedToEnableTAA  = _Event.GetValue<bool>() && !TAAEnabled;
+    const bool NeedToDisableTAA = !_Event.GetValue<bool>() && TAAEnabled;
 
-    if (NeedToEnableWireframe)
-      m_DebugPasses.push_back(CCollisionRenderPass::Create());
-    else if (NeedToDisableWireframe)
-      RemoveRenderPass(ERenderPassType::Collision, m_DebugPasses);
+    if (NeedToEnableTAA)
+    {
+      const TVector2i Viewport = m_SceneTarget->Size;
+      m_SceneTarget->Velocity  = CreateVelocityTexture("SCENE_TARGET_VELOCITY", Viewport);
+      m_SceneTarget->FrameBuffer.Bind();
+      m_SceneTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT1, m_SceneTarget->Velocity->ID());
+      m_SceneTarget->FrameBuffer.Unbind();
+      SetRenderPassEnabled(ERenderPassType::TAA, true, m_PostProcessPasses);
+      m_IsTAAEnabled = true;
+    }
+    else if (NeedToDisableTAA)
+    {
+      m_SceneTarget->Velocity.reset();
+      m_SceneTarget->FrameBuffer.Bind();
+      m_SceneTarget->FrameBuffer.DetachTexture(GL_COLOR_ATTACHMENT1);
+      m_SceneTarget->FrameBuffer.Unbind();
+      SetRenderPassEnabled(ERenderPassType::TAA, false, m_PostProcessPasses);
+      m_IsTAAEnabled = false;
+    }
 
     break;
   }
-  case TEventType::ViewportResized: {
-    const TVector2i NewViewport = _Event.GetValue<TVector2i>();
-
-    m_SceneTarget       = CreateRenderTarget(GetRenderTextureName(), NewViewport);
-    m_PostProcessTarget = CreateRenderTarget(GetRenderTextureName(), NewViewport);
-    if (m_FinalTarget)
-      m_FinalTarget = CreateRenderTarget(GetRenderTextureName(), NewViewport);
-
-    resource::UnloadUnusedAssets();
-
+  case TEventType::Config_TAAJitterSampleCountChanged: {
+    m_JitterSampleCount = _Event.GetValue<int32_t>();
     break;
   }
   }
@@ -171,7 +179,7 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
   DebugPass(_Renderer, RenderContext, Commands);
   OutputPass(_Renderer, RenderContext, Commands);
 
-  EndFrame(_Renderer);
+  EndFrame(_Renderer, RenderContext);
 }
 
 void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
@@ -189,8 +197,12 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_Re
   _Renderer.ClearColor({0.2f, 0.2f, 0.2f, 1.0f});
 }
 
-void CRenderPipeline::EndFrame(IRenderer &_Renderer)
+void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
 {
+  m_PrevViewProjectionMatrix = _RenderContext.ViewProjectionMatrix;
+  m_PreviousJitter           = m_CurrentJitter;
+  m_JitterFrameIndex         = (m_JitterFrameIndex + 1) % m_JitterSampleCount;
+
   m_LastFrameDrawCalls = _Renderer.GetDrawCallsCount();
   m_LastFrameVertices  = _Renderer.GetVerticesCount();
   m_LastFrameIndices   = _Renderer.GetIndicesCount();
@@ -203,30 +215,52 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer)
 
 void CRenderPipeline::UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_UtilityPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+  for (const TRenderPass &RenderPass : m_UtilityPasses)
+  {
+    if (RenderPass.IsEnabled)
+      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
+  }
 }
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_ShadowPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+  for (const TRenderPass &RenderPass : m_ShadowPasses)
+  {
+    if (RenderPass.IsEnabled)
+      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
+  }
 }
 
 void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
+  if (_RenderContext.SceneRenderTarget.Velocity)
+  {
+    constexpr GLenum Attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    _RenderContext.SceneRenderTarget.FrameBuffer.SetDrawBuffers(Attachments, 2);
+  }
+  else
+  {
+    constexpr GLenum Attachments[1] = {GL_COLOR_ATTACHMENT0};
+    _RenderContext.SceneRenderTarget.FrameBuffer.SetDrawBuffers(Attachments, 1);
+  }
 
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_GeometryPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+  for (const TRenderPass &RenderPass : m_GeometryPasses)
+  {
+    if (RenderPass.IsEnabled)
+      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
+  }
 
   _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
 }
 
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_PostProcessPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+  for (const TRenderPass &RenderPass : m_PostProcessPasses)
+  {
+    if (RenderPass.IsEnabled)
+      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
+  }
 }
 
 void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
@@ -243,8 +277,11 @@ void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderCon
 
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
 
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_DebugPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+  for (const TRenderPass &RenderPass : m_DebugPasses)
+  {
+    if (RenderPass.IsEnabled)
+      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
+  }
 
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 }
@@ -256,8 +293,11 @@ void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderCo
   else
     CFrameBuffer::BindDefault();
 
-  for (const std::shared_ptr<IRenderPass> &RenderPass : m_OutputPasses)
-    DoRenderPass(RenderPass, _Renderer, _RenderContext, _Commands);
+  for (const TRenderPass &RenderPass : m_OutputPasses)
+  {
+    if (RenderPass.IsEnabled)
+      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
+  }
 
   if (_RenderContext.FinalRenderTarget)
     _RenderContext.FinalRenderTarget->FrameBuffer.Unbind();
@@ -327,6 +367,27 @@ std::vector<const TRenderCommand *> CRenderPipeline::FilterCommands(const std::s
   return FilteredCommands;
 }
 
+bool CRenderPipeline::IsRenderPassEnabled(ERenderPassType _Type, const TRenderPassesList &_Passes)
+{
+  auto It = std::find_if(_Passes.begin(), _Passes.end(), [_Type](const TRenderPass &Pass) {
+    return Pass.Pass->GetType() == _Type;
+  });
+
+  return It != _Passes.end() && It->IsEnabled;
+}
+
+void CRenderPipeline::SetRenderPassEnabled(ERenderPassType _Type, bool _Enabled, TRenderPassesList &_Passes)
+{
+  auto It = std::find_if(_Passes.begin(), _Passes.end(), [_Type](const TRenderPass &Pass) {
+    return Pass.Pass->GetType() == _Type;
+  });
+
+  if (It != _Passes.end())
+    It->IsEnabled = _Enabled;
+  else
+    assert(false);
+}
+
 void CRenderPipeline::SetLightingData(const std::vector<TFrameData::TLight> &_Lighting)
 {
   TShaderLighting ShaderLighting;
@@ -365,39 +426,43 @@ glm::mat4 CRenderPipeline::CalculateLightSpaceMatrix() const
 
   return LightProjection * LightView;
 }
-
 TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer)
 {
-  const auto &Camera = _Renderer.GetCamera();
+  const TVector2i Viewport = _Renderer.GetViewport();
+
+  const auto     &Camera     = _Renderer.GetCamera();
+  const glm::mat4 Projection = Camera->GetPerspectiveProjection();
+  const glm::mat4 View       = Camera->GetView();
+
+  glm::mat4 JitteredProjection = Projection;
+  if (m_IsTAAEnabled)
+  {
+    m_CurrentJitter = GenerateHaltonJitter(m_JitterFrameIndex) * 2.0f - 1.0f;
+
+    JitteredProjection[2][0] += m_CurrentJitter.x / Viewport.X;
+    JitteredProjection[2][1] += m_CurrentJitter.y / Viewport.Y;
+  }
+  glm::mat4 JitteredViewProjection = JitteredProjection * View;
 
   return TRenderContext{
-      .SceneRenderTarget       = *m_SceneTarget,
-      .PostProcessRenderTarget = *m_PostProcessTarget,
-      .FinalRenderTarget       = m_FinalTarget.get(),
-      .CameraPosition          = Camera->GetPosition(),
-      .ProjectionMatrix        = Camera->GetPerspectiveProjection(),
-      .ViewMatrix              = Camera->GetView(),
-      .ViewProjectionMatrix    = Camera->GetPerspectiveProjection() * Camera->GetView(),
-      .LightSpaceMatrix        = CalculateLightSpaceMatrix(),
-      .ShadowMap               = 0,
-      .IrradianceMap           = FrameData.Environment.IrradianceMap,
+      .SceneRenderTarget            = *m_SceneTarget,
+      .PostProcessRenderTarget      = *m_PostProcessTarget,
+      .FinalRenderTarget            = m_FinalTarget.get(),
+      .CameraPosition               = Camera->GetPosition(),
+      .ProjectionMatrix             = Projection,
+      .ViewMatrix                   = View,
+      .ViewProjectionMatrix         = Projection * View,
+      .JitteredViewProjectionMatrix = JitteredViewProjection,
+      .PreviousViewProjectionMatrix = m_PrevViewProjectionMatrix,
+      .LightSpaceMatrix             = CalculateLightSpaceMatrix(),
+      .Jitter                       = m_CurrentJitter,
+      .PrevJitter                   = m_PreviousJitter,
+      .ShadowMap                    = 0,
+      .IrradianceMap                = FrameData.Environment.IrradianceMap,
+      .TAAHistoryMap                = 0,
+      .QuadVAO                      = m_QuadBuffer.VAO,
+      .CubeVAO                      = m_CubeBuffer.VAO,
   };
-}
-
-std::unique_ptr<TRenderTarget> CRenderPipeline::CreateRenderTarget(const std::string &_Name, TVector2i _Size)
-{
-  auto RenderTarget = std::make_unique<TRenderTarget>();
-
-  RenderTarget->Size  = _Size;
-  RenderTarget->Color = CreateRenderTexture(_Name, _Size);
-  RenderTarget->Depth = CreateDepthTexture(_Name + "_DEPTH", _Size);
-
-  RenderTarget->FrameBuffer.Bind();
-  RenderTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, RenderTarget->Color->ID());
-  RenderTarget->FrameBuffer.AttachTexture(GL_DEPTH_ATTACHMENT, RenderTarget->Depth->ID());
-  RenderTarget->FrameBuffer.Unbind();
-
-  return RenderTarget;
 }
 
 std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size)
@@ -411,7 +476,7 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
-  return resource::CreateTexture(_Name, TextureParams);
+  return resource::RecreateTexture(_Name, TextureParams);
 }
 
 std::shared_ptr<CTextureBase> CRenderPipeline::CreateDepthTexture(const std::string &_Name, TVector2i _Size)
@@ -427,7 +492,21 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateDepthTexture(const std::str
   TextureParams.WrapS          = ETextureWrap::ClampToEdge;
   TextureParams.WrapT          = ETextureWrap::ClampToEdge;
 
-  return resource::CreateTexture(_Name, TextureParams);
+  return resource::RecreateTexture(_Name, TextureParams);
+}
+
+std::shared_ptr<CTextureBase> CRenderPipeline::CreateVelocityTexture(const std::string &_Name, TVector2i _Size)
+{
+  TTextureParams TextureParams;
+  TextureParams.Width          = _Size.X;
+  TextureParams.Height         = _Size.Y;
+  TextureParams.InternalFormat = GL_RG16F;
+  TextureParams.Format         = GL_RG;
+  TextureParams.Type           = GL_FLOAT;
+  TextureParams.MinFilter      = ETextureFilter::Linear;
+  TextureParams.MagFilter      = ETextureFilter::Linear;
+
+  return resource::RecreateTexture(_Name, TextureParams);
 }
 
 std::string CRenderPipeline::GetRenderTextureName()
@@ -436,6 +515,83 @@ std::string CRenderPipeline::GetRenderTextureName()
 
   static uint32_t Counter = 0;
   return std::format("{}{}", RENDER_TEXTURE_NAME, Counter++);
+}
+
+void CRenderPipeline::InitRenderTargets(TVector2i _Viewport)
+{
+  const auto CreateDepthRBO = [](TVector2i _Size) {
+    CRenderBuffer DepthRBO;
+    DepthRBO.Bind();
+    DepthRBO.AllocateStorage(GL_DEPTH_COMPONENT, _Size.X, _Size.Y);
+    DepthRBO.Unbind();
+    return DepthRBO;
+  };
+
+  m_SceneTarget           = std::make_unique<TRenderTarget>();
+  m_SceneTarget->Size     = _Viewport;
+  m_SceneTarget->Color    = CreateRenderTexture("SCENE_TARGET_COLOR", _Viewport);
+  m_SceneTarget->Depth    = CreateDepthTexture("SCENE_TARGET_DEPTH", _Viewport);
+  m_SceneTarget->Velocity = CreateVelocityTexture("SCENE_TARGET_VELOCITY", _Viewport);
+  m_SceneTarget->FrameBuffer.Bind();
+  m_SceneTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_SceneTarget->Color->ID());
+  m_SceneTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT1, m_SceneTarget->Velocity->ID());
+  m_SceneTarget->FrameBuffer.AttachTexture(GL_DEPTH_ATTACHMENT, std::get<TRenderTarget::TTexture>(m_SceneTarget->Depth)->ID());
+  m_SceneTarget->FrameBuffer.Unbind();
+
+  m_PostProcessTarget        = std::make_unique<TRenderTarget>();
+  m_PostProcessTarget->Size  = _Viewport;
+  m_PostProcessTarget->Color = CreateRenderTexture("POST_PROCESS_TARGET_COLOR", _Viewport);
+  m_PostProcessTarget->Depth = CreateDepthRBO(_Viewport);
+  m_PostProcessTarget->FrameBuffer.Bind();
+  m_PostProcessTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_PostProcessTarget->Color->ID());
+  m_PostProcessTarget->FrameBuffer.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, std::get<CRenderBuffer>(m_PostProcessTarget->Depth).ID());
+  m_PostProcessTarget->FrameBuffer.Unbind();
+
+  if (CConfig::Instance().IsEditorEnabled())
+  {
+    m_FinalTarget        = std::make_unique<TRenderTarget>();
+    m_FinalTarget->Size  = _Viewport;
+    m_FinalTarget->Color = CreateRenderTexture("FINAL_TARGET_COLOR", _Viewport);
+    m_FinalTarget->Depth = CreateDepthRBO(_Viewport);
+    m_FinalTarget->FrameBuffer.Bind();
+    m_FinalTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_FinalTarget->Color->ID());
+    m_FinalTarget->FrameBuffer.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, std::get<CRenderBuffer>(m_FinalTarget->Depth).ID());
+    m_FinalTarget->FrameBuffer.Unbind();
+  }
+}
+
+void CRenderPipeline::InitCommonVAOs()
+{
+  m_QuadBuffer.VAO.Bind();
+  m_QuadBuffer.VBO.Bind();
+  m_QuadBuffer.VBO.Assign(QUAD_VERTICES, sizeof(QUAD_VERTICES));
+  m_QuadBuffer.VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float));
+  m_QuadBuffer.VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, false, 5 * sizeof(float), (void *)(3 * sizeof(float)));
+  m_QuadBuffer.VAO.Unbind();
+
+  m_CubeBuffer.VAO.Bind();
+  m_CubeBuffer.VBO.Bind();
+  m_CubeBuffer.VBO.Assign(CUBE_VERTICES, sizeof(CUBE_VERTICES));
+  m_CubeBuffer.VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 3 * sizeof(float));
+  m_CubeBuffer.VAO.Unbind();
+}
+
+glm::vec2 CRenderPipeline::GenerateHaltonJitter(uint32_t _Index)
+{
+  auto HaltonSequence = [](uint32_t Index, uint32_t Base) -> float {
+    float Fraction = 1.0f;
+    float Result   = 0.0f;
+
+    while (Index > 0)
+    {
+      Fraction /= Base;
+      Result   += Fraction * (Index % Base);
+      Index    /= Base;
+    }
+    return Result;
+  };
+
+  return glm::vec2(HaltonSequence(_Index % 8, 2), HaltonSequence(_Index % 8, 3));
 }
 
 uint32_t CRenderPipeline::GetRenderTextureID() const
@@ -480,23 +636,4 @@ float CRenderPipeline::GetRenderPassTime(ERenderPassType _Type) const
     return It->second;
 
   return 0.0f;
-}
-
-bool CRenderPipeline::DoesRenderPassExists(ERenderPassType Type, const std::vector<std::shared_ptr<IRenderPass>> &_Container)
-{
-  return std::any_of(_Container.begin(), _Container.end(), [Type](const std::shared_ptr<IRenderPass> &RenderPass) {
-    return RenderPass->GetType() == Type;
-  });
-}
-
-void CRenderPipeline::RemoveRenderPass(ERenderPassType Type, std::vector<std::shared_ptr<IRenderPass>> &_Container)
-{
-  auto It = std::remove_if(_Container.begin(), _Container.end(), [Type](const std::shared_ptr<IRenderPass> &RenderPass) {
-    return RenderPass->GetType() == Type;
-  });
-
-  if (It != _Container.end())
-    _Container.erase(It, _Container.end());
-
-  m_RenderPassTimes.erase(Type);
 }

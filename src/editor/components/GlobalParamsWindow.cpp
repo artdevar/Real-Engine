@@ -18,6 +18,14 @@ void CGlobalParamsWindow::Render()
       if (ImGui::Checkbox("FXAA", &FXAAEnabled))
         CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
 
+      bool TAAEnabled = CConfig::Instance().GetTAAEnabled();
+      if (ImGui::Checkbox("TAA", &TAAEnabled))
+        CConfig::Instance().SetTAAEnabled(TAAEnabled);
+
+      int TAAJitterSampleCount = CConfig::Instance().GetTAAJitterSampleCount();
+      if (ImGui::DragInt("TAA Sample count", &TAAJitterSampleCount, 8, 8, 32))
+        CConfig::Instance().SetTAAJitterSampleCount(TAAJitterSampleCount);
+
       ImGui::Separator();
 
       bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();

@@ -11,16 +11,8 @@
 #include "utils/Resource.h"
 
 COutputRenderPass::COutputRenderPass() :
-    m_Shader(resource::LoadShader("Output")),
-    m_VAO(),
-    m_VBO(GL_STATIC_DRAW)
+    m_Shader(resource::LoadShader("Output"))
 {
-  m_VAO.Bind();
-  m_VBO.Bind();
-  m_VBO.Assign(QUAD_VERTICES, sizeof(QUAD_VERTICES));
-  m_VAO.EnableAttrib(ATTRIB_LOC_POSITION, 3, GL_FLOAT, false, 5 * sizeof(float));
-  m_VAO.EnableAttrib(ATTRIB_LOC_TEXCOORDS_0, 2, GL_FLOAT, false, 5 * sizeof(float), (void *)(3 * sizeof(float)));
-  m_VAO.Unbind();
 }
 
 void COutputRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
@@ -30,7 +22,7 @@ void COutputRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetCullFace(ECullMode::None);
   _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
-  m_VAO.Bind();
+  _RenderContext.QuadVAO.Bind();
 }
 
 void COutputRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
@@ -42,7 +34,7 @@ void COutputRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
 
 void COutputRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  m_VAO.Unbind();
+  _RenderContext.QuadVAO.Unbind();
 }
 
 bool COutputRenderPass::Accepts(const TRenderCommand &_Command) const
