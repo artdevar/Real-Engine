@@ -57,17 +57,8 @@ void CTAARenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderCo
 {
   _RenderContext.QuadVAO.Unbind();
 
-  TRenderTarget &CurrentOutput = *m_HistoryTargets[m_HistoryIndex];
-  _RenderContext.TAAHistoryMap = CurrentOutput.Color->ID();
-
-  CFrameBuffer::Blit(CurrentOutput.FrameBuffer.ID(),                          //
-                     _RenderContext.PostProcessRenderTarget.FrameBuffer.ID(), //
-                     CurrentOutput.Size.X,                                    //
-                     CurrentOutput.Size.Y,                                    //
-                     GL_COLOR_BUFFER_BIT,                                     //
-                     GL_NEAREST);
-
-  m_HistoryIndex = !m_HistoryIndex;
+  _RenderContext.TAAHistoryMap = m_HistoryTargets[m_HistoryIndex]->Color->ID();
+  m_HistoryIndex               = !m_HistoryIndex;
 }
 
 bool CTAARenderPass::Accepts(const TRenderCommand &_Command) const

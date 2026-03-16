@@ -34,7 +34,12 @@ void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
   _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color));
   _Renderer.SetViewport(m_BloomColor->GetSize());
   _Renderer.SetShader(m_DownsampleShader);
-  CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
+
+  if (_RenderContext.TAAHistoryMap != CTexture::INVALID_VALUE)
+    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.TAAHistoryMap);
+  else
+    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
+
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("Threshold", m_Threshold);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);

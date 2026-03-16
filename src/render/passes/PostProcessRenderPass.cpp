@@ -35,10 +35,12 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
   CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
   CTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
+  CTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, _RenderContext.TAAHistoryMap);
 
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("DepthTexture", TEXTURE_DEPTH_MAP_INDEX);
   _Renderer.SetUniform("BloomTexture", TEXTURE_BLOOM_INDEX);
+  _Renderer.SetUniform("TAATexture", TEXTURE_TAA_HISTORY_INDEX);
   _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
   _Renderer.SetUniform("IsFXAAEnabled", m_IsFXAAEnabled);
   _Renderer.SetUniform("IsHDR", m_IsHDREnabled);

@@ -35,7 +35,7 @@ void main()
   }
   vec2 velocity = texture(VelocityTex, io_TexCoords).xy;
 
-  vec2 jitterDelta = (Jitter - PrevJitter) * InverseScreenSize * 0.5;
+  vec2 jitterDelta = (Jitter - PrevJitter) * 0.5;
   vec2 historyUV   = io_TexCoords - velocity + jitterDelta;
   historyUV        = clamp(historyUV, vec2(0.0), vec2(1.0));
   vec3 history     = SampleHistoryCatmullRom(historyUV);
