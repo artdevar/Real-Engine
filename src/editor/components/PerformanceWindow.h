@@ -3,8 +3,7 @@
 #if DEV_STAGE
 
 #include "EditorWindow.h"
-#include <common/containers/StaticArray.h>
-#include <imgui/imgui.h>
+#include <vector>
 
 namespace editor
 {
@@ -12,6 +11,8 @@ namespace editor
 class CPerformanceWindow : public IEditorWindow
 {
 public:
+  CPerformanceWindow();
+
   std::string GetName() const override;
   TVector2i GetSize() const override;
 
@@ -25,15 +26,15 @@ private:
 
   TVector2i m_Size;
 
-  CStaticArray<TVector2f, MAX_HISTORY> m_FPSHistory;
-  float                                m_MinFps = 0;
-  float                                m_MaxFps = 0;
-  float                                m_AvgFps = 0;
+  std::vector<TVector2f> m_FPSHistory;
+  float                  m_MinFps = 0;
+  float                  m_MaxFps = 0;
+  float                  m_AvgFps = 0;
 
-  CStaticArray<TVector2f, MAX_HISTORY> m_FrameTimeHistory;
-  float                                m_MinFrameTime = 0;
-  float                                m_MaxFrameTime = 0;
-  float                                m_AvgFrameTime = 0;
+  std::vector<TVector2f> m_FrameTimeHistory;
+  float                  m_MinFrameTime = 0;
+  float                  m_MaxFrameTime = 0;
+  float                  m_AvgFrameTime = 0;
 };
 
 } // namespace editor

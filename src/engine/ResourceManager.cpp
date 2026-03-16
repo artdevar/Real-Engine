@@ -20,6 +20,8 @@ static bool IsFormatSupported(const std::filesystem::path &_Path)
   return false;
 }
 
+CResourceManager::CResourceManager() = default;
+
 void CResourceManager::Init()
 {
   event::Subscribe(TEventType::EntityRemoved, GetWeakPtr());
@@ -50,12 +52,14 @@ std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path 
   if (!IsFormatSupported(_Path))
     return nullptr;
 
-  auto Iter = m_Assets.find(_Path);
+  std::string PathStr = _Path.string();
+
+  auto Iter = m_Assets.find(PathStr);
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Model = std::make_shared<CModel>(std::make_unique<CTinyGLTFParseStrategy>());
     if (Model->Load(_Path, CPasskey(this)))
-      Iter = m_Assets.emplace(_Path.string(), std::move(Model)).first;
+      Iter = m_Assets.emplace(std::move(PathStr), std::move(Model)).first;
     else
       return nullptr;
   }
@@ -65,14 +69,15 @@ std::shared_ptr<CModel> CResourceManager::LoadModel(const std::filesystem::path 
 
 std::shared_ptr<CShader> CResourceManager::LoadShader(const std::string &_Name)
 {
-  const std::filesystem::path ShaderPath = CConfig::Instance().GetShadersDir() / _Name;
+  const std::filesystem::path ShaderPath    = CConfig::Instance().GetShadersDir() / _Name;
+  std::string                 ShaderPathStr = ShaderPath.string();
 
-  auto Iter = m_Assets.find(ShaderPath);
+  auto Iter = m_Assets.find(ShaderPathStr);
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<IAsset> Shader = std::make_shared<CShader>();
     if (Shader->Load(ShaderPath, CPasskey(this)))
-      Iter = m_Assets.emplace(ShaderPath.string(), std::move(Shader)).first;
+      Iter = m_Assets.emplace(std::move(ShaderPathStr), std::move(Shader)).first;
     else
       return nullptr;
   }
@@ -87,12 +92,14 @@ std::shared_ptr<CTextureBase> CResourceManager::GetDefaultTexture(ETextureType _
 
 std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
 {
-  auto Iter = m_Assets.find(_Path);
+  std::string PathStr = _Path.string();
+  auto        Iter    = m_Assets.find(PathStr);
+
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
     if (Texture->Load(_Path, CPasskey(this)))
-      Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
+      Iter = m_Assets.emplace(std::move(PathStr), std::move(Texture)).first;
     else
       return nullptr;
   }
@@ -102,12 +109,14 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
 
 std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path, const TTextureParams &_Params)
 {
-  auto Iter = m_Assets.find(_Path);
+  std::string PathStr = _Path.string();
+  auto        Iter    = m_Assets.find(PathStr);
+
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
     if (Texture->Load(_Path, _Params, CPasskey(this)))
-      Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
+      Iter = m_Assets.emplace(std::move(PathStr), std::move(Texture)).first;
     else
       return nullptr;
   }
@@ -117,12 +126,14 @@ std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesyste
 
 std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesystem::path &_Path)
 {
-  auto Iter = m_Assets.find(_Path);
+  std::string PathStr = _Path.string();
+  auto        Iter    = m_Assets.find(PathStr);
+
   if (Iter == m_Assets.end())
   {
     std::shared_ptr<CCubemap> Texture = std::make_shared<CCubemap>();
     if (Texture->Load(_Path, CPasskey(this)))
-      Iter = m_Assets.emplace(_Path.string(), std::move(Texture)).first;
+      Iter = m_Assets.emplace(std::move(PathStr), std::move(Texture)).first;
     else
       return nullptr;
   }

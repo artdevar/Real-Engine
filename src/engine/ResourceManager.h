@@ -14,10 +14,8 @@ class CResourceManager final : public CSharable<CResourceManager>,
                                public IEventsListener,
                                public IShutdownable
 {
-  DISABLE_CLASS_COPY(CResourceManager);
-
 public:
-  CResourceManager() = default;
+  CResourceManager();
 
   void Init();
 
