@@ -5,7 +5,6 @@
 #include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
 #include <common/MathTypes.h>
-#include <common/Core.h>
 #include <memory>
 
 class CWorld;
@@ -29,7 +28,6 @@ class CEngine final : public CSharable<CEngine>,
                       public IShutdownable,
                       private IUpdateable
 {
-  DISABLE_CLASS_COPY(CEngine);
   using CSharable<CEngine>::Create;
 
 public:
@@ -38,7 +36,7 @@ public:
   CEngine();
   ~CEngine();
 
-  void Shutdown();
+  void Shutdown() override;
 
   int Init();
   int Run();
@@ -46,7 +44,6 @@ public:
 public:
   TVector2i GetWindowSize() const;
   TVector2i GetViewportSize() const;
-  uint32_t GetRenderTextureID() const;
 
   std::shared_ptr<CDisplay> GetDisplay() const;
   std::shared_ptr<CWorld> GetWorld() const;

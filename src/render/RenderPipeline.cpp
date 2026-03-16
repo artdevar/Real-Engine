@@ -38,6 +38,7 @@ CRenderPipeline::CRenderPipeline() :
     m_LastFrameTriangles(0),
     m_LastFrameLines(0),
     m_LastFramePoints(0),
+    m_ShadowMapTextureID(0),
     m_PrevViewProjectionMatrix(glm::mat4(1.0f)),
     m_CurrentJitter(0.0f),
     m_PreviousJitter(0.0f),
@@ -199,6 +200,7 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_Re
 
 void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
 {
+  m_ShadowMapTextureID       = _RenderContext.ShadowMap;
   m_PrevViewProjectionMatrix = _RenderContext.ViewProjectionMatrix;
   m_PreviousJitter           = m_CurrentJitter;
   m_JitterFrameIndex         = (m_JitterFrameIndex + 1) % m_JitterSampleCount;
@@ -597,6 +599,11 @@ glm::vec2 CRenderPipeline::GenerateHaltonJitter(uint32_t _Index)
 uint32_t CRenderPipeline::GetRenderTextureID() const
 {
   return m_FinalTarget ? m_FinalTarget->Color->ID() : 0;
+}
+
+uint32_t CRenderPipeline::GetShadowMapTextureID() const
+{
+  return m_ShadowMapTextureID;
 }
 
 uint32_t CRenderPipeline::GetDrawCallsCount() const

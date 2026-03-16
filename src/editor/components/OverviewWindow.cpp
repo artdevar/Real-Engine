@@ -2,6 +2,7 @@
 
 #include "OverviewWindow.h"
 #include "engine/Engine.h"
+#include "engine/Camera.h"
 #include "interfaces/RenderPipeline.h"
 #include <imgui/imgui.h>
 
@@ -43,6 +44,22 @@ void COverviewWindow::Render()
 
     auto &Engine = CEngine::Instance();
 
+    if (ImGui::CollapsingHeader("Application"))
+    {
+      ImGui::Text("Window size: %d x %d", Engine.GetWindowSize().X, Engine.GetWindowSize().Y);
+      ImGui::Text("Viewport size: %d x %d", Engine.GetViewportSize().X, Engine.GetViewportSize().Y);
+      ImGui::Text("Running time: %.1f seconds", Engine.GetApplicationRunningTime());
+    }
+
+    if (ImGui::CollapsingHeader("Camera"))
+    {
+      if (const auto Camera = Engine.GetCamera())
+      {
+        const glm::vec3 CamPos = Camera->GetPosition();
+        ImGui::Text("Position: (%.1f, %.1f, %.1f)", CamPos.x, CamPos.y, CamPos.z);
+      }
+    }
+
     if (ImGui::CollapsingHeader("Render data"))
     {
       if (const auto Pipeline = Engine.GetRenderPipeline())
@@ -53,6 +70,12 @@ void COverviewWindow::Render()
         ImGui::Text("Triangles: %s", FormatCount(Pipeline->GetTrianglesCount()).c_str());
         ImGui::Text("Lines: %s", FormatCount(Pipeline->GetLinesCount()).c_str());
         ImGui::Text("Points: %s", FormatCount(Pipeline->GetPointsCount()).c_str());
+
+        if (ImGui::CollapsingHeader("Shadow map"))
+        {
+          const ImVec2 ImageSize(Available.x, Available.x);
+          ImGui::Image(reinterpret_cast<void *>(static_cast<uintptr_t>(Pipeline->GetShadowMapTextureID())), ImageSize, ImVec2(0, 1), ImVec2(1, 0));
+        }
       }
     }
   }

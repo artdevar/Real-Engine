@@ -66,6 +66,7 @@ public:
   uint32_t GetLinesCount() const override;
   uint32_t GetPointsCount() const override;
   uint32_t GetRenderTextureID() const override;
+  uint32_t GetShadowMapTextureID() const override;
 
   float GetRenderPassTime(ERenderPassType _Type) const override;
 
@@ -128,6 +129,7 @@ private:
   uint32_t m_LastFrameTriangles;
   uint32_t m_LastFrameLines;
   uint32_t m_LastFramePoints;
+  uint32_t m_ShadowMapTextureID;
 
   std::map<ERenderPassType, float> m_RenderPassTimes;
 
