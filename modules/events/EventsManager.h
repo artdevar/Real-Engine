@@ -4,8 +4,8 @@
 #include <common/Sharable.h>
 #include <common/interfaces/Updateable.h>
 #include <common/interfaces/Shutdownable.h>
-#include <common/containers/UnorderedVector.h>
-#include <map>
+#include <unordered_map>
+#include <vector>
 #include <memory>
 
 class IEventsListener;
@@ -29,9 +29,9 @@ public:
   void Unnotify(const TEvent &_Event);
 
 private:
-  using ListenersContainer = std::vector<std::weak_ptr<IEventsListener>>;
+  using ListenersList = std::vector<std::weak_ptr<IEventsListener>>;
 
-  std::unordered_map<TEventType, ListenersContainer> m_Listeners;
-  CUnorderedVector<TEvent>                           m_PendingEvents;
-  bool                                               m_IsUpdateFunctionRunning;
+  std::unordered_map<TEventType, ListenersList> m_Listeners;
+  std::vector<TEvent>                           m_PendingEvents;
+  bool                                          m_IsInUpdate;
 };

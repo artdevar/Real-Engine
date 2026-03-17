@@ -2,7 +2,7 @@
 #include "EventsListener.h"
 
 CEventsManager::CEventsManager() :
-    m_IsUpdateFunctionRunning(false)
+    m_IsInUpdate(false)
 {
 }
 
@@ -11,18 +11,18 @@ CEventsManager::~CEventsManager() = default;
 void CEventsManager::Shutdown()
 {
   m_Listeners.clear();
-  m_PendingEvents.Clear();
+  m_PendingEvents.clear();
 }
 
 void CEventsManager::Update(float _TimeDelta)
 {
-  m_IsUpdateFunctionRunning = true;
+  m_IsInUpdate = true;
 
-  if (m_PendingEvents.Empty())
+  if (m_PendingEvents.empty())
     return;
 
-  CUnorderedVector<TEvent> EventsToProcess = std::move(m_PendingEvents);
-  for (TEvent Event : EventsToProcess)
+  std::vector<TEvent> EventsToProcess = std::move(m_PendingEvents);
+  for (const TEvent &Event : EventsToProcess)
   {
     auto ItListeners = m_Listeners.find(Event.Type);
     if (ItListeners == m_Listeners.end())
@@ -42,7 +42,7 @@ void CEventsManager::Update(float _TimeDelta)
     }
   }
 
-  m_IsUpdateFunctionRunning = false;
+  m_IsInUpdate = false;
 }
 
 void CEventsManager::Subscribe(TEventType _Event, std::weak_ptr<IEventsListener> _Listener)
@@ -71,22 +71,22 @@ void CEventsManager::Unsubscribe(TEventType _Event, std::weak_ptr<IEventsListene
 
 void CEventsManager::Notify(TEvent _Event)
 {
-  auto Iter = m_PendingEvents.Find(_Event, [&_Event](const TEvent &E) {
+  auto Iter = std::find_if(m_PendingEvents.begin(), m_PendingEvents.end(), [&_Event](const TEvent &E) {
     return E.Type == _Event.Type;
   });
 
   if (Iter == m_PendingEvents.end())
-    m_PendingEvents.Push(std::move(_Event));
+    m_PendingEvents.push_back(std::move(_Event));
   else
     Iter->Value = std::move(_Event.Value);
 }
 
 void CEventsManager::Unnotify(const TEvent &_Event)
 {
-  auto Iter = m_PendingEvents.Find(_Event, [&_Event](const TEvent &E) {
+  auto Iter = std::find_if(m_PendingEvents.begin(), m_PendingEvents.end(), [&_Event](const TEvent &E) {
     return E.Type == _Event.Type;
   });
 
   if (Iter != m_PendingEvents.end())
-    m_PendingEvents.Erase(Iter);
+    m_PendingEvents.erase(Iter);
 }
