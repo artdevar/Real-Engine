@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.25)
 
 project(Real_Engine VERSION 0.0.1 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
 # Options
 
 option(DEV_STAGE "Enable development-stage features" ON)
@@ -17,11 +14,15 @@ else()
     set(SHADERS_HOT_RELOAD_VAL 0)
 endif()
 
-set (PROJECT_NAME "Real Engine")
+set(PROJECT_NAME "Real Engine")
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Exec
 
 add_executable(Real_Engine)
+
+file(GLOB_RECURSE SHADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.*)
 
 file(GLOB_RECURSE PROJECT_SOURCES CONFIGURE_DEPENDS
      ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
@@ -33,6 +34,8 @@ elseif (UNIX)
     list(FILTER PROJECT_SOURCES EXCLUDE REGEX ".*SysUtils_Windows.cpp$")
 endif()
 
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/shaders PREFIX "shaders" FILES ${SHADERS})
+target_sources(Real_Engine PRIVATE ${SHADERS})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/src PREFIX "src" FILES ${PROJECT_SOURCES})
 target_sources(Real_Engine PRIVATE ${PROJECT_SOURCES})
 
@@ -48,6 +51,16 @@ target_compile_definitions(Real_Engine PRIVATE
     ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
     SHADERS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shaders/"
 )
+
+target_compile_options(Real_Engine PRIVATE
+    $<$<CXX_COMPILER_ID:MSVC>:/GR->
+    $<$<CXX_COMPILER_ID:MSVC>:/MP>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-rtti>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wnon-virtual-dtor>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Woverloaded-virtual>
+)
+
+target_compile_features(Real_Engine PRIVATE cxx_std_23)
 
 # Includes
 
@@ -106,11 +119,4 @@ endif()
 
 target_precompile_headers(Real_Engine PRIVATE
     $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}/src/pch.h>
-)
-
-target_compile_options(Real_Engine PRIVATE
-  $<$<CXX_COMPILER_ID:MSVC>:/GR->
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-fno-rtti>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wnon-virtual-dtor>
-  $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Woverloaded-virtual>
 )
