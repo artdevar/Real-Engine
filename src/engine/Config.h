@@ -357,7 +357,7 @@ private:
   bool  AreShadowsEnabled        = true;
   bool  IsFXAAEnabled            = false;
   bool  IsTAAEnabled             = true;
-  int   TAAJitterSampleCount     = 16;
+  int   TAAJitterSampleCount     = 8;
   bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;

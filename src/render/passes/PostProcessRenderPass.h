@@ -46,6 +46,7 @@ private:
   std::shared_ptr<CShader> m_Shader;
 
   bool  m_IsFXAAEnabled;
+  bool  m_IsTAAEnabled;
   bool  m_IsHDREnabled;
   bool  m_IsBloomEnabled;
   bool  m_IsGammaCorrectionEnabled;

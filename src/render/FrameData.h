@@ -1,7 +1,8 @@
 #pragma once
 
-#include <vector>
+#include "RenderTypes.h"
 #include <glm/fwd.hpp>
+#include <vector>
 
 struct TFrameData
 {

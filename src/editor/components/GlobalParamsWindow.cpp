@@ -23,7 +23,7 @@ void CGlobalParamsWindow::Render()
         CConfig::Instance().SetTAAEnabled(TAAEnabled);
 
       int TAAJitterSampleCount = CConfig::Instance().GetTAAJitterSampleCount();
-      if (ImGui::DragInt("TAA Sample count", &TAAJitterSampleCount, 8, 8, 32))
+      if (ImGui::DragInt("TAA Sample count", &TAAJitterSampleCount, 4, 4, 32))
         CConfig::Instance().SetTAAJitterSampleCount(TAAJitterSampleCount);
 
       ImGui::Separator();

@@ -4,7 +4,6 @@
 #include "render/RenderTarget.h"
 #include "interfaces/Renderer.h"
 #include "utils/Event.h"
-#include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Config.h"
 #include "utils/Resource.h"
@@ -32,6 +31,8 @@ void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
 
 void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
+  const glm::vec2 InverseSize = glm::vec2(1.0f / _RenderContext.PostProcessRenderTarget.Size.X, 1.0f / _RenderContext.PostProcessRenderTarget.Size.Y);
+
   CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
   CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
   CTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
@@ -41,8 +42,9 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
   _Renderer.SetUniform("DepthTexture", TEXTURE_DEPTH_MAP_INDEX);
   _Renderer.SetUniform("BloomTexture", TEXTURE_BLOOM_INDEX);
   _Renderer.SetUniform("TAATexture", TEXTURE_TAA_HISTORY_INDEX);
-  _Renderer.SetUniform("InverseScreenSize", glm::vec2(1.0f / _Renderer.GetViewport().X, 1.0f / _Renderer.GetViewport().Y));
+  _Renderer.SetUniform("InverseScreenSize", InverseSize);
   _Renderer.SetUniform("IsFXAAEnabled", m_IsFXAAEnabled);
+  _Renderer.SetUniform("IsTAAEnabled", m_IsTAAEnabled);
   _Renderer.SetUniform("IsHDR", m_IsHDREnabled);
   _Renderer.SetUniform("IsBloomEnabled", m_IsBloomEnabled);
   _Renderer.SetUniform("BloomIntensity", m_BloomIntensity);
@@ -80,6 +82,9 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
   case TEventType::Config_FXAAEnabledChanged:
     m_IsFXAAEnabled = _Event.GetValue<bool>();
     break;
+  case TEventType::Config_TAAEnabledChanged:
+    m_IsTAAEnabled = _Event.GetValue<bool>();
+    break;
   case TEventType::Config_HDREnabledChanged:
     m_IsHDREnabled = _Event.GetValue<bool>();
     break;
@@ -107,6 +112,7 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
 void CPostProcessRenderPass::SubscribeToEvents()
 {
   event::Subscribe(TEventType::Config_FXAAEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_TAAEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_HDREnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_HDRExposureChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_GammaCorrectionEnabledChanged, GetWeakPtr());

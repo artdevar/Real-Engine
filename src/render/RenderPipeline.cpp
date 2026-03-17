@@ -4,6 +4,8 @@
 #include "RenderQueue.h"
 #include "RenderTarget.h"
 #include "FrameData.h"
+#include "RenderContext.h"
+#include "RenderTypes.h"
 #include "passes/OpaqueRenderPass.h"
 #include "passes/SkyboxRenderPass.h"
 #include "passes/TransparentRenderPass.h"
@@ -16,12 +18,10 @@
 #include "passes/EquirectangularToCubemapPass.h"
 #include "passes/IrradianceConvolutionPass.h"
 #include "passes/TAARenderPass.h"
-#include "assets/Shader.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
 #include "engine/Config.h"
 #include "interfaces/Renderer.h"
-#include "render/RenderContext.h"
 #include "utils/Resource.h"
 #include <common/Logger.h>
 #include <common/Stopwatch.h>
@@ -40,6 +40,7 @@ CRenderPipeline::CRenderPipeline() :
     m_LastFramePoints(0),
     m_ShadowMapTextureID(0),
     m_PrevViewProjectionMatrix(glm::mat4(1.0f)),
+    m_PrevJitteredViewProjectionMatrix(glm::mat4(1.0f)),
     m_CurrentJitter(0.0f),
     m_PreviousJitter(0.0f),
     m_JitterFrameIndex(0),
@@ -200,10 +201,11 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_Re
 
 void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
 {
-  m_ShadowMapTextureID       = _RenderContext.ShadowMap;
-  m_PrevViewProjectionMatrix = _RenderContext.ViewProjectionMatrix;
-  m_PreviousJitter           = m_CurrentJitter;
-  m_JitterFrameIndex         = (m_JitterFrameIndex + 1) % m_JitterSampleCount;
+  m_ShadowMapTextureID               = _RenderContext.ShadowMap;
+  m_PrevViewProjectionMatrix         = _RenderContext.ViewProjectionMatrix;
+  m_PrevJitteredViewProjectionMatrix = _RenderContext.JitteredViewProjectionMatrix;
+  m_PreviousJitter                   = m_CurrentJitter;
+  m_JitterFrameIndex                 = (m_JitterFrameIndex + 1) % m_JitterSampleCount;
 
   m_LastFrameDrawCalls = _Renderer.GetDrawCallsCount();
   m_LastFrameVertices  = _Renderer.GetVerticesCount();
@@ -428,9 +430,9 @@ glm::mat4 CRenderPipeline::CalculateLightSpaceMatrix() const
 
   return LightProjection * LightView;
 }
+
 TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer)
 {
-  const TVector2i Viewport = _Renderer.GetViewport();
 
   const auto     &Camera     = _Renderer.GetCamera();
   const glm::mat4 Projection = Camera->GetPerspectiveProjection();
@@ -439,7 +441,8 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
   glm::mat4 JitteredProjection = Projection;
   if (m_IsTAAEnabled)
   {
-    m_CurrentJitter = GenerateHaltonJitter(m_JitterFrameIndex) * 2.0f - 1.0f;
+    const TVector2i Viewport = m_SceneTarget->Size;
+    m_CurrentJitter          = GenerateHaltonJitter(m_JitterFrameIndex, m_JitterSampleCount) * 2.0f - 1.0f;
 
     JitteredProjection[2][0] += m_CurrentJitter.x / Viewport.X;
     JitteredProjection[2][1] += m_CurrentJitter.y / Viewport.Y;
@@ -447,23 +450,25 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
   glm::mat4 JitteredViewProjection = JitteredProjection * View;
 
   return TRenderContext{
-      .SceneRenderTarget            = *m_SceneTarget,
-      .PostProcessRenderTarget      = *m_PostProcessTarget,
-      .FinalRenderTarget            = m_FinalTarget.get(),
-      .CameraPosition               = Camera->GetPosition(),
-      .ProjectionMatrix             = Projection,
-      .ViewMatrix                   = View,
-      .ViewProjectionMatrix         = Projection * View,
-      .JitteredViewProjectionMatrix = JitteredViewProjection,
-      .PreviousViewProjectionMatrix = m_PrevViewProjectionMatrix,
-      .LightSpaceMatrix             = CalculateLightSpaceMatrix(),
-      .Jitter                       = m_CurrentJitter,
-      .PrevJitter                   = m_PreviousJitter,
-      .ShadowMap                    = 0,
-      .IrradianceMap                = FrameData.Environment.IrradianceMap,
-      .TAAHistoryMap                = 0,
-      .QuadVAO                      = m_QuadBuffer.VAO,
-      .CubeVAO                      = m_CubeBuffer.VAO,
+      .QuadVAO                              = m_QuadBuffer.VAO,
+      .CubeVAO                              = m_CubeBuffer.VAO,
+      .SceneRenderTarget                    = *m_SceneTarget,
+      .PostProcessRenderTarget              = *m_PostProcessTarget,
+      .FinalRenderTarget                    = m_FinalTarget.get(),
+      .CameraPosition                       = Camera->GetPosition(),
+      .ProjectionMatrix                     = Projection,
+      .ViewMatrix                           = View,
+      .ViewProjectionMatrix                 = Projection * View,
+      .JitteredViewProjectionMatrix         = JitteredViewProjection,
+      .PreviousViewProjectionMatrix         = m_PrevViewProjectionMatrix,
+      .PreviousJitteredViewProjectionMatrix = m_PrevJitteredViewProjectionMatrix,
+      .LightSpaceMatrix                     = CalculateLightSpaceMatrix(),
+      .Jitter                               = m_CurrentJitter,
+      .PrevJitter                           = m_PreviousJitter,
+      .ShadowMap                            = 0,
+      .BloomMap                             = 0,
+      .IrradianceMap                        = FrameData.Environment.IrradianceMap,
+      .TAAHistoryMap                        = 0,
   };
 }
 
@@ -578,7 +583,7 @@ void CRenderPipeline::InitCommonVAOs()
   m_CubeBuffer.VAO.Unbind();
 }
 
-glm::vec2 CRenderPipeline::GenerateHaltonJitter(uint32_t _Index)
+glm::vec2 CRenderPipeline::GenerateHaltonJitter(uint32_t _Index, int32_t _Samples)
 {
   auto HaltonSequence = [](uint32_t Index, uint32_t Base) -> float {
     float Fraction = 1.0f;
@@ -593,7 +598,7 @@ glm::vec2 CRenderPipeline::GenerateHaltonJitter(uint32_t _Index)
     return Result;
   };
 
-  return glm::vec2(HaltonSequence(_Index % 8, 2), HaltonSequence(_Index % 8, 3));
+  return glm::vec2(HaltonSequence(_Index % _Samples, 2), HaltonSequence(_Index % _Samples, 3));
 }
 
 uint32_t CRenderPipeline::GetRenderTextureID() const

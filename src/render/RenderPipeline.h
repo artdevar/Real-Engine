@@ -1,7 +1,6 @@
 #pragma once
 
 #include "interfaces/RenderPipeline.h"
-#include "render/RenderTypes.h"
 #include "render/ShaderTypes.h"
 #include "render/FrameData.h"
 #include "passes/RenderPassTypes.h"
@@ -103,7 +102,7 @@ private:
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
   static bool IsRenderPassEnabled(ERenderPassType _Type, const TRenderPassesList &_Passes);
   static void SetRenderPassEnabled(ERenderPassType _Type, bool _Enabled, TRenderPassesList &_Passes);
-  static glm::vec2 GenerateHaltonJitter(uint32_t _Index);
+  static glm::vec2 GenerateHaltonJitter(uint32_t _Index, int32_t _Samples);
 
 private:
   TRenderPassesList m_UtilityPasses;
@@ -134,6 +133,7 @@ private:
   std::map<ERenderPassType, float> m_RenderPassTimes;
 
   glm::mat4 m_PrevViewProjectionMatrix;
+  glm::mat4 m_PrevJitteredViewProjectionMatrix;
   glm::vec2 m_CurrentJitter;
   glm::vec2 m_PreviousJitter;
   uint32_t  m_JitterFrameIndex;

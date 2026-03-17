@@ -22,7 +22,8 @@ void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
-  _Renderer.SetUniform("u_JitteredCurrentVP", _RenderContext.JitteredViewProjectionMatrix);
+  _Renderer.SetUniform("u_JitteredCurrVP", _RenderContext.JitteredViewProjectionMatrix);
+  _Renderer.SetUniform("u_JitteredPrevVP", _RenderContext.PreviousJitteredViewProjectionMatrix);
   _Renderer.SetUniform("u_CurrentVP", _RenderContext.ViewProjectionMatrix);
   _Renderer.SetUniform("u_PreviousVP", _RenderContext.PreviousViewProjectionMatrix);
   _Renderer.SetUniform("u_IsShadowMapEnabled", _RenderContext.ShadowMap != CTexture::INVALID_VALUE);

@@ -46,8 +46,10 @@ private:
   void InitHistoryTargets(const TVector2i &_Viewport);
 
 private:
+  static constexpr inline int HISTORY_TARGETS_COUNT = 2;
+
   std::shared_ptr<CShader>       m_Shader;
-  std::shared_ptr<TRenderTarget> m_HistoryTargets[2];
+  std::shared_ptr<TRenderTarget> m_HistoryTargets[HISTORY_TARGETS_COUNT];
 
   int32_t m_HistoryIndex;
 };
