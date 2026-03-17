@@ -6,8 +6,26 @@
 #include <common/Logger.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <fstream>
-#include <sstream>
+#include <thread>
+
+static bool WaitForFileAvailable(const std::filesystem::path &_Path)
+{
+  constexpr int Attempts = 5;
+  constexpr int Delay    = 20;
+
+  std::ifstream File;
+  for (int Attempt = 0; Attempt < Attempts; ++Attempt)
+  {
+    File.open(_Path);
+    if (File.is_open())
+    {
+      File.close();
+      return true;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(Delay));
+  }
+  return false;
+}
 
 static inline bool operator<(const std::string &_L, const std::string_view &_R)
 {
@@ -38,12 +56,12 @@ void CShader::Shutdown()
 
 bool CShader::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
-  const std::filesystem::path VertexShaderPath = std::filesystem::path(_Path).replace_extension(".vs");
+  const std::filesystem::path VertexShaderPath = std::filesystem::path(_Path).replace_extension(VERTEX_SHADER_EXTENSION);
   const GLuint                VertexShader     = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);
   if (VertexShader == INVALID_VALUE)
     return false;
 
-  const std::filesystem::path FragmentShaderPath = std::filesystem::path(_Path).replace_extension(".fs");
+  const std::filesystem::path FragmentShaderPath = std::filesystem::path(_Path).replace_extension(FRAGMENT_SHADER_EXTENSION);
   const GLuint                FragmentShader     = LoadShader(FragmentShaderPath, GL_FRAGMENT_SHADER);
   if (FragmentShader == INVALID_VALUE)
   {
@@ -164,8 +182,8 @@ void CShader::Validate()
   if (m_BasePath.empty())
     return;
 
-  const std::filesystem::path VertexShaderPath   = std::filesystem::path(m_BasePath).replace_extension(".vs");
-  const std::filesystem::path FragmentShaderPath = std::filesystem::path(m_BasePath).replace_extension(".fs");
+  const std::filesystem::path VertexShaderPath   = std::filesystem::path(m_BasePath).replace_extension(VERTEX_SHADER_EXTENSION);
+  const std::filesystem::path FragmentShaderPath = std::filesystem::path(m_BasePath).replace_extension(FRAGMENT_SHADER_EXTENSION);
 
   auto GetWriteTime = [](const std::filesystem::path &_Path, std::filesystem::file_time_type &_Out) {
     std::error_code Error;
@@ -180,6 +198,9 @@ void CShader::Validate()
     return;
 
   if (NewVertexTimestamp == m_VertexTimestamp && NewFragmentTimestamp == m_FragmentTimestamp)
+    return;
+  // Ensure the shader files are available (editors may perform atomic replace while saving).
+  if (!WaitForFileAvailable(VertexShaderPath) || !WaitForFileAvailable(FragmentShaderPath))
     return;
 
   const GLuint NewVertex = LoadShader(VertexShaderPath, GL_VERTEX_SHADER);

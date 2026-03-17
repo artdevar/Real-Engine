@@ -31,7 +31,9 @@ private:
   static void UnloadShader(unsigned _ShaderID);
 
 private:
-  static constexpr inline unsigned INVALID_VALUE = 0u;
+  static constexpr inline unsigned  INVALID_VALUE             = 0u;
+  static constexpr std::string_view VERTEX_SHADER_EXTENSION   = ".vert";
+  static constexpr std::string_view FRAGMENT_SHADER_EXTENSION = ".frag";
 
   unsigned                                     m_ID;
   std::map<std::string, unsigned, std::less<>> m_UniformsCache;
