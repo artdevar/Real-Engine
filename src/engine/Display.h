@@ -2,10 +2,11 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <functional>
-#include <string>
 #include <common/MathTypes.h>
 #include <common/Sharable.h>
+#include <functional>
+#include <string>
+#include <filesystem>
 
 class CDisplay : public CSharable<CDisplay>
 {
@@ -20,7 +21,7 @@ public:
   CDisplay();
   ~CDisplay();
 
-  int Init(const std::string &_Title);
+  int Init(const std::string &_Title, const std::filesystem::path &_IconPath);
   void Shutdown();
 
   void PollEvents();
@@ -45,7 +46,7 @@ public:
 
 private:
   void InitCallbacks();
-  void LoadIcon();
+  void LoadIcon(const std::filesystem::path &_IconPath);
 
   static void OnWindowResizedProxy(GLFWwindow *_Window, int _Width, int _Height);
   static void OnMousePressedProxy(GLFWwindow *_Window, int _Button, int _Action, int _Mods);

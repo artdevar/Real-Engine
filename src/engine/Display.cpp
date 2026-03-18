@@ -1,5 +1,4 @@
 #include "Display.h"
-#include "Config.h"
 #include "utils/Image.h"
 #include <common/Logger.h>
 #include <cstdlib>
@@ -19,7 +18,7 @@ CDisplay::CDisplay() :
 
 CDisplay::~CDisplay() = default;
 
-int CDisplay::Init(const std::string &_Title)
+int CDisplay::Init(const std::string &_Title, const std::filesystem::path &_IconPath)
 {
   ApplyInitHints();
 
@@ -81,7 +80,7 @@ int CDisplay::Init(const std::string &_Title)
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
-  LoadIcon();
+  LoadIcon(_IconPath);
   InitCallbacks();
 
   return EXIT_SUCCESS;
@@ -192,13 +191,12 @@ void CDisplay::InitCallbacks()
   glfwSetErrorCallback(OnErrorOccuredProxy);
 }
 
-void CDisplay::LoadIcon()
+void CDisplay::LoadIcon(const std::filesystem::path &_IconPath)
 {
 #if defined(_WIN32) || defined(__linux__)
-  const auto IconPath = CConfig::Instance().GetAppIconPath();
-  if (!IconPath.empty())
+  if (!_IconPath.empty())
   {
-    const CImage Image(IconPath);
+    const CImage Image(_IconPath);
     if (Image.IsValid())
     {
       GLFWimage Icon;
@@ -209,7 +207,7 @@ void CDisplay::LoadIcon()
     }
     else
     {
-      LOG_ERROR("[CDisplay] Failed to load window icon from path: {}", IconPath.string());
+      LOG_ERROR("[CDisplay] Failed to load window icon from path: {}", _IconPath.string());
     }
   }
 #endif

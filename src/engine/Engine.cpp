@@ -78,7 +78,9 @@ int CEngine::Init()
 #endif
 
   const std::string GameTitle       = CConfig::Instance().GetAppTitle();
-  const int         DisplayInitCode = m_Display->Init(GameTitle);
+  const auto        WindowIconPath  = CConfig::Instance().GetAppIconPath();
+  const int         DisplayInitCode = m_Display->Init(GameTitle, WindowIconPath);
+
   if (DisplayInitCode != EXIT_SUCCESS)
     return DisplayInitCode;
 
