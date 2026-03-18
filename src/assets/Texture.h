@@ -2,7 +2,6 @@
 
 #include "interfaces/GeneratableTexture.h"
 #include "interfaces/TextureAsset.h"
-#include <common/containers/StaticArray.h>
 #include <common/MathTypes.h>
 
 class CTextureBase : public ITextureAsset,
@@ -31,22 +30,13 @@ protected:
   static void Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind(unsigned _Target);
 
-  struct TImage
-  {
-    void *Data;
-
-    int Width;
-    int Height;
-    int Channels;
-  };
-
 protected:
   unsigned       m_ID;
   const unsigned m_Target;
   TVector2i      m_Size;
 };
 
-//
+// ----------------------------------------------
 
 class CTexture final : public CTextureBase
 {
@@ -68,6 +58,8 @@ private:
 
   static float GetSupportedAnisotropyLevel();
 };
+
+// ----------------------------------------------
 
 class CCubemap final : public CTextureBase
 {

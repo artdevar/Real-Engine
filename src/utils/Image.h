@@ -9,6 +9,11 @@ class CImage final
 
 public:
   explicit CImage(const std::filesystem::path &_Path);
+  explicit CImage(const std::filesystem::path &_Path, bool _Flipped, bool _HDR);
+
+  CImage(CImage &&_Other);
+  CImage &operator=(CImage &&_Other);
+
   ~CImage();
 
   int GetWidth() const
@@ -32,9 +37,13 @@ public:
     return m_Data != nullptr;
   }
 
+  static bool IsHDR(const std::filesystem::path &_Path);
+
 private:
-  void LoadImage(const std::filesystem::path &_Path);
+  void LoadImage(const std::filesystem::path &_Path, bool _Flipped, bool _HDR);
   void FreeImage();
+
+  void Clear();
 
 private:
   void *m_Data;

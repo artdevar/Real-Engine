@@ -1,8 +1,8 @@
 #include <glad/glad.h>
 #include "Texture.h"
 #include "utils/Path.h"
+#include "utils/Image.h"
 #include <common/Logger.h>
-#include <stb_image.h>
 #include <vector>
 
 namespace
@@ -168,30 +168,20 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
 {
   assert(!IsValid() && "The texture already used");
 
-  TImage Image;
-  if (_Params.HDR)
-  {
-    stbi_set_flip_vertically_on_load(true);
-    Image.Data = stbi_loadf(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
-    stbi_set_flip_vertically_on_load(false);
-  }
-  else
-  {
-    Image.Data = stbi_load(_Path.string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
-  }
-
-  if (!Image.Data)
+  const CImage Image(_Path, _Params.HDR, _Params.HDR);
+  if (!Image.IsValid())
   {
     CLogger::Log(ELogType::Error, "[CTexture] Texture '{}' failed to load", _Path.string());
     return false;
   }
 
-  const GLenum Format         = ToFormat(Image.Channels);
-  const GLenum InternalFormat = ToInternalFormat(Image.Channels, _Params.sRGB, _Params.HDR);
+  const GLenum Format         = ToFormat(Image.GetChannels());
+  const GLenum InternalFormat = ToInternalFormat(Image.GetChannels(), _Params.sRGB, _Params.HDR);
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, InternalFormat, Image.Width, Image.Height, 0, Format, _Params.HDR ? GL_FLOAT : GL_UNSIGNED_BYTE, Image.Data);
+  glTexImage2D(m_Target, 0, InternalFormat, Image.GetWidth(), Image.GetHeight(), 0, Format, _Params.HDR ? GL_FLOAT : GL_UNSIGNED_BYTE,
+               Image.GetPixels());
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
@@ -207,10 +197,8 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
   if (_Params.BorderColors.has_value())
     glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
 
-  stbi_image_free(Image.Data);
-
   m_Path = _Path;
-  m_Size = TVector2i(Image.Width, Image.Height);
+  m_Size = TVector2i(Image.GetWidth(), Image.GetHeight());
 
   return true;
 }
@@ -344,10 +332,11 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
 {
   static const CStaticArray<std::string, CUBEMAP_FACES_COUNT> CUBEMAP_FACES = {"right", "left", "top", "bottom", "front", "back"};
 
-  const auto Files   = utils::GetFilesInDirectory(_Path);
-  bool       Success = false;
+  const auto Files = utils::GetFilesInDirectory(_Path);
 
-  CStaticArray<TImage, CUBEMAP_FACES_COUNT> Images;
+  std::vector<CImage> Images;
+  Images.reserve(CUBEMAP_FACES_COUNT);
+
   for (const std::string &Face : CUBEMAP_FACES)
   {
     const auto It = std::find_if(Files.begin(), Files.end(), [&Face](const std::filesystem::path &File) {
@@ -360,22 +349,25 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
       break;
     }
 
-    TImage Image;
-    Image.Data = stbi_load(It->string().c_str(), &Image.Width, &Image.Height, &Image.Channels, 0);
-    if (Image.Data)
-      Images.PushBack(std::move(Image));
+    CImage Image(*It);
+    if (Image.IsValid())
+      Images.push_back(std::move(Image));
+    else
+      break;
   }
 
-  if (Success = (Images.GetActualSize() == CUBEMAP_FACES_COUNT))
+  bool Success = false;
+  if (Success = (Images.size() == CUBEMAP_FACES_COUNT))
   {
     glGenTextures(1, &m_ID);
     glBindTexture(m_Target, m_ID);
 
-    for (int i = 0; i < Images.GetActualSize(); ++i)
+    for (int i = 0; i < Images.size(); ++i)
     {
-      const TImage &Image  = Images[i];
-      const GLenum  Format = ToFormat(Image.Channels);
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.Width, Image.Height, 0, Format, GL_UNSIGNED_BYTE, Image.Data);
+      const CImage &Image  = Images[i];
+      const GLenum  Format = ToFormat(Image.GetChannels());
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.GetWidth(), Image.GetHeight(), 0, Format, GL_UNSIGNED_BYTE,
+                   Image.GetPixels());
     }
 
     glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
@@ -384,7 +376,8 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
     glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, ToGLWrap(_Params.WrapR));
 
-    m_Size = TVector2i(Images[0].Width, Images[0].Height);
+    m_Size = TVector2i(Images[0].GetWidth(), Images[0].GetHeight());
+    m_Path = _Path;
 
     CLogger::Log(ELogType::Info, "[CCubemap] Texture '{}' loaded successfully", _Path.string());
   }
@@ -392,11 +385,6 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
   {
     CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load", _Path.string());
   }
-
-  for (TImage &Image : Images)
-    stbi_image_free(Image.Data);
-
-  m_Path = _Path;
 
   return Success;
 }
