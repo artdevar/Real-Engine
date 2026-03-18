@@ -194,7 +194,7 @@ void CDisplay::InitCallbacks()
 
 void CDisplay::LoadIcon()
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__linux__)
   const auto IconPath = CConfig::Instance().GetAppIconPath();
   if (!IconPath.empty())
   {
