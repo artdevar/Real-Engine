@@ -199,7 +199,7 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
   if (GLAD_GL_ARB_texture_filter_anisotropic)
-    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, _Params.Anisotropy);
+    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, std::min(GetSupportedAnisotropyLevel(), _Params.Anisotropy));
 
   if (!_Params.HDR)
     glGenerateMipmap(m_Target);
@@ -234,9 +234,6 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
-  if (GLAD_GL_ARB_texture_filter_anisotropic)
-    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, _Params.Anisotropy);
-
   if (_Params.BorderColors.has_value())
     glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
 
@@ -254,6 +251,25 @@ void CTexture::Bind(GLenum _TextureUnit, GLuint _TextureID)
 void CTexture::Unbind()
 {
   CTextureBase::Unbind(TARGET);
+}
+
+float CTexture::GetSupportedAnisotropyLevel()
+{
+  static const float AnisotropyLevel = []() -> float {
+    float MaxAnisotropy = 0.0f;
+    if (GLAD_GL_ARB_texture_filter_anisotropic)
+    {
+      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &MaxAnisotropy);
+      LOG_INFO("[CTexture] Max anisotropy level supported: {}", MaxAnisotropy);
+    }
+    else
+    {
+      LOG_INFO("[CTexture] Anisotropic filtering is not supported");
+    }
+    return MaxAnisotropy;
+  }();
+
+  return AnisotropyLevel;
 }
 
 // CCubemap

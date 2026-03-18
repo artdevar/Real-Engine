@@ -65,6 +65,8 @@ public:
 
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
+
+  static float GetSupportedAnisotropyLevel();
 };
 
 class CCubemap final : public CTextureBase

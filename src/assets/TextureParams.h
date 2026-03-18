@@ -46,7 +46,7 @@ struct TTextureParams
 
   bool  HDR        = false;
   bool  sRGB       = false;
-  float Anisotropy = 8.0f;
+  float Anisotropy = 16.0f;
 
   std::optional<CStaticArray<float, BordersCount>> BorderColors;
   ETextureWrap                                     WrapS     = ETextureWrap::Repeat;
