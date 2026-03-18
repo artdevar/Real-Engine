@@ -35,15 +35,10 @@ vec3 ToneMapACES(vec3 x)
 
 vec3 SampleColor(vec2 uv)
 {
-  vec3 c = texture(ColorTexture, uv).rgb;
-
-  if (IsHDR)
-  {
-    c *= Exposure;
-    c  = ToneMapACES(c);
-  }
-
-  return c;
+  if (IsTAAEnabled)
+    return texture(TAATexture, uv).rgb;
+  else
+    return texture(ColorTexture, uv).rgb;
 }
 
 vec3 CalculateFXAA(vec3 color)
@@ -91,11 +86,14 @@ vec3 CalculateFXAA(vec3 color)
 
 void main()
 {
-  vec3 color = vec3(0.0);
-  if (IsTAAEnabled)
-    color = texture(TAATexture, io_TexCoords).rgb;
-  else
-    color = texture(ColorTexture, io_TexCoords).rgb;
+  vec3 color = SampleColor(io_TexCoords);
+
+  if (IsFXAAEnabled)
+  {
+    float depth = texture(DepthTexture, io_TexCoords).r;
+    if (depth < 1.0)
+      color = CalculateFXAA(color);
+  }
 
   if (IsBloomEnabled)
   {
@@ -107,16 +105,6 @@ void main()
   {
     color *= Exposure;
     color  = ToneMapACES(color);
-  }
-
-  if (IsFXAAEnabled)
-  {
-    float depth = texture(DepthTexture, io_TexCoords).r;
-    if (depth < 1.0)
-    {
-      vec3 fxaaColor = CalculateFXAA(color);
-      color          = mix(color, fxaaColor, IsBloomEnabled ? 0.5 : 1.0);
-    }
   }
 
   if (IsGammaCorrectionEnabled)
