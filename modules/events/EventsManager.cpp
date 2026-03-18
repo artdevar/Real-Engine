@@ -1,5 +1,6 @@
 #include "EventsManager.h"
 #include "EventsListener.h"
+#include <algorithm>
 
 CEventsManager::CEventsManager() :
     m_IsInUpdate(false)
