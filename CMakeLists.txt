@@ -15,11 +15,20 @@ else()
 endif()
 
 set(PROJECT_NAME "Real Engine")
+set(ASSETS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/assets)
+set(APP_ICON ${ASSETS_DIRECTORY}/icons/icon.png)
+
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Exec
 
-add_executable(Real_Engine)
+if(WIN32)
+    set(APP_RC ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/windows/app.rc)
+    add_executable(Real_Engine ${APP_RC})
+    source_group("resources" FILES ${APP_RC})
+else()
+    add_executable(Real_Engine)
+endif()
 
 file(GLOB_RECURSE SHADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/shaders/*.*)
@@ -45,10 +54,11 @@ target_compile_definitions(Real_Engine PRIVATE
     GLM_ENABLE_EXPERIMENTAL
     GLM_FORCE_PURE
     APP_NAME="${PROJECT_NAME}"
+	  APP_ICON="${APP_ICON}"
     DEV_STAGE=${DEV_STAGE_VAL}
     SHADERS_HOT_RELOAD=${SHADERS_HOT_RELOAD_VAL}
     PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/"
-    ASSETS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/"
+    ASSETS_DIR="${ASSETS_DIRECTORY}"
     SHADERS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/shaders/"
 )
 

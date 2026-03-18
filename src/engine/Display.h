@@ -45,6 +45,7 @@ public:
 
 private:
   void InitCallbacks();
+  void LoadIcon();
 
   static void OnWindowResizedProxy(GLFWwindow *_Window, int _Width, int _Height);
   static void OnMousePressedProxy(GLFWwindow *_Window, int _Button, int _Action, int _Mods);

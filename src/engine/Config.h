@@ -217,11 +217,6 @@ public:
     }
   }
 #endif
-  std::string GetAppTitle() const
-  {
-    return APP_NAME;
-  }
-
   int GetShadowMapSize() const
   {
     return ShadowMapSize;
@@ -326,6 +321,14 @@ public:
     return LightSpaceMatrix_OrthRightTop;
   }
 
+  std::string GetAppTitle() const
+  {
+    return APP_NAME;
+  }
+  std::filesystem::path GetAppIconPath() const
+  {
+    return APP_ICON;
+  }
   std::filesystem::path GetProjectRoot() const
   {
     return PROJECT_ROOT;

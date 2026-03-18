@@ -1,8 +1,8 @@
 #include "Display.h"
+#include "Config.h"
+#include "utils/Image.h"
 #include <common/Logger.h>
 #include <cstdlib>
-#include <cstring>
-#include <format>
 
 static inline void ApplyInitHints()
 {
@@ -81,6 +81,7 @@ int CDisplay::Init(const std::string &_Title)
   // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
 
+  LoadIcon();
   InitCallbacks();
 
   return EXIT_SUCCESS;
@@ -189,6 +190,29 @@ void CDisplay::InitCallbacks()
   glfwSetScrollCallback(m_Window, OnMouseScrollProxy);
   glfwSetKeyCallback(m_Window, OnKeyPressedProxy);
   glfwSetErrorCallback(OnErrorOccuredProxy);
+}
+
+void CDisplay::LoadIcon()
+{
+#ifdef _WIN32
+  const auto IconPath = CConfig::Instance().GetAppIconPath();
+  if (!IconPath.empty())
+  {
+    const CImage Image(IconPath);
+    if (Image.IsValid())
+    {
+      GLFWimage Icon;
+      Icon.width  = Image.GetWidth();
+      Icon.height = Image.GetHeight();
+      Icon.pixels = static_cast<unsigned char *>(Image.GetPixels());
+      glfwSetWindowIcon(m_Window, 1, &Icon);
+    }
+    else
+    {
+      LOG_ERROR("[CDisplay] Failed to load window icon from path: {}", IconPath.string());
+    }
+  }
+#endif
 }
 
 void CDisplay::OnWindowResizedProxy(GLFWwindow *_Window, int _Width, int _Height)
