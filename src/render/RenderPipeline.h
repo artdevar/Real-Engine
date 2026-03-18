@@ -93,7 +93,6 @@ private:
                     const std::vector<TRenderCommand>  &_Commands);
 
 private:
-  static std::string GetRenderTextureName();
   static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
   static std::shared_ptr<CTextureBase> CreateDepthTexture(const std::string &_Name, TVector2i _Size);
   static std::shared_ptr<CTextureBase> CreateVelocityTexture(const std::string &_Name, TVector2i _Size);

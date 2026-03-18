@@ -433,7 +433,6 @@ glm::mat4 CRenderPipeline::CalculateLightSpaceMatrix() const
 
 TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer)
 {
-
   const auto     &Camera     = _Renderer.GetCamera();
   const glm::mat4 Projection = Camera->GetPerspectiveProjection();
   const glm::mat4 View       = Camera->GetView();
@@ -514,14 +513,6 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateVelocityTexture(const std::
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
   return resource::RecreateTexture(_Name, TextureParams);
-}
-
-std::string CRenderPipeline::GetRenderTextureName()
-{
-  constexpr std::string_view RENDER_TEXTURE_NAME = "PIPELINE_SCENE_RENDER_TEXTURE_";
-
-  static uint32_t Counter = 0;
-  return std::format("{}{}", RENDER_TEXTURE_NAME, Counter++);
 }
 
 void CRenderPipeline::InitRenderTargets(TVector2i _Viewport)

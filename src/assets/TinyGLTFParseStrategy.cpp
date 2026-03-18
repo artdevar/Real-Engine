@@ -1,6 +1,7 @@
 #include "pch.h"
 
 #include "TinyGLTFParseStrategy.h"
+#include "utils/Path.h"
 #include <common/Stopwatch.h>
 #include <common/Logger.h>
 #include <mikktspace.h>
@@ -159,18 +160,16 @@ bool CTinyGLTFParseStrategy::Parse(const std::filesystem::path &_Path, TModelDat
   const bool IsLoaded = Loader.LoadASCIIFromFile(&NativeModel, &Error, &Warning, _Path.string());
 
   if (!Warning.empty())
-    CLogger::Log(ELogType::Warning, "Model loading {} warning: {}", _Path.string(), Warning);
+    LOG_WARNING("[CTinyGLTFParseStrategy] Model loading {} warning: {}", utils::GetRelativePath(_Path).string(), Warning);
 
   if (!Error.empty())
-    CLogger::Log(ELogType::Error, "Model loading {} error: {}", _Path.string(), Error);
+    LOG_ERROR("[CTinyGLTFParseStrategy] Model loading {} error: {}", utils::GetRelativePath(_Path).string(), Error);
 
   if (!IsLoaded)
   {
-    CLogger::Log(ELogType::Error, "Model loading {} failed", _Path.string());
+    LOG_ERROR("[CTinyGLTFParseStrategy] Model loading {} failed", utils::GetRelativePath(_Path).string());
     return false;
   }
-
-  CLogger::Log(ELogType::Info, "Model {} loaded successfully", _Path.string());
 
   {
     MEASURE_ZONE("Parse GLTF Model");
