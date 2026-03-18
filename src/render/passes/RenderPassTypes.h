@@ -13,5 +13,12 @@ enum class ERenderPassType
   EquirectangularToCubemap,
   IrradianceConvolution,
   Bloom,
-  TAA
+  TAA,
+
+  Common_Utility = 1000,
+  Common_Shadow,
+  Common_Geometry,
+  Common_PostProcess,
+  Common_Debug,
+  Common_Output
 };

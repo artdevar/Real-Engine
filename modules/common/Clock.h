@@ -22,14 +22,14 @@ public:
   float Restart()
   {
     const TimePoint Now     = ClockType::now();
-    const float     Elapsed = std::chrono::duration_cast<Duration>(Now - m_StartTime).count();
+    const float     Elapsed = GetElapsedTime(Now, m_StartTime);
     m_StartTime             = Now;
     return Elapsed;
   }
 
   float GetElapsedTime() const
   {
-    return std::chrono::duration_cast<Duration>(ClockType::now() - m_StartTime).count();
+    return GetElapsedTime(ClockType::now(), m_StartTime);
   }
 
   float GetElapsedTimeMs() const
@@ -40,6 +40,12 @@ public:
   static TimePoint Now()
   {
     return ClockType::now();
+  }
+
+private:
+  static float GetElapsedTime(const TimePoint &_Now, const TimePoint &_StartTime)
+  {
+    return std::chrono::duration_cast<Duration>(_Now - _StartTime).count();
   }
 
 private:

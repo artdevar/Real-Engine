@@ -219,24 +219,22 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_Rend
 
 void CRenderPipeline::UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  for (const TRenderPass &RenderPass : m_UtilityPasses)
-  {
-    if (RenderPass.IsEnabled)
-      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
-  }
+  utils::CClock PassClock;
+  DoRenderPasses(m_UtilityPasses, _Renderer, _RenderContext, _Commands);
+  m_RenderPassTimes[ERenderPassType::Common_Utility] = PassClock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  for (const TRenderPass &RenderPass : m_ShadowPasses)
-  {
-    if (RenderPass.IsEnabled)
-      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
-  }
+  utils::CClock PassClock;
+  DoRenderPasses(m_ShadowPasses, _Renderer, _RenderContext, _Commands);
+  m_RenderPassTimes[ERenderPassType::Common_Shadow] = PassClock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
+  utils::CClock PassClock;
+
   _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
   if (_RenderContext.SceneRenderTarget.Velocity)
   {
@@ -249,28 +247,23 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
     _RenderContext.SceneRenderTarget.FrameBuffer.SetDrawBuffers(Attachments, 1);
   }
 
-  for (const TRenderPass &RenderPass : m_GeometryPasses)
-  {
-    if (RenderPass.IsEnabled)
-      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
-  }
+  DoRenderPasses(m_GeometryPasses, _Renderer, _RenderContext, _Commands);
 
   _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
+
+  m_RenderPassTimes[ERenderPassType::Common_Geometry] = PassClock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  for (const TRenderPass &RenderPass : m_PostProcessPasses)
-  {
-    if (RenderPass.IsEnabled)
-      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
-  }
+  utils::CClock PassClock;
+  DoRenderPasses(m_PostProcessPasses, _Renderer, _RenderContext, _Commands);
+  m_RenderPassTimes[ERenderPassType::Common_PostProcess] = PassClock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
-  if (m_DebugPasses.empty())
-    return;
+  utils::CClock PassClock;
 
   CFrameBuffer::Blit(_RenderContext.SceneRenderTarget.FrameBuffer.ID(),       //
                      _RenderContext.PostProcessRenderTarget.FrameBuffer.ID(), //
@@ -281,30 +274,40 @@ void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderCon
 
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
 
-  for (const TRenderPass &RenderPass : m_DebugPasses)
-  {
-    if (RenderPass.IsEnabled)
-      DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
-  }
+  DoRenderPasses(m_DebugPasses, _Renderer, _RenderContext, _Commands);
 
   _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+
+  m_RenderPassTimes[ERenderPassType::Common_Debug] = PassClock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
+  utils::CClock PassClock;
+
   if (_RenderContext.FinalRenderTarget)
     _RenderContext.FinalRenderTarget->FrameBuffer.Bind();
   else
     CFrameBuffer::BindDefault();
 
-  for (const TRenderPass &RenderPass : m_OutputPasses)
+  DoRenderPasses(m_OutputPasses, _Renderer, _RenderContext, _Commands);
+
+  if (_RenderContext.FinalRenderTarget)
+    _RenderContext.FinalRenderTarget->FrameBuffer.Unbind();
+
+  m_RenderPassTimes[ERenderPassType::Common_Output] = PassClock.GetElapsedTimeMs();
+}
+
+void CRenderPipeline::DoRenderPasses(const TRenderPassesList           &_Passes,
+                                     IRenderer                         &_Renderer,
+                                     TRenderContext                    &_RenderContext,
+                                     const std::vector<TRenderCommand> &_Commands)
+{
+  for (const TRenderPass &RenderPass : _Passes)
   {
     if (RenderPass.IsEnabled)
       DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
   }
-
-  if (_RenderContext.FinalRenderTarget)
-    _RenderContext.FinalRenderTarget->FrameBuffer.Unbind();
 }
 
 void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
@@ -313,29 +316,19 @@ void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPa
                                    const std::vector<TRenderCommand>  &_Commands)
 {
   if (!_RenderPass->IsAvailable())
-  {
-    m_RenderPassTimes[_RenderPass->GetType()] = 0.0f;
     return;
-  }
 
   std::vector<const TRenderCommand *> Commands;
   if (_RenderPass->NeedsCommands())
   {
     Commands = FilterCommands(_RenderPass, _Commands);
     if (Commands.empty())
-    {
-      m_RenderPassTimes[_RenderPass->GetType()] = 0.0f;
       return;
-    }
   }
-
-  utils::CClock Clock;
 
   _RenderPass->PreExecute(_Renderer, _RenderContext, Commands);
   _RenderPass->Execute(_Renderer, _RenderContext, Commands);
   _RenderPass->PostExecute(_Renderer, _RenderContext, Commands);
-
-  m_RenderPassTimes[_RenderPass->GetType()] = Clock.GetElapsedTimeMs();
 }
 
 void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext)
