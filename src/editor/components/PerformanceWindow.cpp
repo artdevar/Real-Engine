@@ -20,11 +20,11 @@ static ImPlotPoint GetPlotPoint(int idx, void *user_data)
 
 const CPerformanceWindow::RenderPassesList &CPerformanceWindow::GetRenderPasses()
 {
-  static const RenderPassesList RenderPasses = {std::make_pair(ERenderPassType::Common_Utility, "Utility"),         //
-                                                std::make_pair(ERenderPassType::Common_Shadow, "Shadow"),           //
-                                                std::make_pair(ERenderPassType::Common_Geometry, "Geometry"),       //
-                                                std::make_pair(ERenderPassType::Common_PostProcess, "PostProcess"), //
-                                                std::make_pair(ERenderPassType::Common_Debug, "Debug"),             //
+  static const RenderPassesList RenderPasses = {std::make_pair(ERenderPassType::Common_Utility, "Utility"),          //
+                                                std::make_pair(ERenderPassType::Common_Shadow, "Shadow"),            //
+                                                std::make_pair(ERenderPassType::Common_Geometry, "Geometry"),        //
+                                                std::make_pair(ERenderPassType::Common_PostProcess, "Post Process"), //
+                                                std::make_pair(ERenderPassType::Common_Debug, "Debug"),              //
                                                 std::make_pair(ERenderPassType::Common_Output, "Output")};
 
   return RenderPasses;
@@ -76,10 +76,10 @@ void CPerformanceWindow::RenderFPSSection()
       float MinFpsLimit = m_FPSHistory.Min - 10;
       float MaxFpsLimit = m_FPSHistory.Max + 10;
 
-      if (m_TargetFPS.has_value())
+      if (m_IsTargetFPSSet)
       {
-        MinFpsLimit = std::min(MinFpsLimit, *m_TargetFPS - 10.0f);
-        MaxFpsLimit = std::max(MaxFpsLimit, *m_TargetFPS + 10.0f);
+        MinFpsLimit = std::min(MinFpsLimit, m_TargetFPS - 10.0f);
+        MaxFpsLimit = std::max(MaxFpsLimit, m_TargetFPS + 10.0f);
       }
 
       ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.History.front().X, m_FPSHistory.History.back().X, ImGuiCond_Always);
@@ -93,9 +93,9 @@ void CPerformanceWindow::RenderFPSSection()
     if (!m_FPSHistory.History.empty())
       ImPlot::PlotLineG("FPS", GetPlotPoint, &m_FPSHistory, m_FPSHistory.History.size(), ImPlotLineFlags_None);
 
-    if (m_TargetFPS.has_value())
+    if (m_IsTargetFPSSet)
     {
-      const float TargetValues[] = {static_cast<float>(*m_TargetFPS), static_cast<float>(*m_TargetFPS)};
+      const float TargetValues[] = {static_cast<float>(m_TargetFPS), static_cast<float>(m_TargetFPS)};
       const float TargetX[]      = {m_FPSHistory.History.front().X, m_FPSHistory.History.back().X};
       ImPlot::PlotLine("Target FPS", TargetX, TargetValues, 2);
     }
@@ -128,20 +128,11 @@ void CPerformanceWindow::RenderFPSSection()
 
   if (ImGui::CollapsingHeader("Settings##FPSSettings"))
   {
-    bool IsTargetFPSEnabled = m_TargetFPS.has_value();
-    ImGui::Checkbox("Target FPS", &IsTargetFPSEnabled);
-    if (IsTargetFPSEnabled)
+    ImGui::Checkbox("Target FPS", &m_IsTargetFPSSet);
+    if (m_IsTargetFPSSet)
     {
       ImGui::SameLine();
-
-      if (!m_TargetFPS.has_value())
-        m_TargetFPS.emplace(240);
-
-      ImGui::SliderInt("##TargetFPSSlider", &m_TargetFPS.value(), 10, 1000);
-    }
-    else
-    {
-      m_TargetFPS.reset();
+      ImGui::SliderInt("##TargetFPSSlider", &m_TargetFPS, 10, 1000);
     }
   }
 }

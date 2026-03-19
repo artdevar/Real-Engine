@@ -45,8 +45,9 @@ private:
   constexpr static size_t MAX_HISTORY       = 1000;
   constexpr static size_t RENDER_PASS_COUNT = 6;
 
-  TVector2i          m_Size;
-  std::optional<int> m_TargetFPS;
+  TVector2i m_Size;
+  int       m_TargetFPS      = 240;
+  bool      m_IsTargetFPSSet = false;
 
   THistoryBuffer m_FPSHistory;
   THistoryBuffer m_FrameTimeHistory;
