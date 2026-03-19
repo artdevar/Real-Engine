@@ -46,6 +46,14 @@ public:
       event::Notify(TEventType::Config_TAAEnabledChanged, _Enabled);
     }
   }
+  void SetMSAASamples(int _Samples)
+  {
+    if (MSAASampleCount != _Samples)
+    {
+      MSAASampleCount = _Samples;
+      event::Notify(TEventType::Config_MSAASamplesChanged, _Samples);
+    }
+  }
   void SetTAAJitterSampleCount(int _Count)
   {
     if (TAAJitterSampleCount != _Count)
@@ -237,6 +245,14 @@ public:
   {
     return TAAJitterSampleCount;
   }
+  int GetMSAASampleCount() const
+  {
+    return MSAASampleCount;
+  }
+  bool IsMSAAEnabled() const
+  {
+    return MSAASampleCount > 0;
+  }
   bool GetHDREnabled() const
   {
     return IsHDREnabled;
@@ -360,6 +376,7 @@ private:
   bool  AreShadowsEnabled        = true;
   bool  IsFXAAEnabled            = false;
   bool  IsTAAEnabled             = true;
+  int   MSAASampleCount          = 4;
   int   TAAJitterSampleCount     = 8;
   bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;

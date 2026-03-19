@@ -102,6 +102,7 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   event::Subscribe(TEventType::Config_BloomEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_TAAEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_TAAJitterSampleCountChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_MSAASamplesChanged, GetWeakPtr());
 }
 
 void CRenderPipeline::OnEvent(const TEvent &_Event)
@@ -158,6 +159,10 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
   }
   case TEventType::Config_TAAJitterSampleCountChanged: {
     m_JitterSampleCount = _Event.GetValue<int32_t>();
+    break;
+  }
+  case TEventType::Config_MSAASamplesChanged: {
+    const int32_t MSAASamples = _Event.GetValue<int32_t>();
     break;
   }
   }

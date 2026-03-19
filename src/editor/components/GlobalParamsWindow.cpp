@@ -1,9 +1,9 @@
 #if DEV_STAGE
 
 #include "GlobalParamsWindow.h"
-
 #include "engine/Config.h"
 #include <imgui/imgui.h>
+#include <map>
 
 namespace editor
 {
@@ -14,20 +14,6 @@ void CGlobalParamsWindow::Render()
   {
     if (ImGui::CollapsingHeader("Render"))
     {
-      bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
-      if (ImGui::Checkbox("FXAA", &FXAAEnabled))
-        CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
-
-      bool TAAEnabled = CConfig::Instance().GetTAAEnabled();
-      if (ImGui::Checkbox("TAA", &TAAEnabled))
-        CConfig::Instance().SetTAAEnabled(TAAEnabled);
-
-      int TAAJitterSampleCount = CConfig::Instance().GetTAAJitterSampleCount();
-      if (ImGui::DragInt("TAA Sample count", &TAAJitterSampleCount, 4, 4, 32))
-        CConfig::Instance().SetTAAJitterSampleCount(TAAJitterSampleCount);
-
-      ImGui::Separator();
-
       bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
       if (ImGui::Checkbox("Draw shadows", &ShadowsEnabled))
         CConfig::Instance().SetShadowsEnabled(ShadowsEnabled);
@@ -73,6 +59,49 @@ void CGlobalParamsWindow::Render()
       int BloomBlurPasses = CConfig::Instance().GetBloomBlurPasses();
       if (ImGui::DragInt("Bloom blur passes", &BloomBlurPasses, 1, 0, 100))
         CConfig::Instance().SetBloomBlurPasses(BloomBlurPasses);
+    }
+
+    if (ImGui::CollapsingHeader("Anti Aliasing"))
+    {
+      static const std::map<int, std::pair<int, const char *>> MSAAItems = {
+          std::make_pair(0, std::make_pair(0, "None")), //
+          std::make_pair(2, std::make_pair(2, "2x")),   //
+          std::make_pair(4, std::make_pair(4, "4x")),   //
+          std::make_pair(8, std::make_pair(8, "8x")),   //
+          std::make_pair(16, std::make_pair(16, "16x")) //
+      };
+
+      const int MSAASamples = CConfig::Instance().GetMSAASampleCount();
+      if (ImGui::BeginCombo("MSAA", MSAAItems.at(MSAASamples).second))
+      {
+        for (auto it = MSAAItems.cbegin(); it != MSAAItems.cend(); ++it)
+        {
+          auto &&[Samples, Name] = it->second;
+
+          const bool IsSelected = MSAASamples == Samples;
+          if (ImGui::Selectable(Name, IsSelected))
+            CConfig::Instance().SetMSAASamples(Samples);
+          if (IsSelected)
+            ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+      }
+
+      ImGui::Separator();
+
+      bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
+      if (ImGui::Checkbox("FXAA", &FXAAEnabled))
+        CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
+
+      ImGui::Separator();
+
+      bool TAAEnabled = CConfig::Instance().GetTAAEnabled();
+      if (ImGui::Checkbox("TAA", &TAAEnabled))
+        CConfig::Instance().SetTAAEnabled(TAAEnabled);
+
+      int TAAJitterSampleCount = CConfig::Instance().GetTAAJitterSampleCount();
+      if (ImGui::DragInt("TAA Sample count", &TAAJitterSampleCount, 4, 4, 32))
+        CConfig::Instance().SetTAAJitterSampleCount(TAAJitterSampleCount);
     }
 
     if (ImGui::CollapsingHeader("Debug"))
