@@ -31,9 +31,9 @@ protected:
   static void Unbind(unsigned _Target);
 
 protected:
-  unsigned       m_ID;
-  const unsigned m_Target;
-  TVector2i      m_Size;
+  unsigned  m_ID;
+  unsigned  m_Target;
+  TVector2i m_Size;
 };
 
 // ----------------------------------------------

@@ -16,9 +16,9 @@ void CComponentsFactory::CreateEnvironmentComponent(const std::filesystem::path 
     Params.WrapR             = ETextureWrap::ClampToEdge;
     Params.MinFilter         = ETextureFilter::Linear;
     Params.MagFilter         = ETextureFilter::Linear;
-    Params.InternalFormat    = GL_RGB16F;
-    Params.Format            = GL_RGB;
-    Params.Type              = GL_FLOAT;
+    Params.InternalFormat    = EInternalFormat::RGB16F;
+    Params.Format            = EFormat::RGB;
+    Params.Type              = EType::Float;
     Params.Width             = 512;
     Params.Height            = 512;
     _Component.SkyboxTexture = resource::CreateCubemap("SKYBOX_CUBEMAP", Params);
@@ -32,9 +32,9 @@ void CComponentsFactory::CreateEnvironmentComponent(const std::filesystem::path 
     Params.WrapR             = ETextureWrap::ClampToEdge;
     Params.MinFilter         = ETextureFilter::Linear;
     Params.MagFilter         = ETextureFilter::Linear;
-    Params.InternalFormat    = GL_RGB16F;
-    Params.Format            = GL_RGB;
-    Params.Type              = GL_FLOAT;
+    Params.InternalFormat    = EInternalFormat::RGB16F;
+    Params.Format            = EFormat::RGB;
+    Params.Type              = EType::Float;
     Params.Width             = 32;
     Params.Height            = 32;
     _Component.IrradianceMap = resource::CreateCubemap("IRRADIANCE_CUBEMAP", Params);

@@ -103,6 +103,7 @@ private:
   static void SetRenderPassEnabled(ERenderPassType _Type, bool _Enabled, TRenderPassesList &_Passes);
   static glm::vec2 GenerateHaltonJitter(uint32_t _Index, int32_t _Samples);
 
+  static bool IsAnyPassEnabled(const TRenderPassesList &_Passes);
   static void DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
                            IRenderer                          &_Renderer,
                            TRenderContext                     &_RenderContext,

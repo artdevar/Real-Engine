@@ -89,9 +89,9 @@ std::shared_ptr<CTextureBase> CShadowRenderPass::CreateDepthMap(TVector2i _Size)
   DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});
   DepthMapParams.Width          = _Size.X;
   DepthMapParams.Height         = _Size.Y;
-  DepthMapParams.InternalFormat = GL_DEPTH_COMPONENT16;
-  DepthMapParams.Format         = GL_DEPTH_COMPONENT;
-  DepthMapParams.Type           = GL_FLOAT;
+  DepthMapParams.InternalFormat = EInternalFormat::Depth16;
+  DepthMapParams.Format         = EFormat::Depth;
+  DepthMapParams.Type           = EType::Float;
   DepthMapParams.WrapS          = ETextureWrap::ClampToBorder;
   DepthMapParams.WrapT          = ETextureWrap::ClampToBorder;
   DepthMapParams.MinFilter      = ETextureFilter::Nearest;

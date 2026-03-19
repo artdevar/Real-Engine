@@ -87,9 +87,9 @@ void CTAARenderPass::InitHistoryTargets(const TVector2i &_Viewport)
   TTextureParams TextureParams{
       .Width          = _Viewport.X,
       .Height         = _Viewport.Y,
-      .InternalFormat = GL_RGBA16F,
-      .Format         = GL_RGBA,
-      .Type           = GL_FLOAT,
+      .InternalFormat = EInternalFormat::RGBA16F,
+      .Format         = EFormat::RGBA,
+      .Type           = EType::Float,
       .MinFilter      = ETextureFilter::Linear,
       .MagFilter      = ETextureFilter::Linear,
 

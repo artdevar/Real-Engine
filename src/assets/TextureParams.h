@@ -31,6 +31,40 @@ enum class ETextureFilter : std::uint8_t
   NearestMipmapLinear
 };
 
+enum class EInternalFormat : std::uint8_t
+{
+  R8,
+  RG8,
+  RGB8,
+  RGBA8,
+  RG16F,
+  RGB16F,
+  RGBA16F,
+  Depth16,
+  Depth24,
+  Depth32
+};
+
+enum class EFormat : std::uint8_t
+{
+  Red,
+  RG,
+  RGB,
+  RGBA,
+  Depth
+};
+
+enum class EType : std::uint8_t
+{
+  Byte,
+  UnsignedByte,
+  Short,
+  UnsignedShort,
+  Int,
+  UnsignedInt,
+  Float
+};
+
 struct TTextureParams
 {
   static constexpr inline int BordersCount = 4;
@@ -40,18 +74,20 @@ struct TTextureParams
   int Width  = 0;
   int Height = 0;
 
-  int InternalFormat = 0;
-  int Format         = 0;
-  int Type           = 0;
+  EInternalFormat InternalFormat;
+  EFormat         Format;
+  EType           Type;
 
   bool  HDR        = false;
   bool  sRGB       = false;
   float Anisotropy = 16.0f;
 
+  std::optional<int>                               Samples;
   std::optional<CStaticArray<float, BordersCount>> BorderColors;
-  ETextureWrap                                     WrapS     = ETextureWrap::Repeat;
-  ETextureWrap                                     WrapT     = ETextureWrap::Repeat;
-  ETextureWrap                                     WrapR     = ETextureWrap::Repeat; // For cubemaps
-  ETextureFilter                                   MinFilter = ETextureFilter::LinearMipmapLinear;
-  ETextureFilter                                   MagFilter = ETextureFilter::Linear;
+
+  ETextureWrap   WrapS     = ETextureWrap::Repeat;
+  ETextureWrap   WrapT     = ETextureWrap::Repeat;
+  ETextureWrap   WrapR     = ETextureWrap::Repeat; // For cubemaps
+  ETextureFilter MinFilter = ETextureFilter::LinearMipmapLinear;
+  ETextureFilter MagFilter = ETextureFilter::Linear;
 };

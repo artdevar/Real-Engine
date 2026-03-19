@@ -7,6 +7,7 @@
 
 namespace
 {
+
 constexpr GLint ToGLWrap(ETextureWrap _Wrap)
 {
   switch (_Wrap)
@@ -45,7 +46,7 @@ constexpr GLint ToGLFilter(ETextureFilter _Filter)
   }
 }
 
-constexpr GLint ToInternalFormat(int _Channels, bool _sRGB, bool _HDR)
+constexpr GLint ToGLInternalFormat(int _Channels, bool _sRGB, bool _HDR)
 {
   if (_HDR)
     return GL_RGB16F;
@@ -66,7 +67,37 @@ constexpr GLint ToInternalFormat(int _Channels, bool _sRGB, bool _HDR)
   }
 }
 
-constexpr GLint ToFormat(int _Channels)
+constexpr GLint ToGLInternalFormat(EInternalFormat _Format)
+{
+  switch (_Format)
+  {
+  case EInternalFormat::R8:
+    return GL_R8;
+  case EInternalFormat::RG8:
+    return GL_RG8;
+  case EInternalFormat::RGB8:
+    return GL_RGB8;
+  case EInternalFormat::RGBA8:
+    return GL_RGBA8;
+  case EInternalFormat::RG16F:
+    return GL_RG16F;
+  case EInternalFormat::RGB16F:
+    return GL_RGB16F;
+  case EInternalFormat::RGBA16F:
+    return GL_RGBA16F;
+  case EInternalFormat::Depth16:
+    return GL_DEPTH_COMPONENT16;
+  case EInternalFormat::Depth24:
+    return GL_DEPTH_COMPONENT24;
+  case EInternalFormat::Depth32:
+    return GL_DEPTH_COMPONENT32;
+  default:
+    assert(false && "Unsupported internal format");
+    return GL_RGB8;
+  }
+}
+
+constexpr GLint ToGLFormat(int _Channels)
 {
   switch (_Channels)
   {
@@ -83,6 +114,51 @@ constexpr GLint ToFormat(int _Channels)
     return GL_RGB;
   }
 }
+
+constexpr GLint ToGLFormat(EFormat _Format)
+{
+  switch (_Format)
+  {
+  case EFormat::Red:
+    return GL_RED;
+  case EFormat::RG:
+    return GL_RG;
+  case EFormat::RGB:
+    return GL_RGB;
+  case EFormat::RGBA:
+    return GL_RGBA;
+  case EFormat::Depth:
+    return GL_DEPTH_COMPONENT;
+  default:
+    assert(false && "Unsupported format");
+    return GL_RGB;
+  }
+}
+
+constexpr GLint ToGLType(EType _Type)
+{
+  switch (_Type)
+  {
+  case EType::Byte:
+    return GL_BYTE;
+  case EType::UnsignedByte:
+    return GL_UNSIGNED_BYTE;
+  case EType::Short:
+    return GL_SHORT;
+  case EType::UnsignedShort:
+    return GL_UNSIGNED_SHORT;
+  case EType::Int:
+    return GL_INT;
+  case EType::UnsignedInt:
+    return GL_UNSIGNED_INT;
+  case EType::Float:
+    return GL_FLOAT;
+  default:
+    assert(false && "Unsupported type");
+    return GL_UNSIGNED_BYTE;
+  }
+}
+
 } // namespace
 
 // CTextureBase
@@ -175,8 +251,8 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
     return false;
   }
 
-  const GLenum Format         = ToFormat(Image.GetChannels());
-  const GLenum InternalFormat = ToInternalFormat(Image.GetChannels(), _Params.sRGB, _Params.HDR);
+  const GLenum Format         = ToGLFormat(Image.GetChannels());
+  const GLenum InternalFormat = ToGLInternalFormat(Image.GetChannels(), _Params.sRGB, _Params.HDR);
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
@@ -213,9 +289,13 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 
   assert(!IsValid() && "The texture already exists");
 
+  const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
+  const GLint Format         = ToGLFormat(_Params.Format);
+  const GLint Type           = ToGLType(_Params.Type);
+
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, _Params.InternalFormat, _Params.Width, _Params.Height, 0, _Params.Format, _Params.Type, _Params.Data);
+  glTexImage2D(m_Target, 0, InternalFormat, _Params.Width, _Params.Height, 0, Format, Type, _Params.Data);
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
@@ -295,6 +375,10 @@ bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 
   assert(!IsValid() && "The texture already exists");
 
+  const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
+  const GLint Format         = ToGLFormat(_Params.Format);
+  const GLint Type           = ToGLType(_Params.Type);
+
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
 
@@ -302,12 +386,12 @@ bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   {
     glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, //
                  0,                                  //
-                 _Params.InternalFormat,             //
+                 InternalFormat,                     //
                  _Params.Width,                      //
                  _Params.Height,                     //
                  0,                                  //
-                 _Params.Format,                     //
-                 _Params.Type,                       //
+                 Format,                             //
+                 Type,                               //
                  nullptr);
   }
 
@@ -365,7 +449,7 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
     for (int i = 0; i < Images.size(); ++i)
     {
       const CImage &Image  = Images[i];
-      const GLenum  Format = ToFormat(Image.GetChannels());
+      const GLenum  Format = ToGLFormat(Image.GetChannels());
       glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.GetWidth(), Image.GetHeight(), 0, Format, GL_UNSIGNED_BYTE,
                    Image.GetPixels());
     }

@@ -115,9 +115,9 @@ void CBloomRenderPass::InitTextures(TVector2i _Size)
   TTextureParams Params;
   Params.Width          = _Size.X / 2;
   Params.Height         = _Size.Y / 2;
-  Params.InternalFormat = GL_RGBA16F;
-  Params.Format         = GL_RGBA;
-  Params.Type           = GL_FLOAT;
+  Params.InternalFormat = EInternalFormat::RGBA16F;
+  Params.Format         = EFormat::RGBA;
+  Params.Type           = EType::Float;
   Params.MinFilter      = ETextureFilter::Linear;
   Params.MagFilter      = ETextureFilter::Linear;
   Params.WrapS          = ETextureWrap::ClampToEdge;

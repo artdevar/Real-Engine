@@ -263,6 +263,12 @@ void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_Ren
 
 void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
+  if (!IsAnyPassEnabled(m_DebugPasses))
+  {
+    m_RenderPassTimes[ERenderPassType::Common_Debug] = 0.0f;
+    return;
+  }
+
   utils::CClock PassClock;
 
   CFrameBuffer::Blit(_RenderContext.SceneRenderTarget.FrameBuffer.ID(),       //
@@ -308,6 +314,16 @@ void CRenderPipeline::DoRenderPasses(const TRenderPassesList           &_Passes,
     if (RenderPass.IsEnabled)
       DoRenderPass(RenderPass.Pass, _Renderer, _RenderContext, _Commands);
   }
+}
+
+bool CRenderPipeline::IsAnyPassEnabled(const TRenderPassesList &_Passes)
+{
+  for (const TRenderPass &RenderPass : _Passes)
+  {
+    if (RenderPass.IsEnabled)
+      return true;
+  }
+  return false;
 }
 
 void CRenderPipeline::DoRenderPass(const std::shared_ptr<IRenderPass> &_RenderPass,
@@ -469,9 +485,9 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
   TextureParams.Height         = _Size.Y;
-  TextureParams.InternalFormat = GL_RGBA16F;
-  TextureParams.Format         = GL_RGBA;
-  TextureParams.Type           = GL_FLOAT;
+  TextureParams.InternalFormat = EInternalFormat::RGBA16F;
+  TextureParams.Format         = EFormat::RGBA;
+  TextureParams.Type           = EType::Float;
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
@@ -483,9 +499,9 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateDepthTexture(const std::str
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
   TextureParams.Height         = _Size.Y;
-  TextureParams.InternalFormat = GL_DEPTH_COMPONENT24;
-  TextureParams.Format         = GL_DEPTH_COMPONENT;
-  TextureParams.Type           = GL_FLOAT;
+  TextureParams.InternalFormat = EInternalFormat::Depth24;
+  TextureParams.Format         = EFormat::Depth;
+  TextureParams.Type           = EType::Float;
   TextureParams.MinFilter      = ETextureFilter::Nearest;
   TextureParams.MagFilter      = ETextureFilter::Nearest;
   TextureParams.WrapS          = ETextureWrap::ClampToEdge;
@@ -499,9 +515,9 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateVelocityTexture(const std::
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
   TextureParams.Height         = _Size.Y;
-  TextureParams.InternalFormat = GL_RG16F;
-  TextureParams.Format         = GL_RG;
-  TextureParams.Type           = GL_FLOAT;
+  TextureParams.InternalFormat = EInternalFormat::RG16F;
+  TextureParams.Format         = EFormat::RG;
+  TextureParams.Type           = EType::Float;
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
