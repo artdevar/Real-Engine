@@ -15,9 +15,9 @@ namespace editor
 struct THistoryBuffer
 {
   std::deque<TVector2f> History;
-  float                 MinTime = 0;
-  float                 MaxTime = 0;
-  float                 AvgTime = 0;
+  float                 Min = 0;
+  float                 Max = 0;
+  float                 Avg = 0;
 };
 
 class CPerformanceWindow : public IEditorWindow
@@ -45,7 +45,8 @@ private:
   constexpr static size_t MAX_HISTORY       = 1000;
   constexpr static size_t RENDER_PASS_COUNT = 6;
 
-  TVector2i m_Size;
+  TVector2i          m_Size;
+  std::optional<int> m_TargetFPS;
 
   THistoryBuffer m_FPSHistory;
   THistoryBuffer m_FrameTimeHistory;

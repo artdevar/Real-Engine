@@ -73,9 +73,18 @@ void CPerformanceWindow::RenderFPSSection()
 
     if (!m_FPSHistory.History.empty())
     {
+      float MinFpsLimit = m_FPSHistory.Min - 10;
+      float MaxFpsLimit = m_FPSHistory.Max + 10;
+
+      if (m_TargetFPS.has_value())
+      {
+        MinFpsLimit = std::min(MinFpsLimit, *m_TargetFPS - 10.0f);
+        MaxFpsLimit = std::max(MaxFpsLimit, *m_TargetFPS + 10.0f);
+      }
+
       ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.History.front().X, m_FPSHistory.History.back().X, ImGuiCond_Always);
-      ImPlot::SetupAxisLimits(ImAxis_Y1, m_FPSHistory.MinTime - 10.0f, m_FPSHistory.MaxTime + 10.0f, ImGuiCond_Always);
-      ImPlot::SetupAxisLimits(ImAxis_Y2, m_FrameTimeHistory.MinTime - 1.0f, m_FrameTimeHistory.MaxTime + 1.0f, ImGuiCond_Always);
+      ImPlot::SetupAxisLimits(ImAxis_Y1, MinFpsLimit, MaxFpsLimit, ImGuiCond_Always);
+      ImPlot::SetupAxisLimits(ImAxis_Y2, m_FrameTimeHistory.Min - 1.0f, m_FrameTimeHistory.Max + 1.0f, ImGuiCond_Always);
     }
 
     ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
@@ -83,6 +92,13 @@ void CPerformanceWindow::RenderFPSSection()
     ImPlot::SetAxis(ImAxis_Y1);
     if (!m_FPSHistory.History.empty())
       ImPlot::PlotLineG("FPS", GetPlotPoint, &m_FPSHistory, m_FPSHistory.History.size(), ImPlotLineFlags_None);
+
+    if (m_TargetFPS.has_value())
+    {
+      const float TargetValues[] = {static_cast<float>(*m_TargetFPS), static_cast<float>(*m_TargetFPS)};
+      const float TargetX[]      = {m_FPSHistory.History.front().X, m_FPSHistory.History.back().X};
+      ImPlot::PlotLine("Target FPS", TargetX, TargetValues, 2);
+    }
 
     ImPlot::SetAxis(ImAxis_Y2);
     if (!m_FrameTimeHistory.History.empty())
@@ -92,18 +108,42 @@ void CPerformanceWindow::RenderFPSSection()
     ImPlot::EndPlot();
   }
 
-  ImGui::Columns(2, "PerfStats");
-  ImGui::Text("FPS");
-  ImGui::Text("Min: %.1f", m_FPSHistory.MinTime);
-  ImGui::Text("Max: %.1f", m_FPSHistory.MaxTime);
-  ImGui::Text("Avg: %.1f", m_FPSHistory.AvgTime);
-  ImGui::NextColumn();
-  ImGui::Text("Tick (ms)");
-  ImGui::Text("Min: %.2f", m_FrameTimeHistory.MinTime);
-  ImGui::Text("Max: %.2f", m_FrameTimeHistory.MaxTime);
-  ImGui::Text("Avg: %.2f", m_FrameTimeHistory.AvgTime);
-  ImGui::NextColumn();
-  ImGui::Columns(1);
+  if (ImGui::CollapsingHeader("Details##FPSDetails"))
+  {
+    ImGui::Columns(2, "PerformanceStats");
+    ImGui::Text("FPS");
+    ImGui::NextColumn();
+    ImGui::Text("Tick (ms)");
+    ImGui::Separator();
+    ImGui::NextColumn();
+    ImGui::Text("Min: %.1f", m_FPSHistory.Min);
+    ImGui::Text("Max: %.1f", m_FPSHistory.Max);
+    ImGui::Text("Avg: %.1f", m_FPSHistory.Avg);
+    ImGui::NextColumn();
+    ImGui::Text("Min: %.2f", m_FrameTimeHistory.Min);
+    ImGui::Text("Max: %.2f", m_FrameTimeHistory.Max);
+    ImGui::Text("Avg: %.2f", m_FrameTimeHistory.Avg);
+    ImGui::Columns(1);
+  }
+
+  if (ImGui::CollapsingHeader("Settings##FPSSettings"))
+  {
+    bool IsTargetFPSEnabled = m_TargetFPS.has_value();
+    ImGui::Checkbox("Target FPS", &IsTargetFPSEnabled);
+    if (IsTargetFPSEnabled)
+    {
+      ImGui::SameLine();
+
+      if (!m_TargetFPS.has_value())
+        m_TargetFPS.emplace(240);
+
+      ImGui::SliderInt("##TargetFPSSlider", &m_TargetFPS.value(), 10, 1000);
+    }
+    else
+    {
+      m_TargetFPS.reset();
+    }
+  }
 }
 
 void CPerformanceWindow::RenderPassesSection()
@@ -114,9 +154,8 @@ void CPerformanceWindow::RenderPassesSection()
   const auto &RenderPasses = GetRenderPasses();
   RenderPassesPlot(RenderPasses);
 
-  ImGui::Spacing();
-
-  RenderPassesStatistics(RenderPasses);
+  if (ImGui::CollapsingHeader("Details##RenderPassesDetails"))
+    RenderPassesStatistics(RenderPasses);
 }
 
 void CPerformanceWindow::RenderPassesPlot(const RenderPassesList &_RenderPasses)
@@ -139,7 +178,10 @@ void CPerformanceWindow::RenderPassesPlot(const RenderPassesList &_RenderPasses)
   {
     if (!m_RenderPassStats[i].History.empty())
     {
-      ImPlot::PlotLineG(_RenderPasses[i].second.data(), GetPlotPoint, &m_RenderPassStats[i], m_RenderPassStats[i].History.size(),
+      ImPlot::PlotLineG(_RenderPasses[i].second.data(),      //
+                        GetPlotPoint,                        //
+                        &m_RenderPassStats[i],               //
+                        m_RenderPassStats[i].History.size(), //
                         ImPlotLineFlags_None);
     }
   }
@@ -150,14 +192,7 @@ void CPerformanceWindow::RenderPassesPlot(const RenderPassesList &_RenderPasses)
 
 void CPerformanceWindow::RenderPassesStatistics(const RenderPassesList &_RenderPasses)
 {
-  if (!ImGui::CollapsingHeader("Render Pass Statistics"))
-    return;
-
   ImGui::Columns(4, "RenderPassStats");
-  ImGui::SetColumnWidth(0, 200);
-  ImGui::SetColumnWidth(1, 80);
-  ImGui::SetColumnWidth(2, 80);
-  ImGui::SetColumnWidth(3, 80);
 
   ImGui::Text("Pass");
   ImGui::NextColumn();
@@ -173,11 +208,11 @@ void CPerformanceWindow::RenderPassesStatistics(const RenderPassesList &_RenderP
   {
     ImGui::Text("%s", _RenderPasses[i].second.data());
     ImGui::NextColumn();
-    ImGui::Text("%.3f", m_RenderPassStats[i].MinTime);
+    ImGui::Text("%.2f", m_RenderPassStats[i].Min);
     ImGui::NextColumn();
-    ImGui::Text("%.3f", m_RenderPassStats[i].MaxTime);
+    ImGui::Text("%.2f", m_RenderPassStats[i].Max);
     ImGui::NextColumn();
-    ImGui::Text("%.3f", m_RenderPassStats[i].AvgTime);
+    ImGui::Text("%.2f", m_RenderPassStats[i].Avg);
     ImGui::NextColumn();
   }
 
@@ -186,6 +221,10 @@ void CPerformanceWindow::RenderPassesStatistics(const RenderPassesList &_RenderP
 
 void CPerformanceWindow::UpdateFPSHistory()
 {
+  constexpr auto Comparator = [](const TVector2f &a, const TVector2f &b) {
+    return a.Y < b.Y;
+  };
+
   const float FPS         = CEngine::Instance().GetFPS();
   const float FrameTime   = CEngine::Instance().GetFrameTime();
   const float RunningTime = CEngine::Instance().GetApplicationRunningTime();
@@ -205,39 +244,31 @@ void CPerformanceWindow::UpdateFPSHistory()
     m_FrameTimeHistory.History.pop_front();
   m_FrameTimeHistory.History.emplace_back(RunningTime, SmoothedFrameTime);
 
-  m_FPSHistory.MinTime = std::min_element(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), [](const TVector2f &a, const TVector2f &b) {
-                           return a.Y < b.Y;
-                         })->Y;
+  m_FPSHistory.Min = std::min_element(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), Comparator)->Y;
+  m_FPSHistory.Max = std::max_element(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), Comparator)->Y;
 
-  m_FPSHistory.MaxTime = std::max_element(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), [](const TVector2f &a, const TVector2f &b) {
-                           return a.Y < b.Y;
-                         })->Y;
+  m_FPSHistory.Avg = std::accumulate(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), 0.0f,
+                                     [](float sum, const TVector2f &point) {
+                                       return sum + point.Y;
+                                     }) /
+                     m_FPSHistory.History.size();
 
-  m_FPSHistory.AvgTime = std::accumulate(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), 0.0f,
-                                         [](float sum, const TVector2f &point) {
-                                           return sum + point.Y;
-                                         }) /
-                         m_FPSHistory.History.size();
+  m_FrameTimeHistory.Min = std::min_element(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), Comparator)->Y;
+  m_FrameTimeHistory.Max = std::max_element(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), Comparator)->Y;
 
-  m_FrameTimeHistory.MinTime =
-      std::min_element(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), [](const TVector2f &a, const TVector2f &b) {
-        return a.Y < b.Y;
-      })->Y;
-
-  m_FrameTimeHistory.MaxTime =
-      std::max_element(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), [](const TVector2f &a, const TVector2f &b) {
-        return a.Y < b.Y;
-      })->Y;
-
-  m_FrameTimeHistory.AvgTime = std::accumulate(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), 0.0f,
-                                               [](float sum, const TVector2f &point) {
-                                                 return sum + point.Y;
-                                               }) /
-                               m_FrameTimeHistory.History.size();
+  m_FrameTimeHistory.Avg = std::accumulate(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), 0.0f,
+                                           [](float sum, const TVector2f &point) {
+                                             return sum + point.Y;
+                                           }) /
+                           m_FrameTimeHistory.History.size();
 }
 
 void CPerformanceWindow::UpdateRenderPassHistory()
 {
+  constexpr auto Comparator = [](const TVector2f &a, const TVector2f &b) {
+    return a.Y < b.Y;
+  };
+
   const auto  RenderPipeline = CEngine::Instance().GetRenderPipeline();
   const float RunningTime    = CEngine::Instance().GetApplicationRunningTime();
 
@@ -255,23 +286,19 @@ void CPerformanceWindow::UpdateRenderPassHistory()
 
     if (Stats.History.size() == MAX_HISTORY)
       Stats.History.pop_front();
+
     Stats.History.emplace_back(RunningTime, SmoothedPassTimes[i]);
 
-    Stats.MinTime = std::min_element(Stats.History.begin(), Stats.History.end(), [](const TVector2f &a, const TVector2f &b) {
-                      return a.Y < b.Y;
-                    })->Y;
+    Stats.Min = std::min_element(Stats.History.begin(), Stats.History.end(), Comparator)->Y;
+    Stats.Max = std::max_element(Stats.History.begin(), Stats.History.end(), Comparator)->Y;
 
-    Stats.MaxTime = std::max_element(Stats.History.begin(), Stats.History.end(), [](const TVector2f &a, const TVector2f &b) {
-                      return a.Y < b.Y;
-                    })->Y;
+    Stats.Avg = std::accumulate(Stats.History.begin(), Stats.History.end(), 0.0f,
+                                [](float sum, const TVector2f &point) {
+                                  return sum + point.Y;
+                                }) /
+                Stats.History.size();
 
-    Stats.AvgTime = std::accumulate(Stats.History.begin(), Stats.History.end(), 0.0f,
-                                    [](float sum, const TVector2f &point) {
-                                      return sum + point.Y;
-                                    }) /
-                    Stats.History.size();
-
-    m_MaxRenderPassTime = std::max(m_MaxRenderPassTime, Stats.MaxTime);
+    m_MaxRenderPassTime = std::max(m_MaxRenderPassTime, Stats.Max);
   }
 }
 
