@@ -13,7 +13,7 @@ This project is built with **GCC 15.2.1**. From time to time I fix compilation f
 
 ### Requirements
 - CMake >= 3.25
-- GCC >= 13 (other compilers with C++23 support may be used, but compilation errors are possible)
+- GCC >= 15 / Visual Studio 2026 (MSVC v145)
 
 ### Build Steps
 1. Create a build directory:
