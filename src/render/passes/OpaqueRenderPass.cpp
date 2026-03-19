@@ -26,10 +26,10 @@ void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetUniform("u_JitteredPrevVP", _RenderContext.PreviousJitteredViewProjectionMatrix);
   _Renderer.SetUniform("u_CurrentVP", _RenderContext.ViewProjectionMatrix);
   _Renderer.SetUniform("u_PreviousVP", _RenderContext.PreviousViewProjectionMatrix);
-  _Renderer.SetUniform("u_IsShadowMapEnabled", _RenderContext.ShadowMap != CTexture::INVALID_VALUE);
+  _Renderer.SetUniform("u_IsShadowMapEnabled", _RenderContext.ShadowMap != CTexture::INVALID_TEXTURE);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   _Renderer.SetUniform("u_IrradianceMap", TEXTURE_IRRADIANCE_MAP_INDEX);
-  CTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
+  C2DTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
   CCubemap::Bind(TEXTURE_IRRADIANCE_MAP_UNIT, _RenderContext.IrradianceMap);
 }
 
@@ -40,11 +40,11 @@ void COpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
     _Renderer.SetUniform("u_Model", Command->ModelMatrix);
     _Renderer.SetUniform("u_MVP", _RenderContext.JitteredViewProjectionMatrix * Command->ModelMatrix);
 
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
-    CTexture::Bind(TEXTURE_NORMAL_UNIT, Command->Material.NormalTexture);
-    CTexture::Bind(TEXTURE_EMISSIVE_UNIT, Command->Material.EmissiveTexture);
-    CTexture::Bind(TEXTURE_METALLIC_ROUGHNESS_UNIT, Command->Material.MetallicRoughnessTexture);
-    CTexture::Bind(TEXTURE_OCCLUSION_UNIT, Command->Material.OcclusionTexture);
+    C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
+    C2DTexture::Bind(TEXTURE_NORMAL_UNIT, Command->Material.NormalTexture);
+    C2DTexture::Bind(TEXTURE_EMISSIVE_UNIT, Command->Material.EmissiveTexture);
+    C2DTexture::Bind(TEXTURE_METALLIC_ROUGHNESS_UNIT, Command->Material.MetallicRoughnessTexture);
+    C2DTexture::Bind(TEXTURE_OCCLUSION_UNIT, Command->Material.OcclusionTexture);
 
     _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
     _Renderer.SetUniform("u_Material.NormalTexture", TEXTURE_NORMAL_INDEX);

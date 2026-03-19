@@ -8,7 +8,7 @@
 
 class CShader;
 class CCamera;
-class CTextureBase;
+class CTexture;
 
 class IRenderer
 {

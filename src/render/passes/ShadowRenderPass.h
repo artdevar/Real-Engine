@@ -8,7 +8,7 @@
 #include <common/Sharable.h>
 #include <vector>
 
-class CTextureBase;
+class CTexture;
 class CShader;
 
 class CShadowRenderPass : public CSharable<CShadowRenderPass>,
@@ -46,7 +46,7 @@ private:
 
   void SubscribeToEvents();
 
-  static std::shared_ptr<CTextureBase> CreateDepthMap(TVector2i _Size);
+  static std::shared_ptr<CTexture> CreateDepthMap(TVector2i _Size);
   void DestroyDepthMap();
 
 private:
@@ -54,7 +54,7 @@ private:
 
   int                           m_ShadowMapSize;
   std::shared_ptr<CShader>      m_Shader;
-  std::shared_ptr<CTextureBase> m_DepthMap;
+  std::shared_ptr<CTexture> m_DepthMap;
   CFrameBuffer                  m_DepthMapFBO;
   TVector2i                     m_OldViewport;
 };

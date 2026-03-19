@@ -8,7 +8,7 @@
 
 namespace editor
 {
-static void DisplayTextureInfo(const std::shared_ptr<CTextureBase> &Texture)
+static void DisplayTextureInfo(const std::shared_ptr<CTexture> &Texture)
 {
   if (Texture)
   {

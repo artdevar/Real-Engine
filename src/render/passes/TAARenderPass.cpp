@@ -34,10 +34,10 @@ void CTAARenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContex
 
   const glm::vec2 InverseSize = glm::vec2(1.0f / PrevOutput.Size.X, 1.0f / PrevOutput.Size.Y);
 
-  CTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, PrevOutput.Color->ID());
-  CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
-  CTexture::Bind(TEXTURE_VELOCITY_UNIT, _RenderContext.SceneRenderTarget.Velocity->ID());
-  CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
+  C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, PrevOutput.Color->ID());
+  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
+  C2DTexture::Bind(TEXTURE_VELOCITY_UNIT, _RenderContext.SceneRenderTarget.Velocity->ID());
+  C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
   _Renderer.SetUniform("CurrentFrame", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("HistoryFrame", TEXTURE_TAA_HISTORY_INDEX);
   _Renderer.SetUniform("VelocityTexture", TEXTURE_VELOCITY_INDEX);

@@ -77,7 +77,7 @@ static TTextureParams CreateTextureParams(ETextureType _TextureType, const TSamp
 
 static TModelComponent::TTexture LoadTexture(const TModelData &_ModelData, const TTexture &_Texture, ETextureType _TextureType)
 {
-  std::shared_ptr<CTextureBase> TexturePtr;
+  std::shared_ptr<CTexture> TexturePtr;
   if (_Texture.ImageIndex < 0 || _Texture.ImageIndex >= _ModelData.Images.size())
   {
     TexturePtr = resource::GetDefaultTexture(_TextureType);

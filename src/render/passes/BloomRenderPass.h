@@ -8,7 +8,7 @@
 #include <events/EventsListener.h>
 
 class CShader;
-class CTextureBase;
+class CTexture;
 
 class CBloomRenderPass : public CSharable<CBloomRenderPass>,
                          public IEventsListener,
@@ -50,11 +50,11 @@ private:
   std::shared_ptr<CShader> m_DownsampleShader;
   std::shared_ptr<CShader> m_BlurShader;
 
-  CFrameBuffer                  m_BloomFBO;
-  std::shared_ptr<CTextureBase> m_BloomColor;
+  CFrameBuffer                 m_BloomFBO;
+  std::shared_ptr<CTexture> m_BloomColor;
 
-  CFrameBuffer                  m_PingPongFBO[2];
-  std::shared_ptr<CTextureBase> m_PingPongColor[2];
+  CFrameBuffer                 m_PingPongFBO[2];
+  std::shared_ptr<CTexture> m_PingPongColor[2];
 
   static float m_Threshold;
   static int   m_BlurPasses;

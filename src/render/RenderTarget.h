@@ -6,7 +6,7 @@
 
 struct TRenderTarget
 {
-  using TTexture     = std::shared_ptr<CTextureBase>;
+  using TTexture     = std::shared_ptr<CTexture>;
   using TDepthHandle = std::variant<TTexture, CRenderBuffer>;
 
   CFrameBuffer FrameBuffer;

@@ -16,7 +16,7 @@
 class IRenderer;
 class IRenderPass;
 class CRenderQueue;
-class CTextureBase;
+class CTexture;
 class CVertexArray;
 class CVertexBuffer;
 struct TRenderContext;
@@ -93,9 +93,9 @@ private:
                       const std::vector<TRenderCommand> &_Commands);
 
 private:
-  static std::shared_ptr<CTextureBase> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
-  static std::shared_ptr<CTextureBase> CreateDepthTexture(const std::string &_Name, TVector2i _Size);
-  static std::shared_ptr<CTextureBase> CreateVelocityTexture(const std::string &_Name, TVector2i _Size);
+  static std::shared_ptr<CTexture> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
+  static std::shared_ptr<CTexture> CreateDepthTexture(const std::string &_Name, TVector2i _Size);
+  static std::shared_ptr<CTexture> CreateVelocityTexture(const std::string &_Name, TVector2i _Size);
   static std::vector<const TRenderCommand *> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
                                                             const std::vector<TRenderCommand>  &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);

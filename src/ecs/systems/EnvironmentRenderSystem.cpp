@@ -21,9 +21,9 @@ void CEnvironmentRenderSystem::Collect(TFrameData &_FrameData)
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TEnvironmentComponent>(Entity);
 
   _FrameData.Environment = TFrameData::TEnvironment{
-      .SkyboxTexture      = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE,
-      .EquirectangularMap = SkyboxComponent.EquirectangularMap ? SkyboxComponent.EquirectangularMap->ID() : CTexture::INVALID_VALUE,
-      .IrradianceMap      = SkyboxComponent.IrradianceMap ? SkyboxComponent.IrradianceMap->ID() : CCubemap::INVALID_VALUE,
+      .SkyboxTexture      = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_TEXTURE,
+      .EquirectangularMap = SkyboxComponent.EquirectangularMap ? SkyboxComponent.EquirectangularMap->ID() : CTexture::INVALID_TEXTURE,
+      .IrradianceMap      = SkyboxComponent.IrradianceMap ? SkyboxComponent.IrradianceMap->ID() : CCubemap::INVALID_TEXTURE,
   };
 }
 
@@ -35,9 +35,9 @@ void CEnvironmentRenderSystem::Collect(CRenderQueue &_Queue)
   ecs::TEntity Entity          = m_Entities[0];
   auto        &SkyboxComponent = m_Coordinator->GetComponent<TEnvironmentComponent>(Entity);
 
-  const uint32_t Skybox             = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_VALUE;
-  const uint32_t IrradianceMap      = SkyboxComponent.IrradianceMap ? SkyboxComponent.IrradianceMap->ID() : CCubemap::INVALID_VALUE;
-  const uint32_t EquirectangularMap = SkyboxComponent.EquirectangularMap ? SkyboxComponent.EquirectangularMap->ID() : CTexture::INVALID_VALUE;
+  const uint32_t Skybox             = SkyboxComponent.SkyboxTexture ? SkyboxComponent.SkyboxTexture->ID() : CCubemap::INVALID_TEXTURE;
+  const uint32_t IrradianceMap      = SkyboxComponent.IrradianceMap ? SkyboxComponent.IrradianceMap->ID() : CCubemap::INVALID_TEXTURE;
+  const uint32_t EquirectangularMap = SkyboxComponent.EquirectangularMap ? SkyboxComponent.EquirectangularMap->ID() : CTexture::INVALID_TEXTURE;
 
   switch (m_ConversionStage)
   {

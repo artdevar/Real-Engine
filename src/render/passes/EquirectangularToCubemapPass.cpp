@@ -42,7 +42,7 @@ void CEquirectangularToCubemapPass::Execute(IRenderer &_Renderer, TRenderContext
 
   for (const TRenderCommand *Command : _Commands)
   {
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Environment.EquirectangularMap);
+    C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Environment.EquirectangularMap);
     _Renderer.SetUniform("u_EquirectangularMap", TEXTURE_BASIC_COLOR_INDEX);
 
     m_FBO.Bind();

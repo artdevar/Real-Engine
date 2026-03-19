@@ -33,10 +33,10 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
 {
   const glm::vec2 InverseSize = glm::vec2(1.0f / _RenderContext.PostProcessRenderTarget.Size.X, 1.0f / _RenderContext.PostProcessRenderTarget.Size.Y);
 
-  CTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
-  CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
-  CTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
-  CTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, _RenderContext.TAAHistoryMap);
+  C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
+  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
+  C2DTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
+  C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, _RenderContext.TAAHistoryMap);
 
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("DepthTexture", TEXTURE_DEPTH_MAP_INDEX);

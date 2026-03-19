@@ -35,10 +35,10 @@ void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
   _Renderer.SetViewport(m_BloomColor->GetSize());
   _Renderer.SetShader(m_DownsampleShader);
 
-  if (_RenderContext.TAAHistoryMap != CTexture::INVALID_VALUE)
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.TAAHistoryMap);
+  if (_RenderContext.TAAHistoryMap != CTexture::INVALID_TEXTURE)
+    C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.TAAHistoryMap);
   else
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
+    C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
 
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("Threshold", m_Threshold);
@@ -51,7 +51,7 @@ void CBloomRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCont
   {
     m_PingPongFBO[Horizontal].Bind();
 
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, i == 0 ? m_BloomColor->ID() : m_PingPongColor[!Horizontal]->ID());
+    C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, i == 0 ? m_BloomColor->ID() : m_PingPongColor[!Horizontal]->ID());
     _Renderer.SetUniform("Image", TEXTURE_BASIC_COLOR_INDEX);
     _Renderer.SetUniform("Horizontal", Horizontal);
 

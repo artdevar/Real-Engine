@@ -27,7 +27,7 @@ void COutputRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
 
 void COutputRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.PostProcessRenderTarget.Color->ID());
+  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.PostProcessRenderTarget.Color->ID());
   _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }

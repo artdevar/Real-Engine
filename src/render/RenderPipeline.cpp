@@ -480,7 +480,7 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
   };
 }
 
-std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size)
+std::shared_ptr<CTexture> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size)
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
@@ -494,7 +494,7 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateRenderTexture(const std::st
   return resource::RecreateTexture(_Name, TextureParams);
 }
 
-std::shared_ptr<CTextureBase> CRenderPipeline::CreateDepthTexture(const std::string &_Name, TVector2i _Size)
+std::shared_ptr<CTexture> CRenderPipeline::CreateDepthTexture(const std::string &_Name, TVector2i _Size)
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
@@ -510,7 +510,7 @@ std::shared_ptr<CTextureBase> CRenderPipeline::CreateDepthTexture(const std::str
   return resource::RecreateTexture(_Name, TextureParams);
 }
 
-std::shared_ptr<CTextureBase> CRenderPipeline::CreateVelocityTexture(const std::string &_Name, TVector2i _Size)
+std::shared_ptr<CTexture> CRenderPipeline::CreateVelocityTexture(const std::string &_Name, TVector2i _Size)
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;

@@ -46,7 +46,7 @@ void CShadowRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
   {
     _Renderer.SetUniform("u_Model", Command->ModelMatrix);
 
-    CTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
+    C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
     _Renderer.SetUniform("u_Material.BaseColorTexture", TEXTURE_BASIC_COLOR_INDEX);
     _Renderer.SetUniform("u_Material.AlphaCutoff", Command->Material.AlphaCutoff);
     _Renderer.SetUniform("u_Material.AlphaMode", static_cast<int>(Command->Material.AlphaMode));
@@ -83,7 +83,7 @@ bool CShadowRenderPass::NeedsCommands() const
   return true;
 }
 
-std::shared_ptr<CTextureBase> CShadowRenderPass::CreateDepthMap(TVector2i _Size)
+std::shared_ptr<CTexture> CShadowRenderPass::CreateDepthMap(TVector2i _Size)
 {
   TTextureParams DepthMapParams;
   DepthMapParams.BorderColors.emplace({1.0f, 1.0f, 1.0f, 1.0f});

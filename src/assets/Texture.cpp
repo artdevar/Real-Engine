@@ -161,93 +161,122 @@ constexpr GLint ToGLType(EType _Type)
 
 } // namespace
 
-// CTextureBase
+// CTexture
 
-CTextureBase::~CTextureBase()
+const unsigned CTexture::INVALID_TEXTURE = 0u;
+
+CTexture::CTexture(unsigned _Target) :
+    m_ID(INVALID_TEXTURE),
+    m_Target(_Target),
+    m_Size()
+{
+}
+
+CTexture::~CTexture()
 {
   assert(!IsValid() && "The texture isn't completely shutted down");
 }
 
-void CTextureBase::Shutdown()
+void CTexture::Shutdown()
 {
   if (IsValid())
   {
     glDeleteTextures(1, &m_ID);
-    m_ID = INVALID_VALUE;
+    m_ID = INVALID_TEXTURE;
   }
 }
 
-void CTextureBase::Bind(GLenum _TextureUnit)
+void CTexture::Bind(unsigned _TextureUnit) const
 {
-  Bind(m_Target, _TextureUnit, ID());
+  Bind(m_Target, _TextureUnit, m_ID);
 }
 
-void CTextureBase::Bind(GLenum _Target, GLenum _TextureUnit, GLuint _TextureID)
+void CTexture::Unbind() const
+{
+  Unbind(m_Target);
+}
+
+GLuint CTexture::ID() const
+{
+  return m_ID;
+}
+
+bool CTexture::IsValid() const
+{
+  return m_ID != INVALID_TEXTURE;
+}
+
+TVector2i CTexture::GetSize() const
+{
+  return m_Size;
+}
+
+void CTexture::OverrideTarget(unsigned _Target)
+{
+  assert(!IsValid() && "Cannot override target of an already created texture");
+  m_Target = _Target;
+}
+
+float CTexture::GetSupportedAnisotropyLevel()
+{
+  static const float AnisotropyLevel = []() -> float {
+    float MaxAnisotropy = 0.0f;
+    if (GLAD_GL_ARB_texture_filter_anisotropic)
+    {
+      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &MaxAnisotropy);
+      LOG_INFO("[CTexture] Max anisotropy level supported: {}", MaxAnisotropy);
+    }
+    else
+    {
+      LOG_INFO("[CTexture] Anisotropic filtering is not supported");
+    }
+    return MaxAnisotropy;
+  }();
+
+  return AnisotropyLevel;
+}
+
+void CTexture::Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID)
 {
   glActiveTexture(_TextureUnit);
   glBindTexture(_Target, _TextureID);
 }
 
-void CTextureBase::Unbind()
-{
-  Unbind(m_Target);
-}
-
-void CTextureBase::Unbind(GLenum _Target)
+void CTexture::Unbind(unsigned _Target)
 {
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(_Target, INVALID_VALUE);
+  glBindTexture(_Target, INVALID_TEXTURE);
 }
 
-GLuint CTextureBase::ID() const
-{
-  return m_ID;
-}
+// C2DTexture
 
-bool CTextureBase::IsValid() const
-{
-  return m_ID != INVALID_VALUE;
-}
+const unsigned C2DTexture::TARGET         = GL_TEXTURE_2D;
+const unsigned C2DTexture::SAMPLED_TARGET = GL_TEXTURE_2D_MULTISAMPLE;
 
-TVector2i CTextureBase::GetSize() const
-{
-  return m_Size;
-}
-
-CTextureBase::CTextureBase(GLenum _Target) :
-    m_ID(INVALID_VALUE),
-    m_Target(_Target)
+C2DTexture::C2DTexture() :
+    CTexture(TARGET)
 {
 }
 
-// CTexture
-
-const unsigned CTexture::TARGET = GL_TEXTURE_2D;
-
-CTexture::CTexture() :
-    CTextureBase(TARGET)
-{
-}
-
-bool CTexture::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
+bool C2DTexture::Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>)
 {
   TTextureParams Params;
   return Load(_Path, Params);
 }
 
-bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>)
+bool C2DTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>)
 {
   return Load(_Path, _Params);
 }
 
-bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_Params)
+bool C2DTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_Params)
 {
   assert(!IsValid() && "The texture already used");
 
   const CImage Image(_Path, _Params.HDR, _Params.HDR);
   if (!Image.IsValid())
   {
-    CLogger::Log(ELogType::Error, "[CTexture] Texture '{}' failed to load", _Path.string());
+    LOG_ERROR("[C2DTexture] Texture '{}' failed to load", utils::GetRelativePath(_Path).string());
     return false;
   }
 
@@ -279,23 +308,36 @@ bool CTexture::Load(const std::filesystem::path &_Path, const TTextureParams &_P
   return true;
 }
 
-bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager>)
+bool C2DTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager>)
 {
   if (_Params.Width <= 0 || _Params.Height <= 0)
   {
-    CLogger::Log(ELogType::Error, "[CTexture] Invalid texture size: {}x{}", _Params.Width, _Params.Height);
+    LOG_ERROR("[C2DTexture] Invalid texture size: {}x{}", _Params.Width, _Params.Height);
     return false;
   }
 
   assert(!IsValid() && "The texture already exists");
 
-  const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
-  const GLint Format         = ToGLFormat(_Params.Format);
-  const GLint Type           = ToGLType(_Params.Type);
+  const bool IsMultisampled = _Params.Samples.has_value() && _Params.Samples.value() > 0;
+
+  if (IsMultisampled)
+    OverrideTarget(SAMPLED_TARGET);
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, InternalFormat, _Params.Width, _Params.Height, 0, Format, Type, _Params.Data);
+
+  if (IsMultisampled)
+  {
+    const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
+    glTexImage2DMultisample(m_Target, _Params.Samples.value(), InternalFormat, _Params.Width, _Params.Height, GL_TRUE);
+  }
+  else
+  {
+    const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
+    const GLint Format         = ToGLFormat(_Params.Format);
+    const GLint Type           = ToGLType(_Params.Type);
+    glTexImage2D(m_Target, 0, InternalFormat, _Params.Width, _Params.Height, 0, Format, Type, _Params.Data);
+  }
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
@@ -311,41 +353,23 @@ bool CTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   return true;
 }
 
-void CTexture::Bind(GLenum _TextureUnit, GLuint _TextureID)
+void C2DTexture::Bind(unsigned _TextureUnit, unsigned _TextureID)
 {
-  CTextureBase::Bind(TARGET, _TextureUnit, _TextureID);
+  CTexture::Bind(TARGET, _TextureUnit, _TextureID);
 }
 
-void CTexture::Unbind()
+void C2DTexture::Unbind()
 {
-  CTextureBase::Unbind(TARGET);
-}
-
-float CTexture::GetSupportedAnisotropyLevel()
-{
-  static const float AnisotropyLevel = []() -> float {
-    float MaxAnisotropy = 0.0f;
-    if (GLAD_GL_ARB_texture_filter_anisotropic)
-    {
-      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &MaxAnisotropy);
-      LOG_INFO("[CTexture] Max anisotropy level supported: {}", MaxAnisotropy);
-    }
-    else
-    {
-      LOG_INFO("[CTexture] Anisotropic filtering is not supported");
-    }
-    return MaxAnisotropy;
-  }();
-
-  return AnisotropyLevel;
+  CTexture::Unbind(TARGET);
 }
 
 // CCubemap
 
-const unsigned CCubemap::TARGET = GL_TEXTURE_CUBE_MAP;
+const unsigned CCubemap::CUBEMAP_FACES_COUNT = 6;
+const unsigned CCubemap::TARGET              = GL_TEXTURE_CUBE_MAP;
 
 CCubemap::CCubemap() :
-    CTextureBase(TARGET)
+    CTexture(TARGET)
 {
 }
 
@@ -369,7 +393,7 @@ bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 {
   if (_Params.Width <= 0 || _Params.Height <= 0)
   {
-    CLogger::Log(ELogType::Error, "[CTexture] Invalid texture size: {}x{}", _Params.Width, _Params.Height);
+    LOG_ERROR("[CTexture] Invalid texture size: {}x{}", _Params.Width, _Params.Height);
     return false;
   }
 
@@ -429,7 +453,7 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
 
     if (It == Files.end())
     {
-      CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load: missing face '{}'", _Path.string(), Face);
+      LOG_ERROR("[CCubemap] Texture '{}' failed to load: missing face '{}'", utils::GetRelativePath(_Path).string(), Face);
       break;
     }
 
@@ -463,22 +487,22 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
     m_Size = TVector2i(Images[0].GetWidth(), Images[0].GetHeight());
     m_Path = _Path;
 
-    CLogger::Log(ELogType::Info, "[CCubemap] Texture '{}' loaded successfully", _Path.string());
+    LOG_INFO("[CCubemap] Texture '{}' loaded successfully", utils::GetRelativePath(_Path).string());
   }
   else
   {
-    CLogger::Log(ELogType::Error, "[CCubemap] Texture '{}' failed to load", _Path.string());
+    LOG_ERROR("[CCubemap] Texture '{}' failed to load", utils::GetRelativePath(_Path).string());
   }
 
   return Success;
 }
 
-void CCubemap::Bind(GLenum _TextureUnit, GLuint _TextureID)
+void CCubemap::Bind(unsigned _TextureUnit, unsigned _TextureID)
 {
-  CTextureBase::Bind(TARGET, _TextureUnit, _TextureID);
+  CTexture::Bind(TARGET, _TextureUnit, _TextureID);
 }
 
 void CCubemap::Unbind()
 {
-  CTextureBase::Unbind(TARGET);
+  CTexture::Unbind(TARGET);
 }

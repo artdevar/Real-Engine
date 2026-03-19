@@ -4,31 +4,33 @@
 #include "interfaces/TextureAsset.h"
 #include <common/MathTypes.h>
 
-class CTextureBase : public ITextureAsset,
-                     public IGeneratableTexture
+class CTexture : public ITextureAsset,
+                 public IGeneratableTexture
 {
-  DISABLE_CLASS_COPY(CTextureBase);
-
 public:
-  ~CTextureBase() override;
-
+  ~CTexture() override;
   void Shutdown() override;
-
-  void Bind(unsigned _TextureUnit);
-  void Unbind();
 
   unsigned ID() const;
   bool IsValid() const;
 
   TVector2i GetSize() const;
 
-  static constexpr inline unsigned INVALID_VALUE = 0u;
+  void Bind(unsigned _TextureUnit) const;
+  void Unbind() const;
 
 protected:
-  CTextureBase(unsigned _Target);
+  CTexture(unsigned _Target);
+
+  void OverrideTarget(unsigned _Target);
+
+  static float GetSupportedAnisotropyLevel();
 
   static void Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind(unsigned _Target);
+
+public:
+  static const unsigned INVALID_TEXTURE;
 
 protected:
   unsigned  m_ID;
@@ -38,45 +40,41 @@ protected:
 
 // ----------------------------------------------
 
-class CTexture final : public CTextureBase
+class C2DTexture final : public CTexture
 {
-public:
-  CTexture();
+  static const unsigned int TARGET;
+  static const unsigned int SAMPLED_TARGET;
 
-  bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) override;
-  bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>) override;
+public:
+  C2DTexture();
 
   bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
+  bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) override;
+  bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
   static void Bind(unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind();
 
-  static const unsigned TARGET;
-
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
-
-  static float GetSupportedAnisotropyLevel();
 };
 
 // ----------------------------------------------
 
-class CCubemap final : public CTextureBase
+class CCubemap final : public CTexture
 {
-  static constexpr inline int CUBEMAP_FACES_COUNT = 6;
+  static const unsigned int TARGET;
+  static const unsigned int CUBEMAP_FACES_COUNT;
 
 public:
   CCubemap();
 
+  bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
   bool Load(const std::filesystem::path &_Path, CPasskey<CResourceManager>) override;
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params, CPasskey<CResourceManager>) override;
 
-  bool Generate(const TTextureParams &_Params, CPasskey<CResourceManager>) override;
-
   static void Bind(unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind();
-
-  static const unsigned TARGET;
 
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);

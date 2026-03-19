@@ -11,7 +11,7 @@
 #include <memory>
 
 class CModel;
-class CTextureBase;
+class CTexture;
 
 namespace ecs
 {
@@ -34,8 +34,8 @@ struct TModelComponent
 {
   struct TTexture
   {
-    std::shared_ptr<CTextureBase> Texture       = nullptr;
-    GLint                         TexCoordIndex = 0;
+    std::shared_ptr<CTexture> Texture       = nullptr;
+    GLint                     TexCoordIndex = 0;
   };
 
   struct TPrimitiveData
@@ -88,9 +88,9 @@ struct TLightComponent
 
 struct TEnvironmentComponent
 {
-  std::shared_ptr<CTextureBase> SkyboxTexture;
-  std::shared_ptr<CTextureBase> EquirectangularMap;
-  std::shared_ptr<CTextureBase> IrradianceMap;
+  std::shared_ptr<CTexture> SkyboxTexture;
+  std::shared_ptr<CTexture> EquirectangularMap;
+  std::shared_ptr<CTexture> IrradianceMap;
 };
 
 /////////////////////////////////////////////////////////////////

@@ -85,63 +85,63 @@ std::shared_ptr<CShader> CResourceManager::LoadShader(const std::string &_Name)
   return std::static_pointer_cast<CShader>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::GetDefaultTexture(ETextureType _TextureType)
+std::shared_ptr<CTexture> CResourceManager::GetDefaultTexture(ETextureType _TextureType)
 {
   return LoadTexture(GetDefaultTexturePath(_TextureType));
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
+std::shared_ptr<CTexture> CResourceManager::LoadTexture(const std::filesystem::path &_Path)
 {
   std::string PathStr = _Path.string();
   auto        Iter    = m_Assets.find(PathStr);
 
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
+    std::shared_ptr<CTexture> Texture = std::make_shared<C2DTexture>();
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(std::move(PathStr), std::move(Texture)).first;
     else
       return nullptr;
   }
 
-  return std::static_pointer_cast<CTextureBase>(Iter->second);
+  return std::static_pointer_cast<CTexture>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::LoadTexture(const std::filesystem::path &_Path, const TTextureParams &_Params)
+std::shared_ptr<CTexture> CResourceManager::LoadTexture(const std::filesystem::path &_Path, const TTextureParams &_Params)
 {
   std::string PathStr = _Path.string();
   auto        Iter    = m_Assets.find(PathStr);
 
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<CTexture> Texture = std::make_shared<CTexture>();
+    std::shared_ptr<CTexture> Texture = std::make_shared<C2DTexture>();
     if (Texture->Load(_Path, _Params, CPasskey(this)))
       Iter = m_Assets.emplace(std::move(PathStr), std::move(Texture)).first;
     else
       return nullptr;
   }
 
-  return std::static_pointer_cast<CTextureBase>(Iter->second);
+  return std::static_pointer_cast<CTexture>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::LoadCubemap(const std::filesystem::path &_Path)
+std::shared_ptr<CTexture> CResourceManager::LoadCubemap(const std::filesystem::path &_Path)
 {
   std::string PathStr = _Path.string();
   auto        Iter    = m_Assets.find(PathStr);
 
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<CCubemap> Texture = std::make_shared<CCubemap>();
+    std::shared_ptr<CTexture> Texture = std::make_shared<CCubemap>();
     if (Texture->Load(_Path, CPasskey(this)))
       Iter = m_Assets.emplace(std::move(PathStr), std::move(Texture)).first;
     else
       return nullptr;
   }
 
-  return std::static_pointer_cast<CTextureBase>(Iter->second);
+  return std::static_pointer_cast<CTexture>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::CreateCubemap(const std::string &_Name, const TTextureParams &_Params)
+std::shared_ptr<CTexture> CResourceManager::CreateCubemap(const std::string &_Name, const TTextureParams &_Params)
 {
   if (_Name.empty())
   {
@@ -152,17 +152,17 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateCubemap(const std::string 
   auto Iter = m_Assets.find(_Name);
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<CTextureBase> Texture = std::make_shared<CCubemap>();
+    std::shared_ptr<CTexture> Texture = std::make_shared<CCubemap>();
     if (Texture->Generate(_Params, CPasskey(this)))
       Iter = m_Assets.emplace(_Name, std::move(Texture)).first;
     else
       return nullptr;
   }
 
-  return std::static_pointer_cast<CTextureBase>(Iter->second);
+  return std::static_pointer_cast<CTexture>(Iter->second);
 }
 
-std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string &_Name, const TTextureParams &_Params)
+std::shared_ptr<CTexture> CResourceManager::CreateTexture(const std::string &_Name, const TTextureParams &_Params)
 {
   if (_Name.empty())
   {
@@ -173,14 +173,14 @@ std::shared_ptr<CTextureBase> CResourceManager::CreateTexture(const std::string 
   auto Iter = m_Assets.find(_Name);
   if (Iter == m_Assets.end())
   {
-    std::shared_ptr<CTextureBase> Texture = std::make_shared<CTexture>();
+    std::shared_ptr<CTexture> Texture = std::make_shared<C2DTexture>();
     if (Texture->Generate(_Params, CPasskey(this)))
       Iter = m_Assets.emplace(_Name, std::move(Texture)).first;
     else
       return nullptr;
   }
 
-  return std::static_pointer_cast<CTextureBase>(Iter->second);
+  return std::static_pointer_cast<CTexture>(Iter->second);
 }
 
 std::filesystem::path CResourceManager::GetDefaultTexturePath(ETextureType _TextureType)

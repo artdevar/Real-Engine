@@ -13,7 +13,7 @@ namespace ecs
 void CModelRenderSystem::Collect(CRenderQueue &_Queue)
 {
   constexpr auto GetTextureID = [](const TModelComponent::TTexture &_Texture) -> uint32_t {
-    return _Texture.Texture ? _Texture.Texture->ID() : CTexture::INVALID_VALUE;
+    return _Texture.Texture ? _Texture.Texture->ID() : CTexture::INVALID_TEXTURE;
   };
 
   constexpr ERenderFlags AlphaFlag[] = {ERenderFlags_Opaque, ERenderFlags_Transparent};
