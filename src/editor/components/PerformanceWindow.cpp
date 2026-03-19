@@ -73,13 +73,13 @@ void CPerformanceWindow::RenderFPSSection()
 
     if (!m_FPSHistory.History.empty())
     {
-      float MinFpsLimit = m_FPSHistory.Min - 10;
-      float MaxFpsLimit = m_FPSHistory.Max + 10;
+      float MinFpsLimit = m_FPSHistory.Min - m_FPSHistory.Min * 0.1f;
+      float MaxFpsLimit = m_FPSHistory.Max + m_FPSHistory.Max * 0.1f;
 
       if (m_IsTargetFPSSet)
       {
-        MinFpsLimit = std::min(MinFpsLimit, m_TargetFPS - 10.0f);
-        MaxFpsLimit = std::max(MaxFpsLimit, m_TargetFPS + 10.0f);
+        MinFpsLimit = std::min(MinFpsLimit, m_TargetFPS - m_TargetFPS * 0.1f);
+        MaxFpsLimit = std::max(MaxFpsLimit, m_TargetFPS + m_TargetFPS * 0.1f);
       }
 
       ImPlot::SetupAxisLimits(ImAxis_X1, m_FPSHistory.History.front().X, m_FPSHistory.History.back().X, ImGuiCond_Always);
@@ -160,7 +160,7 @@ void CPerformanceWindow::RenderPassesPlot(const RenderPassesList &_RenderPasses)
   if (!m_RenderPassStats[0].History.empty())
   {
     ImPlot::SetupAxisLimits(ImAxis_X1, m_RenderPassStats[0].History.front().X, m_RenderPassStats[0].History.back().X, ImGuiCond_Always);
-    ImPlot::SetupAxisLimits(ImAxis_Y1, 0, m_MaxRenderPassTime + 1.0f, ImGuiCond_Always);
+    ImPlot::SetupAxisLimits(ImAxis_Y1, 0.0, m_MaxRenderPassTime + m_MaxRenderPassTime * 0.1f, ImGuiCond_Always);
   }
 
   ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, 2.0f);
