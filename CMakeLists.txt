@@ -23,7 +23,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # Exec
 
 if(WIN32)
-    set(APP_RC ${CMAKE_CURRENT_SOURCE_DIR}/assets/icons/windows/app.rc)
+    set(APP_RC ${ASSETS_DIRECTORY}/icons/windows/app.rc)
     add_executable(Real_Engine ${APP_RC})
     source_group("resources" FILES ${APP_RC})
 else()
@@ -54,7 +54,7 @@ target_compile_definitions(Real_Engine PRIVATE
     GLM_ENABLE_EXPERIMENTAL
     GLM_FORCE_PURE
     APP_NAME="${PROJECT_NAME}"
-	  APP_ICON="${APP_ICON}"
+    APP_ICON="${APP_ICON}"
     DEV_STAGE=${DEV_STAGE_VAL}
     SHADERS_HOT_RELOAD=${SHADERS_HOT_RELOAD_VAL}
     PROJECT_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/"
