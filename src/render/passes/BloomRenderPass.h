@@ -2,13 +2,13 @@
 
 #include "RenderPassTypes.h"
 #include "interfaces/RenderPass.h"
-#include "render/Buffer.h"
 #include <common/MathTypes.h>
 #include <common/Sharable.h>
 #include <events/EventsListener.h>
 
 class CShader;
 class CTexture;
+class CFrameBuffer;
 
 class CBloomRenderPass : public CSharable<CBloomRenderPass>,
                          public IEventsListener,
@@ -41,21 +41,22 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CBloomRenderPass>::Create;
-
   void SubscribeToEvents();
-  void InitTextures(TVector2i _Size);
+  void InitTextures(TVector2i _Viewport);
 
 private:
   std::shared_ptr<CShader> m_DownsampleShader;
   std::shared_ptr<CShader> m_BlurShader;
 
-  CFrameBuffer                 m_BloomFBO;
-  std::shared_ptr<CTexture> m_BloomColor;
+  std::unique_ptr<CFrameBuffer> m_BloomFBO;
+  std::shared_ptr<CTexture>     m_BloomColor;
 
-  CFrameBuffer                 m_PingPongFBO[2];
-  std::shared_ptr<CTexture> m_PingPongColor[2];
+  std::unique_ptr<CFrameBuffer> m_PingPongFBO[2];
+  std::shared_ptr<CTexture>     m_PingPongColor[2];
 
-  static float m_Threshold;
-  static int   m_BlurPasses;
+  float m_Threshold;
+  int   m_BlurPasses;
+
+  unsigned  m_PrevFBO;
+  TVector2i m_PrevViewport;
 };

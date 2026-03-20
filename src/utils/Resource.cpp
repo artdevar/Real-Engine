@@ -49,7 +49,7 @@ std::shared_ptr<CTexture> CreateTexture(const std::string &_Name, const TTexture
 
 std::shared_ptr<CTexture> RecreateTexture(const std::string &_Name, const TTextureParams &_Params)
 {
-  Get()->MarkUnused(_Name);
+  Get()->Retire(_Name);
   return Get()->CreateTexture(_Name, _Params);
 }
 
@@ -58,14 +58,14 @@ std::shared_ptr<CTexture> GetDefaultTexture(ETextureType _TextureType)
   return Get()->GetDefaultTexture(_TextureType);
 }
 
-void MarkUnused(const std::string &_Name)
+void Retire(const std::string &_Name)
 {
-  Get()->MarkUnused(_Name);
+  Get()->Retire(_Name);
 }
 
-void UnloadUnusedAssets()
+void Prune()
 {
-  Get()->UnloadUnusedAssets();
+  Get()->Prune();
 }
 
 } // namespace resource

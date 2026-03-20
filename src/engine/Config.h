@@ -4,6 +4,8 @@
 #include <common/MathCore.h>
 #include <filesystem>
 
+extern unsigned GetSupportedMaxSamples();
+
 class CConfig final
 {
 public:
@@ -38,14 +40,6 @@ public:
       event::Notify(TEventType::Config_FXAAEnabledChanged, _Enabled);
     }
   }
-  void SetTAAEnabled(bool _Enabled)
-  {
-    if (IsTAAEnabled != _Enabled)
-    {
-      IsTAAEnabled = _Enabled;
-      event::Notify(TEventType::Config_TAAEnabledChanged, _Enabled);
-    }
-  }
   void SetMSAASamples(int _Samples)
   {
     if (MSAASampleCount != _Samples)
@@ -54,12 +48,12 @@ public:
       event::Notify(TEventType::Config_MSAASamplesChanged, _Samples);
     }
   }
-  void SetTAAJitterSampleCount(int _Count)
+  void SetTAASamples(int _Count)
   {
-    if (TAAJitterSampleCount != _Count)
+    if (TAASampleCount != _Count)
     {
-      TAAJitterSampleCount = _Count;
-      event::Notify(TEventType::Config_TAAJitterSampleCountChanged, _Count);
+      TAASampleCount = _Count;
+      event::Notify(TEventType::Config_TAASamplesChanged, _Count);
     }
   }
   void SetHDREnabled(bool _Enabled)
@@ -237,13 +231,13 @@ public:
   {
     return IsFXAAEnabled;
   }
+  int GetTAASampleCount() const
+  {
+    return TAASampleCount;
+  }
   bool GetTAAEnabled() const
   {
-    return IsTAAEnabled;
-  }
-  int GetTAAJitterSampleCount() const
-  {
-    return TAAJitterSampleCount;
+    return TAASampleCount > 0;
   }
   int GetMSAASampleCount() const
   {
@@ -369,15 +363,18 @@ public:
   {
     return static_cast<bool>(DEV_STAGE);
   }
+  unsigned GetMaxSupportedMSAASamples() const
+  {
+    return GetSupportedMaxSamples();
+  }
 
 private:
   // Render
   int   ShadowMapSize            = 4096;
   bool  AreShadowsEnabled        = true;
-  bool  IsFXAAEnabled            = false;
-  bool  IsTAAEnabled             = true;
   int   MSAASampleCount          = 4;
-  int   TAAJitterSampleCount     = 8;
+  int   TAASampleCount           = 4;
+  bool  IsFXAAEnabled            = false;
   bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;

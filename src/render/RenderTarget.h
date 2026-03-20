@@ -15,4 +15,6 @@ struct TRenderTarget
   TDepthHandle Depth;
   TTexture     Color;
   TTexture     Velocity;
+
+  int MSAASamples = 0;
 };

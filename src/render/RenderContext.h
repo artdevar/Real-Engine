@@ -11,10 +11,6 @@ struct TRenderContext
   CVertexArray &QuadVAO;
   CVertexArray &CubeVAO;
 
-  TRenderTarget &SceneRenderTarget;
-  TRenderTarget &PostProcessRenderTarget;
-  TRenderTarget *FinalRenderTarget;
-
   glm::vec3 CameraPosition;
   glm::mat4 ProjectionMatrix;
   glm::mat4 ViewMatrix;
@@ -25,8 +21,12 @@ struct TRenderContext
   glm::mat4 LightSpaceMatrix;
   glm::vec2 Jitter;
   glm::vec2 PrevJitter;
-  uint32_t  ShadowMap;
-  uint32_t  BloomMap;
-  uint32_t  IrradianceMap;
-  uint32_t  TAAHistoryMap;
+
+  uint32_t ColorTexture;
+  uint32_t DepthTexture;
+  uint32_t VelocityTexture;
+  uint32_t ShadowMap;
+  uint32_t BloomMap;
+  uint32_t IrradianceMap;
+  uint32_t TAAHistoryMap;
 };

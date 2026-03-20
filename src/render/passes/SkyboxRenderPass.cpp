@@ -19,7 +19,6 @@ void CSkyboxRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetDepthFunc(GL_LEQUAL);
   _Renderer.SetDepthMask(false);
   _Renderer.SetCullFace(ECullMode::None);
-  _Renderer.SetViewport(_RenderContext.SceneRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_View", glm::mat4(glm::mat3(_RenderContext.ViewMatrix)));
   _Renderer.SetUniform("u_Projection", _RenderContext.ProjectionMatrix);

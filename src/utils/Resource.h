@@ -18,7 +18,7 @@ std::shared_ptr<CTexture> CreateCubemap(const std::string &_Name, const TTexture
 std::shared_ptr<CTexture> CreateTexture(const std::string &_Name, const TTextureParams &_Params);
 std::shared_ptr<CTexture> RecreateTexture(const std::string &_Name, const TTextureParams &_Params);
 std::shared_ptr<CTexture> GetDefaultTexture(ETextureType _TextureType);
-void MarkUnused(const std::string &_Name);
-void UnloadUnusedAssets();
+void Retire(const std::string &_Name);
+void Prune();
 
 } // namespace resource

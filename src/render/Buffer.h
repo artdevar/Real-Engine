@@ -150,11 +150,13 @@ public:
   void AttachTexture(GLenum _Attachment, GLuint _TextureID)
   {
     glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, GL_TEXTURE_2D, _TextureID, 0);
+    assert(IsComplete());
   }
 
   void AttachTexture(GLenum _Attachment, GLuint _TextureID, GLenum _TextureTarget)
   {
     glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, _TextureTarget, _TextureID, 0);
+    assert(IsComplete());
   }
 
   void DetachTexture(GLenum _Attachment)
@@ -165,6 +167,7 @@ public:
   void AttachRenderBuffer(GLenum _Attachment, GLuint _RenderbufferID)
   {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, _Attachment, GL_RENDERBUFFER, _RenderbufferID);
+    assert(IsComplete());
   }
 
   void DetachRenderBuffer(GLenum _Attachment)
@@ -192,16 +195,33 @@ public:
     glBindFramebuffer(GL_READ_FRAMEBUFFER, INVALID_BUFFER);
   }
 
+  static GLuint GetBound()
+  {
+    GLint BufferID = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &BufferID);
+    return static_cast<GLuint>(BufferID);
+  }
+
   static void BindDefault()
   {
     glBindFramebuffer(GL_FRAMEBUFFER, INVALID_BUFFER);
+  }
+
+  static void BindBuffer(GLuint _BufferID)
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER, _BufferID);
+  }
+
+  bool IsComplete() const
+  {
+    return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
   }
 
 protected:
   void GenerateBuffer()
   {
     glGenFramebuffers(1, &m_ID);
-    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    assert(IsComplete());
   }
 
   void BindBuffer()
@@ -232,7 +252,7 @@ public:
     glRenderbufferStorage(GL_RENDERBUFFER, _InternalFormat, _Width, _Height);
   }
 
-  void AllocateStorage(GLenum _InternalFormat, GLsizei _Samples, GLsizei _Width, GLsizei _Height)
+  void AllocateStorageMultisample(GLenum _InternalFormat, GLsizei _Samples, GLsizei _Width, GLsizei _Height)
   {
     glRenderbufferStorageMultisample(GL_RENDERBUFFER, _Samples, _InternalFormat, _Width, _Height);
   }

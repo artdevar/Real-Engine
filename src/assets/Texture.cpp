@@ -161,6 +161,37 @@ constexpr GLint ToGLType(EType _Type)
 
 } // namespace
 
+extern unsigned GetSupportedMaxSamples()
+{
+  static const unsigned MaxSamples = []() -> unsigned {
+    int MaxSamples = 0;
+    glGetIntegerv(GL_MAX_SAMPLES, &MaxSamples);
+    LOG_INFO("[CTexture] Max samples supported: {}", MaxSamples);
+    return MaxSamples;
+  }();
+
+  return MaxSamples;
+}
+
+unsigned GetSupportedAnisotropyLevel()
+{
+  static const unsigned AnisotropyLevel = []() -> unsigned {
+    float MaxAnisotropy = 0.0f;
+    if (GLAD_GL_ARB_texture_filter_anisotropic)
+    {
+      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &MaxAnisotropy);
+      LOG_INFO("[CTexture] Max anisotropy level supported: {}", MaxAnisotropy);
+    }
+    else
+    {
+      LOG_INFO("[CTexture] Anisotropic filtering is not supported");
+    }
+    return static_cast<unsigned>(MaxAnisotropy);
+  }();
+
+  return AnisotropyLevel;
+}
+
 // CTexture
 
 const unsigned CTexture::INVALID_TEXTURE = 0u;
@@ -196,7 +227,12 @@ void CTexture::Unbind() const
   Unbind(m_Target);
 }
 
-GLuint CTexture::ID() const
+unsigned CTexture::Target() const
+{
+  return m_Target;
+}
+
+unsigned CTexture::ID() const
 {
   return m_ID;
 }
@@ -215,25 +251,6 @@ void CTexture::OverrideTarget(unsigned _Target)
 {
   assert(!IsValid() && "Cannot override target of an already created texture");
   m_Target = _Target;
-}
-
-float CTexture::GetSupportedAnisotropyLevel()
-{
-  static const float AnisotropyLevel = []() -> float {
-    float MaxAnisotropy = 0.0f;
-    if (GLAD_GL_ARB_texture_filter_anisotropic)
-    {
-      glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY, &MaxAnisotropy);
-      LOG_INFO("[CTexture] Max anisotropy level supported: {}", MaxAnisotropy);
-    }
-    else
-    {
-      LOG_INFO("[CTexture] Anisotropic filtering is not supported");
-    }
-    return MaxAnisotropy;
-  }();
-
-  return AnisotropyLevel;
 }
 
 void CTexture::Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID)
@@ -294,7 +311,7 @@ bool C2DTexture::Load(const std::filesystem::path &_Path, const TTextureParams &
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
   if (GLAD_GL_ARB_texture_filter_anisotropic)
-    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, std::min(GetSupportedAnisotropyLevel(), _Params.Anisotropy));
+    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, std::min(float(GetSupportedAnisotropyLevel()), _Params.Anisotropy));
 
   if (!_Params.HDR)
     glGenerateMipmap(m_Target);
@@ -328,8 +345,9 @@ bool C2DTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManag
 
   if (IsMultisampled)
   {
-    const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
-    glTexImage2DMultisample(m_Target, _Params.Samples.value(), InternalFormat, _Params.Width, _Params.Height, GL_TRUE);
+    const GLint   InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
+    const GLsizei Samples        = std::min(static_cast<GLsizei>(_Params.Samples.value()), static_cast<GLsizei>(GetSupportedMaxSamples()));
+    glTexImage2DMultisample(m_Target, Samples, InternalFormat, _Params.Width, _Params.Height, GL_TRUE);
   }
   else
   {
@@ -337,15 +355,15 @@ bool C2DTexture::Generate(const TTextureParams &_Params, CPasskey<CResourceManag
     const GLint Format         = ToGLFormat(_Params.Format);
     const GLint Type           = ToGLType(_Params.Type);
     glTexImage2D(m_Target, 0, InternalFormat, _Params.Width, _Params.Height, 0, Format, Type, _Params.Data);
+
+    glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
+    glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
+    glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
+    glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
+
+    if (_Params.BorderColors.has_value())
+      glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
   }
-
-  glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
-  glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
-  glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
-  glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
-
-  if (_Params.BorderColors.has_value())
-    glTexParameterfv(m_Target, GL_TEXTURE_BORDER_COLOR, _Params.BorderColors->Data());
 
   m_Size = TVector2i(_Params.Width, _Params.Height);
   m_Path = "Generated Texture";

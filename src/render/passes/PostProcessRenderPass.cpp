@@ -1,7 +1,6 @@
 #include "PostProcessRenderPass.h"
 #include "render/RenderCommand.h"
 #include "render/RenderContext.h"
-#include "render/RenderTarget.h"
 #include "interfaces/Renderer.h"
 #include "utils/Event.h"
 #include "assets/Texture.h"
@@ -22,19 +21,19 @@ CPostProcessRenderPass::CPostProcessRenderPass() :
 
 void CPostProcessRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
   _Renderer.SetDepthTest(false);
-  _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   _RenderContext.QuadVAO.Bind();
 }
 
 void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  const glm::vec2 InverseSize = glm::vec2(1.0f / _RenderContext.PostProcessRenderTarget.Size.X, 1.0f / _RenderContext.PostProcessRenderTarget.Size.Y);
+  const auto      Viewport     = _Renderer.GetViewport();
+  const glm::vec2 InverseSize  = glm::vec2(1.0f / Viewport.X, 1.0f / Viewport.Y);
+  const bool      IsTAAEnabled = _RenderContext.TAAHistoryMap != CTexture::INVALID_TEXTURE;
 
-  C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
-  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
+  C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.DepthTexture);
+  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.ColorTexture);
   C2DTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
   C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, _RenderContext.TAAHistoryMap);
 
@@ -44,7 +43,7 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
   _Renderer.SetUniform("TAATexture", TEXTURE_TAA_HISTORY_INDEX);
   _Renderer.SetUniform("InverseScreenSize", InverseSize);
   _Renderer.SetUniform("IsFXAAEnabled", m_IsFXAAEnabled);
-  _Renderer.SetUniform("IsTAAEnabled", m_IsTAAEnabled);
+  _Renderer.SetUniform("IsTAAEnabled", IsTAAEnabled);
   _Renderer.SetUniform("IsHDR", m_IsHDREnabled);
   _Renderer.SetUniform("IsBloomEnabled", m_IsBloomEnabled);
   _Renderer.SetUniform("BloomIntensity", m_BloomIntensity);
@@ -57,7 +56,6 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
 void CPostProcessRenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
   _RenderContext.QuadVAO.Unbind();
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
 }
 
 bool CPostProcessRenderPass::Accepts(const TRenderCommand &_Command) const
@@ -81,9 +79,6 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
   {
   case TEventType::Config_FXAAEnabledChanged:
     m_IsFXAAEnabled = _Event.GetValue<bool>();
-    break;
-  case TEventType::Config_TAAEnabledChanged:
-    m_IsTAAEnabled = _Event.GetValue<bool>();
     break;
   case TEventType::Config_HDREnabledChanged:
     m_IsHDREnabled = _Event.GetValue<bool>();
@@ -112,7 +107,6 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
 void CPostProcessRenderPass::SubscribeToEvents()
 {
   event::Subscribe(TEventType::Config_FXAAEnabledChanged, GetWeakPtr());
-  event::Subscribe(TEventType::Config_TAAEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_HDREnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_HDRExposureChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_GammaCorrectionEnabledChanged, GetWeakPtr());

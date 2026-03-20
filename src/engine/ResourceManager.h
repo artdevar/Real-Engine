@@ -4,6 +4,7 @@
 #include <events/EventsListener.h>
 #include <common/interfaces/Shutdownable.h>
 #include <common/Sharable.h>
+#include <common/interfaces/Updateable.h>
 
 class CModel;
 class CShader;
@@ -12,6 +13,7 @@ class IAsset;
 
 class CResourceManager final : public CSharable<CResourceManager>,
                                public IEventsListener,
+                               public IUpdateable,
                                public IShutdownable
 {
 public:
@@ -20,6 +22,7 @@ public:
   void Init();
 
   void Shutdown() override;
+  void Update(float _TimeDelta) override;
 
   void OnEvent(const TEvent &_Event) override;
 
@@ -33,7 +36,10 @@ public:
   std::shared_ptr<CTexture> CreateCubemap(const std::string &_Name, const TTextureParams &_Params);
   std::shared_ptr<CTexture> CreateTexture(const std::string &_Name, const TTextureParams &_Params);
 
-  void MarkUnused(const std::string &_Name);
+  void Retire(const std::string &_Name);
+  void Prune();
+
+private:
   void UnloadUnusedAssets();
 
 private:
@@ -41,4 +47,5 @@ private:
 
 private:
   std::map<std::string, std::shared_ptr<IAsset>> m_Assets;
+  bool                                           m_IsPruneScheduled;
 };

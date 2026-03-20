@@ -44,8 +44,8 @@ CRenderPipeline::CRenderPipeline() :
     m_CurrentJitter(0.0f),
     m_PreviousJitter(0.0f),
     m_JitterFrameIndex(0),
-    m_JitterSampleCount(8),
-    m_IsTAAEnabled(false)
+    m_TAASamples(0),
+    m_MSAASamples(0)
 {
 }
 
@@ -66,8 +66,8 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   const bool WireframeEnabled = CConfig::Instance().GetWireframeEnabled();
   const bool BloomEnabled     = CConfig::Instance().GetBloomEnabled();
 
-  m_IsTAAEnabled      = CConfig::Instance().GetTAAEnabled();
-  m_JitterSampleCount = CConfig::Instance().GetTAAJitterSampleCount();
+  m_MSAASamples = CConfig::Instance().GetMSAASampleCount();
+  m_TAASamples  = CConfig::Instance().GetTAASampleCount();
 
   m_ShadowPasses.emplace_back(CShadowRenderPass::Create(), ShadowsEnabled);
 
@@ -78,7 +78,7 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   m_GeometryPasses.emplace_back(CSkyboxRenderPass::Create(), true);
   m_GeometryPasses.emplace_back(CTransparentRenderPass::Create(), true);
 
-  m_PostProcessPasses.emplace_back(CTAARenderPass::Create(_Viewport), m_IsTAAEnabled);
+  m_PostProcessPasses.emplace_back(CTAARenderPass::Create(_Viewport), m_TAASamples > 0);
   m_PostProcessPasses.emplace_back(CBloomRenderPass::Create(_Viewport), BloomEnabled);
   m_PostProcessPasses.emplace_back(CPostProcessRenderPass::Create(), true);
 
@@ -100,8 +100,7 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   event::Subscribe(TEventType::Config_GridEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_WireframeEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_BloomEnabledChanged, GetWeakPtr());
-  event::Subscribe(TEventType::Config_TAAEnabledChanged, GetWeakPtr());
-  event::Subscribe(TEventType::Config_TAAJitterSampleCountChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_TAASamplesChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_MSAASamplesChanged, GetWeakPtr());
 }
 
@@ -112,6 +111,7 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
   case TEventType::ViewportResized: {
     const TVector2i NewViewport = _Event.GetValue<TVector2i>();
     InitRenderTargets(NewViewport);
+    resource::Prune();
     break;
   }
   case TEventType::Config_ShadowsEnabledChanged: {
@@ -130,39 +130,57 @@ void CRenderPipeline::OnEvent(const TEvent &_Event)
     SetRenderPassEnabled(ERenderPassType::Bloom, _Event.GetValue<bool>(), m_PostProcessPasses);
     break;
   }
-  case TEventType::Config_TAAEnabledChanged: {
+  case TEventType::Config_TAASamplesChanged: {
+    const int  TAASamples       = _Event.GetValue<int>();
     const bool TAAEnabled       = IsRenderPassEnabled(ERenderPassType::TAA, m_PostProcessPasses);
-    const bool NeedToEnableTAA  = _Event.GetValue<bool>() && !TAAEnabled;
-    const bool NeedToDisableTAA = !_Event.GetValue<bool>() && TAAEnabled;
+    const bool NeedToEnableTAA  = TAASamples > 0 && !TAAEnabled;
+    const bool NeedToDisableTAA = TAASamples == 0 && TAAEnabled;
+
+    m_TAASamples = TAASamples;
 
     if (NeedToEnableTAA)
     {
-      const TVector2i Viewport = m_SceneTarget->Size;
-      m_SceneTarget->Velocity  = CreateVelocityTexture("SCENE_TARGET_VELOCITY", Viewport);
-      m_SceneTarget->FrameBuffer.Bind();
-      m_SceneTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT1, m_SceneTarget->Velocity->ID());
-      m_SceneTarget->FrameBuffer.Unbind();
+      m_SceneTarget = CreateRenderTarget(m_SceneTarget->Size, true, true, m_MSAASamples);
+      if (m_ResolvedSceneTarget)
+        m_ResolvedSceneTarget = CreateRenderTarget(m_ResolvedSceneTarget->Size, true, true);
+
       SetRenderPassEnabled(ERenderPassType::TAA, true, m_PostProcessPasses);
-      m_IsTAAEnabled = true;
     }
     else if (NeedToDisableTAA)
     {
-      m_SceneTarget->Velocity.reset();
-      m_SceneTarget->FrameBuffer.Bind();
-      m_SceneTarget->FrameBuffer.DetachTexture(GL_COLOR_ATTACHMENT1);
-      m_SceneTarget->FrameBuffer.Unbind();
+      m_SceneTarget = CreateRenderTarget(m_SceneTarget->Size, true, false, m_MSAASamples);
+      if (m_ResolvedSceneTarget)
+        m_ResolvedSceneTarget = CreateRenderTarget(m_ResolvedSceneTarget->Size, true, false, 0);
+
       SetRenderPassEnabled(ERenderPassType::TAA, false, m_PostProcessPasses);
-      m_IsTAAEnabled = false;
     }
 
-    break;
-  }
-  case TEventType::Config_TAAJitterSampleCountChanged: {
-    m_JitterSampleCount = _Event.GetValue<int32_t>();
+    resource::Prune();
+
     break;
   }
   case TEventType::Config_MSAASamplesChanged: {
     const int32_t MSAASamples = _Event.GetValue<int32_t>();
+    if (MSAASamples != m_MSAASamples)
+    {
+      m_MSAASamples = MSAASamples;
+
+      const bool IsMsaaEnabled = MSAASamples > 0;
+      if (IsMsaaEnabled)
+      {
+        m_SceneTarget = CreateRenderTarget(m_SceneTarget->Size, true, m_TAASamples > 0, m_MSAASamples);
+        if (!m_ResolvedSceneTarget)
+          m_ResolvedSceneTarget = CreateRenderTarget(m_SceneTarget->Size, true, m_TAASamples > 0, 0);
+      }
+      else
+      {
+        m_SceneTarget = CreateRenderTarget(m_SceneTarget->Size, true, m_TAASamples > 0, 0);
+        m_ResolvedSceneTarget.reset();
+      }
+
+      resource::Prune();
+    }
+
     break;
   }
   }
@@ -192,16 +210,6 @@ void CRenderPipeline::Render(TFrameData &FrameData, CRenderQueue &_Queue, IRende
 void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
 {
   _Renderer.OnFrameBegin();
-
-  _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
-  _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
-
-  if (_RenderContext.FinalRenderTarget)
-    _RenderContext.FinalRenderTarget->FrameBuffer.Bind();
-  else
-    CFrameBuffer::BindDefault();
-
-  _Renderer.ClearColor({0.2f, 0.2f, 0.2f, 1.0f});
 }
 
 void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
@@ -210,7 +218,7 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_Rend
   m_PrevViewProjectionMatrix         = _RenderContext.ViewProjectionMatrix;
   m_PrevJitteredViewProjectionMatrix = _RenderContext.JitteredViewProjectionMatrix;
   m_PreviousJitter                   = m_CurrentJitter;
-  m_JitterFrameIndex                 = (m_JitterFrameIndex + 1) % m_JitterSampleCount;
+  m_JitterFrameIndex                 = (m_JitterFrameIndex + 1) % std::max(m_TAASamples, 1);
 
   m_LastFrameDrawCalls = _Renderer.GetDrawCallsCount();
   m_LastFrameVertices  = _Renderer.GetVerticesCount();
@@ -231,6 +239,12 @@ void CRenderPipeline::UtilityPass(IRenderer &_Renderer, TRenderContext &_RenderC
 
 void CRenderPipeline::ShadowPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
+  if (!IsAnyPassEnabled(m_ShadowPasses))
+  {
+    m_RenderPassTimes[ERenderPassType::Common_Shadow] = 0.0f;
+    return;
+  }
+
   utils::CClock PassClock;
   DoRenderPasses(m_ShadowPasses, _Renderer, _RenderContext, _Commands);
   m_RenderPassTimes[ERenderPassType::Common_Shadow] = PassClock.GetElapsedTimeMs();
@@ -240,21 +254,38 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
 {
   utils::CClock PassClock;
 
-  _RenderContext.SceneRenderTarget.FrameBuffer.Bind();
-  if (_RenderContext.SceneRenderTarget.Velocity)
+  m_SceneTarget->FrameBuffer.Bind();
+  _Renderer.Clear(static_cast<EClearFlags>(EClearFlags::Color | EClearFlags::Depth));
+  _Renderer.SetViewport(m_SceneTarget->Size);
+
+  if (m_SceneTarget->Velocity)
   {
     constexpr GLenum Attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-    _RenderContext.SceneRenderTarget.FrameBuffer.SetDrawBuffers(Attachments, 2);
+    m_SceneTarget->FrameBuffer.SetDrawBuffers(Attachments, 2);
   }
   else
   {
     constexpr GLenum Attachments[1] = {GL_COLOR_ATTACHMENT0};
-    _RenderContext.SceneRenderTarget.FrameBuffer.SetDrawBuffers(Attachments, 1);
+    m_SceneTarget->FrameBuffer.SetDrawBuffers(Attachments, 1);
   }
 
   DoRenderPasses(m_GeometryPasses, _Renderer, _RenderContext, _Commands);
 
-  _RenderContext.SceneRenderTarget.FrameBuffer.Unbind();
+  m_SceneTarget->FrameBuffer.Unbind();
+
+  if (m_ResolvedSceneTarget)
+  {
+    CFrameBuffer::Blit(m_SceneTarget->FrameBuffer.ID(),         //
+                       m_ResolvedSceneTarget->FrameBuffer.ID(), //
+                       m_SceneTarget->Size.X,                   //
+                       m_SceneTarget->Size.Y,                   //
+                       GL_COLOR_BUFFER_BIT,                     //
+                       GL_NEAREST);
+
+    _RenderContext.ColorTexture    = m_ResolvedSceneTarget->Color->ID();
+    _RenderContext.VelocityTexture = m_ResolvedSceneTarget->Velocity ? m_ResolvedSceneTarget->Velocity->ID() : CTexture::INVALID_TEXTURE;
+    _RenderContext.DepthTexture    = std::get<TRenderTarget::TTexture>(m_ResolvedSceneTarget->Depth)->ID();
+  }
 
   m_RenderPassTimes[ERenderPassType::Common_Geometry] = PassClock.GetElapsedTimeMs();
 }
@@ -262,7 +293,16 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
 void CRenderPipeline::PostProcessPass(IRenderer &_Renderer, TRenderContext &_RenderContext, std::vector<TRenderCommand> &_Commands)
 {
   utils::CClock PassClock;
+
+  m_PostProcessTarget->FrameBuffer.Bind();
+  _Renderer.SetViewport(m_PostProcessTarget->Size);
+
   DoRenderPasses(m_PostProcessPasses, _Renderer, _RenderContext, _Commands);
+
+  m_PostProcessTarget->FrameBuffer.Unbind();
+
+  _RenderContext.ColorTexture = m_PostProcessTarget->Color->ID();
+
   m_RenderPassTimes[ERenderPassType::Common_PostProcess] = PassClock.GetElapsedTimeMs();
 }
 
@@ -276,18 +316,19 @@ void CRenderPipeline::DebugPass(IRenderer &_Renderer, TRenderContext &_RenderCon
 
   utils::CClock PassClock;
 
-  CFrameBuffer::Blit(_RenderContext.SceneRenderTarget.FrameBuffer.ID(),       //
-                     _RenderContext.PostProcessRenderTarget.FrameBuffer.ID(), //
-                     _RenderContext.SceneRenderTarget.Size.X,                 //
-                     _RenderContext.SceneRenderTarget.Size.Y,                 //
-                     GL_DEPTH_BUFFER_BIT,                                     //
+  CFrameBuffer::Blit(m_SceneTarget->FrameBuffer.ID(),       //
+                     m_PostProcessTarget->FrameBuffer.ID(), //
+                     m_SceneTarget->Size.X,                 //
+                     m_SceneTarget->Size.Y,                 //
+                     GL_DEPTH_BUFFER_BIT,                   //
                      GL_NEAREST);
 
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Bind();
+  m_PostProcessTarget->FrameBuffer.Bind();
+  _Renderer.SetViewport(m_PostProcessTarget->Size);
 
   DoRenderPasses(m_DebugPasses, _Renderer, _RenderContext, _Commands);
 
-  _RenderContext.PostProcessRenderTarget.FrameBuffer.Unbind();
+  m_PostProcessTarget->FrameBuffer.Unbind();
 
   m_RenderPassTimes[ERenderPassType::Common_Debug] = PassClock.GetElapsedTimeMs();
 }
@@ -296,15 +337,18 @@ void CRenderPipeline::OutputPass(IRenderer &_Renderer, TRenderContext &_RenderCo
 {
   utils::CClock PassClock;
 
-  if (_RenderContext.FinalRenderTarget)
-    _RenderContext.FinalRenderTarget->FrameBuffer.Bind();
+  if (m_FinalTarget)
+    m_FinalTarget->FrameBuffer.Bind();
   else
     CFrameBuffer::BindDefault();
 
+  _Renderer.ClearColor({0.2f, 0.2f, 0.2f, 1.0f});
+  _Renderer.SetViewport(m_SceneTarget->Size);
+
   DoRenderPasses(m_OutputPasses, _Renderer, _RenderContext, _Commands);
 
-  if (_RenderContext.FinalRenderTarget)
-    _RenderContext.FinalRenderTarget->FrameBuffer.Unbind();
+  if (m_FinalTarget)
+    m_FinalTarget->FrameBuffer.Unbind();
 
   m_RenderPassTimes[ERenderPassType::Common_Output] = PassClock.GetElapsedTimeMs();
 }
@@ -452,10 +496,10 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
   const glm::mat4 View       = Camera->GetView();
 
   glm::mat4 JitteredProjection = Projection;
-  if (m_IsTAAEnabled)
+  if (m_TAASamples > 0)
   {
     const TVector2i Viewport = m_SceneTarget->Size;
-    m_CurrentJitter          = GenerateHaltonJitter(m_JitterFrameIndex, m_JitterSampleCount) * 2.0f - 1.0f;
+    m_CurrentJitter          = GenerateHaltonJitter(m_JitterFrameIndex, m_TAASamples) * 2.0f - 1.0f;
 
     JitteredProjection[2][0] += m_CurrentJitter.x / Viewport.X;
     JitteredProjection[2][1] += m_CurrentJitter.y / Viewport.Y;
@@ -465,9 +509,6 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
   return TRenderContext{
       .QuadVAO                              = m_QuadBuffer.VAO,
       .CubeVAO                              = m_CubeBuffer.VAO,
-      .SceneRenderTarget                    = *m_SceneTarget,
-      .PostProcessRenderTarget              = *m_PostProcessTarget,
-      .FinalRenderTarget                    = m_FinalTarget.get(),
       .CameraPosition                       = Camera->GetPosition(),
       .ProjectionMatrix                     = Projection,
       .ViewMatrix                           = View,
@@ -478,14 +519,66 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
       .LightSpaceMatrix                     = CalculateLightSpaceMatrix(),
       .Jitter                               = m_CurrentJitter,
       .PrevJitter                           = m_PreviousJitter,
-      .ShadowMap                            = 0,
-      .BloomMap                             = 0,
+      .ColorTexture                         = m_SceneTarget->Color->ID(),
+      .DepthTexture                         = std::get<TRenderTarget::TTexture>(m_SceneTarget->Depth)->ID(),
+      .VelocityTexture                      = m_SceneTarget->Velocity ? m_SceneTarget->Velocity->ID() : CTexture::INVALID_TEXTURE,
+      .ShadowMap                            = CTexture::INVALID_TEXTURE,
+      .BloomMap                             = CTexture::INVALID_TEXTURE,
       .IrradianceMap                        = FrameData.Environment.IrradianceMap,
-      .TAAHistoryMap                        = 0,
+      .TAAHistoryMap                        = CTexture::INVALID_TEXTURE,
   };
 }
 
-std::shared_ptr<CTexture> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size)
+std::unique_ptr<TRenderTarget> CRenderPipeline::CreateRenderTarget(TVector2i _Size,
+                                                                   bool      _CreateDepthTexture,
+                                                                   bool      _CreateVelocityTexture,
+                                                                   int       _MSAASamples)
+{
+  constexpr auto GetTextureName = [](const std::string &_Base) {
+    static uint32_t Counter = 0;
+    return std::format("{}_{}", _Base, Counter++);
+  };
+
+  constexpr auto CreateDepthRBO = [](TVector2i _Size) {
+    CRenderBuffer DepthRBO;
+    DepthRBO.Bind();
+    DepthRBO.AllocateStorage(GL_DEPTH_COMPONENT, _Size.X, _Size.Y);
+    DepthRBO.Unbind();
+    return DepthRBO;
+  };
+
+  std::unique_ptr<TRenderTarget> RenderTarget = std::make_unique<TRenderTarget>();
+  RenderTarget->Size                          = _Size;
+  RenderTarget->MSAASamples                   = _MSAASamples;
+  RenderTarget->Color                         = CreateRenderTexture(GetTextureName("RENDER_TARGET_COLOR"), _Size, _MSAASamples);
+  RenderTarget->FrameBuffer.Bind();
+  RenderTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, RenderTarget->Color->ID(), RenderTarget->Color->Target());
+
+  if (_CreateVelocityTexture)
+  {
+    RenderTarget->Velocity = CreateVelocityTexture(GetTextureName("RENDER_TARGET_VELOCITY"), _Size, _MSAASamples);
+    RenderTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT1, RenderTarget->Velocity->ID(), RenderTarget->Velocity->Target());
+  }
+
+  if (_CreateDepthTexture)
+  {
+    auto DepthTexture = CreateDepthTexture(GetTextureName("RENDER_TARGET_DEPTH"), _Size, _MSAASamples);
+    RenderTarget->FrameBuffer.AttachTexture(GL_DEPTH_ATTACHMENT, DepthTexture->ID(), DepthTexture->Target());
+    RenderTarget->Depth = std::move(DepthTexture);
+  }
+  else
+  {
+    auto DepthRBO = CreateDepthRBO(_Size);
+    RenderTarget->FrameBuffer.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, DepthRBO.ID());
+    RenderTarget->Depth = std::move(DepthRBO);
+  }
+
+  RenderTarget->FrameBuffer.Unbind();
+
+  return RenderTarget;
+}
+
+std::shared_ptr<CTexture> CRenderPipeline::CreateRenderTexture(const std::string &_Name, TVector2i _Size, int _MSAASamples)
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
@@ -496,10 +589,13 @@ std::shared_ptr<CTexture> CRenderPipeline::CreateRenderTexture(const std::string
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
+  if (_MSAASamples > 0)
+    TextureParams.Samples = _MSAASamples;
+
   return resource::RecreateTexture(_Name, TextureParams);
 }
 
-std::shared_ptr<CTexture> CRenderPipeline::CreateDepthTexture(const std::string &_Name, TVector2i _Size)
+std::shared_ptr<CTexture> CRenderPipeline::CreateDepthTexture(const std::string &_Name, TVector2i _Size, int _MSAASamples)
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
@@ -512,10 +608,13 @@ std::shared_ptr<CTexture> CRenderPipeline::CreateDepthTexture(const std::string 
   TextureParams.WrapS          = ETextureWrap::ClampToEdge;
   TextureParams.WrapT          = ETextureWrap::ClampToEdge;
 
+  if (_MSAASamples > 0)
+    TextureParams.Samples = _MSAASamples;
+
   return resource::RecreateTexture(_Name, TextureParams);
 }
 
-std::shared_ptr<CTexture> CRenderPipeline::CreateVelocityTexture(const std::string &_Name, TVector2i _Size)
+std::shared_ptr<CTexture> CRenderPipeline::CreateVelocityTexture(const std::string &_Name, TVector2i _Size, int _MSAASamples)
 {
   TTextureParams TextureParams;
   TextureParams.Width          = _Size.X;
@@ -526,50 +625,25 @@ std::shared_ptr<CTexture> CRenderPipeline::CreateVelocityTexture(const std::stri
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
 
+  if (_MSAASamples > 0)
+    TextureParams.Samples = _MSAASamples;
+
   return resource::RecreateTexture(_Name, TextureParams);
 }
 
 void CRenderPipeline::InitRenderTargets(TVector2i _Viewport)
 {
-  const auto CreateDepthRBO = [](TVector2i _Size) {
-    CRenderBuffer DepthRBO;
-    DepthRBO.Bind();
-    DepthRBO.AllocateStorage(GL_DEPTH_COMPONENT, _Size.X, _Size.Y);
-    DepthRBO.Unbind();
-    return DepthRBO;
-  };
+  const bool IsTAAEnabled = m_TAASamples > 0;
 
-  m_SceneTarget           = std::make_unique<TRenderTarget>();
-  m_SceneTarget->Size     = _Viewport;
-  m_SceneTarget->Color    = CreateRenderTexture("SCENE_TARGET_COLOR", _Viewport);
-  m_SceneTarget->Depth    = CreateDepthTexture("SCENE_TARGET_DEPTH", _Viewport);
-  m_SceneTarget->Velocity = CreateVelocityTexture("SCENE_TARGET_VELOCITY", _Viewport);
-  m_SceneTarget->FrameBuffer.Bind();
-  m_SceneTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_SceneTarget->Color->ID());
-  m_SceneTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT1, m_SceneTarget->Velocity->ID());
-  m_SceneTarget->FrameBuffer.AttachTexture(GL_DEPTH_ATTACHMENT, std::get<TRenderTarget::TTexture>(m_SceneTarget->Depth)->ID());
-  m_SceneTarget->FrameBuffer.Unbind();
+  m_SceneTarget = CreateRenderTarget(_Viewport, true, IsTAAEnabled, m_MSAASamples);
 
-  m_PostProcessTarget        = std::make_unique<TRenderTarget>();
-  m_PostProcessTarget->Size  = _Viewport;
-  m_PostProcessTarget->Color = CreateRenderTexture("POST_PROCESS_TARGET_COLOR", _Viewport);
-  m_PostProcessTarget->Depth = CreateDepthRBO(_Viewport);
-  m_PostProcessTarget->FrameBuffer.Bind();
-  m_PostProcessTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_PostProcessTarget->Color->ID());
-  m_PostProcessTarget->FrameBuffer.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, std::get<CRenderBuffer>(m_PostProcessTarget->Depth).ID());
-  m_PostProcessTarget->FrameBuffer.Unbind();
+  if (m_MSAASamples > 0)
+    m_ResolvedSceneTarget = CreateRenderTarget(_Viewport, true, IsTAAEnabled, 0);
+
+  m_PostProcessTarget = CreateRenderTarget(_Viewport, false, false, 0);
 
   if (CConfig::Instance().IsEditorEnabled())
-  {
-    m_FinalTarget        = std::make_unique<TRenderTarget>();
-    m_FinalTarget->Size  = _Viewport;
-    m_FinalTarget->Color = CreateRenderTexture("FINAL_TARGET_COLOR", _Viewport);
-    m_FinalTarget->Depth = CreateDepthRBO(_Viewport);
-    m_FinalTarget->FrameBuffer.Bind();
-    m_FinalTarget->FrameBuffer.AttachTexture(GL_COLOR_ATTACHMENT0, m_FinalTarget->Color->ID());
-    m_FinalTarget->FrameBuffer.AttachRenderBuffer(GL_DEPTH_ATTACHMENT, std::get<CRenderBuffer>(m_FinalTarget->Depth).ID());
-    m_FinalTarget->FrameBuffer.Unbind();
-  }
+    m_FinalTarget = CreateRenderTarget(_Viewport, false, false, 0);
 }
 
 void CRenderPipeline::InitCommonVAOs()

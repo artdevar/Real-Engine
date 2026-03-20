@@ -11,6 +11,7 @@ public:
   ~CTexture() override;
   void Shutdown() override;
 
+  unsigned Target() const;
   unsigned ID() const;
   bool IsValid() const;
 
@@ -23,8 +24,6 @@ protected:
   CTexture(unsigned _Target);
 
   void OverrideTarget(unsigned _Target);
-
-  static float GetSupportedAnisotropyLevel();
 
   static void Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind(unsigned _Target);

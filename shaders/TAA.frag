@@ -16,7 +16,7 @@ void main()
 {
   vec2 velocity = texture(VelocityTexture, io_TexCoords).xy;
 
-  vec2 jitterDelta = (Jitter - PrevJitter) * InverseScreenSize;
+  vec2 jitterDelta = Jitter - PrevJitter;
   vec2 uv = io_TexCoords - velocity * InverseScreenSize + jitterDelta;
   uv = clamp(uv, vec2(0.0), vec2(1.0));
 

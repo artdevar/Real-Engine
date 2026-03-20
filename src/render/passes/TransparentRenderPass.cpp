@@ -19,7 +19,6 @@ void CTransparentRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
   _Renderer.SetDepthMask(false);
   _Renderer.SetCullFace(ECullMode::Back);
   _Renderer.SetBlending(EAlphaMode::Blend);
-  _Renderer.SetViewport(_RenderContext.SceneRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);

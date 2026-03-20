@@ -65,7 +65,6 @@ void CGridRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderCo
   _Renderer.SetDepthFunc(GL_LESS);
   _Renderer.SetBlending(EAlphaMode::Blend);
   _Renderer.SetCullFace(ECullMode::None);
-  _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
 }
 

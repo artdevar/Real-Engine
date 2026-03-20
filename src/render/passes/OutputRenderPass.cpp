@@ -20,14 +20,14 @@ void COutputRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetDepthTest(false);
   _Renderer.SetBlending(EAlphaMode::Opaque);
   _Renderer.SetCullFace(ECullMode::None);
-  _Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
+  //_Renderer.SetViewport(_RenderContext.PostProcessRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   _RenderContext.QuadVAO.Bind();
 }
 
 void COutputRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)
 {
-  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.PostProcessRenderTarget.Color->ID());
+  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.ColorTexture);
   _Renderer.SetUniform("Texture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }

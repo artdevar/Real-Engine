@@ -42,8 +42,6 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CShadowRenderPass>::Create;
-
   void SubscribeToEvents();
 
   static std::shared_ptr<CTexture> CreateDepthMap(TVector2i _Size);

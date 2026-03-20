@@ -38,15 +38,12 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CPostProcessRenderPass>::Create;
-
   void SubscribeToEvents();
 
 private:
   std::shared_ptr<CShader> m_Shader;
 
   bool  m_IsFXAAEnabled;
-  bool  m_IsTAAEnabled;
   bool  m_IsHDREnabled;
   bool  m_IsBloomEnabled;
   bool  m_IsGammaCorrectionEnabled;

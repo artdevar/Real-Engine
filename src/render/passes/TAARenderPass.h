@@ -40,8 +40,6 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CTAARenderPass>::Create;
-
   void SubscribeToEvents();
   void InitHistoryTargets(const TVector2i &_Viewport);
 
@@ -50,6 +48,7 @@ private:
 
   std::shared_ptr<CShader>       m_Shader;
   std::shared_ptr<TRenderTarget> m_HistoryTargets[HISTORY_TARGETS_COUNT];
+  int32_t                        m_HistoryIndex;
 
-  int32_t m_HistoryIndex;
+  unsigned m_PrevFBO;
 };

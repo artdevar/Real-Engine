@@ -41,8 +41,6 @@ public:
   void OnEvent(const TEvent &_Event) override;
 
 private:
-  using CSharable<CCollisionRenderPass>::Create;
-
   void SubscribeToEvents();
 
 private:

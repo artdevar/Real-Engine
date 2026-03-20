@@ -133,6 +133,7 @@ int CEngine::Run()
 void CEngine::Update(float _TimeDelta)
 {
   m_EventsManager->Update(_TimeDelta);
+  m_ResourceManager->Update(_TimeDelta);
 
   m_InputManager->Update();
   ProcessInput(_TimeDelta);

@@ -11,13 +11,16 @@
 
 CTAARenderPass::CTAARenderPass(TVector2i _Viewport) :
     m_Shader(resource::LoadShader("TAA")),
-    m_HistoryIndex(0)
+    m_HistoryIndex(0),
+    m_PrevFBO(0)
 {
   InitHistoryTargets(_Viewport);
 }
 
 void CTAARenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_RenderContext, const CommandsList &_Commands)
 {
+  m_PrevFBO = CFrameBuffer::GetBound();
+
   TRenderTarget &CurrentOutput = *m_HistoryTargets[m_HistoryIndex];
   CurrentOutput.FrameBuffer.Bind();
 
@@ -35,9 +38,9 @@ void CTAARenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContex
   const glm::vec2 InverseSize = glm::vec2(1.0f / PrevOutput.Size.X, 1.0f / PrevOutput.Size.Y);
 
   C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, PrevOutput.Color->ID());
-  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.SceneRenderTarget.Color->ID());
-  C2DTexture::Bind(TEXTURE_VELOCITY_UNIT, _RenderContext.SceneRenderTarget.Velocity->ID());
-  C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, std::get<TRenderTarget::TTexture>(_RenderContext.SceneRenderTarget.Depth)->ID());
+  C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.ColorTexture);
+  C2DTexture::Bind(TEXTURE_VELOCITY_UNIT, _RenderContext.VelocityTexture);
+  C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.DepthTexture);
   _Renderer.SetUniform("CurrentFrame", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("HistoryFrame", TEXTURE_TAA_HISTORY_INDEX);
   _Renderer.SetUniform("VelocityTexture", TEXTURE_VELOCITY_INDEX);
@@ -57,6 +60,8 @@ void CTAARenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderCo
 
   _RenderContext.TAAHistoryMap = m_HistoryTargets[m_HistoryIndex]->Color->ID();
   m_HistoryIndex               = !m_HistoryIndex;
+
+  CFrameBuffer::BindBuffer(m_PrevFBO);
 }
 
 bool CTAARenderPass::Accepts(const TRenderCommand &_Command) const

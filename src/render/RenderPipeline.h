@@ -93,9 +93,14 @@ private:
                       const std::vector<TRenderCommand> &_Commands);
 
 private:
-  static std::shared_ptr<CTexture> CreateRenderTexture(const std::string &_Name, TVector2i _Size);
-  static std::shared_ptr<CTexture> CreateDepthTexture(const std::string &_Name, TVector2i _Size);
-  static std::shared_ptr<CTexture> CreateVelocityTexture(const std::string &_Name, TVector2i _Size);
+  static std::unique_ptr<TRenderTarget> CreateRenderTarget(TVector2i _Size,
+                                                           bool      _CreateDepthTexture,
+                                                           bool      _CreateVelocityTexture,
+                                                           int       _MSAASamples = 0);
+
+  static std::shared_ptr<CTexture> CreateRenderTexture(const std::string &_Name, TVector2i _Size, int _MSAASamples = 0);
+  static std::shared_ptr<CTexture> CreateDepthTexture(const std::string &_Name, TVector2i _Size, int _MSAASamples = 0);
+  static std::shared_ptr<CTexture> CreateVelocityTexture(const std::string &_Name, TVector2i _Size, int _MSAASamples = 0);
   static std::vector<const TRenderCommand *> FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
                                                             const std::vector<TRenderCommand>  &_Commands);
   static void SortCommands(std::vector<TRenderCommand> &_Commands, const TRenderContext &_RenderContext);
@@ -118,6 +123,7 @@ private:
   TRenderPassesList m_OutputPasses;
 
   std::unique_ptr<TRenderTarget> m_SceneTarget;
+  std::unique_ptr<TRenderTarget> m_ResolvedSceneTarget;
   std::unique_ptr<TRenderTarget> m_PostProcessTarget;
   std::unique_ptr<TRenderTarget> m_FinalTarget;
 
@@ -142,6 +148,7 @@ private:
   glm::vec2 m_CurrentJitter;
   glm::vec2 m_PreviousJitter;
   uint32_t  m_JitterFrameIndex;
-  int32_t   m_JitterSampleCount;
-  bool      m_IsTAAEnabled;
+
+  int m_TAASamples;
+  int m_MSAASamples;
 };

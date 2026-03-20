@@ -20,7 +20,11 @@ static bool IsFormatSupported(const std::filesystem::path &_Path)
   return false;
 }
 
-CResourceManager::CResourceManager() = default;
+CResourceManager::CResourceManager() :
+    m_Assets(),
+    m_IsPruneScheduled(false)
+{
+}
 
 void CResourceManager::Init()
 {
@@ -34,12 +38,21 @@ void CResourceManager::Shutdown()
   m_Assets.clear();
 }
 
+void CResourceManager::Update(float _TimeDelta)
+{
+  if (m_IsPruneScheduled)
+  {
+    m_IsPruneScheduled = false;
+    UnloadUnusedAssets();
+  }
+}
+
 void CResourceManager::OnEvent(const TEvent &_Event)
 {
   switch (_Event.Type)
   {
   case TEventType::EntityRemoved:
-    UnloadUnusedAssets();
+    Prune();
     break;
 
   default:
@@ -202,7 +215,7 @@ std::filesystem::path CResourceManager::GetDefaultTexturePath(ETextureType _Text
   }
 }
 
-void CResourceManager::MarkUnused(const std::string &_Name)
+void CResourceManager::Retire(const std::string &_Name)
 {
   const auto It = m_Assets.find(_Name);
   if (It == m_Assets.end())
@@ -210,6 +223,11 @@ void CResourceManager::MarkUnused(const std::string &_Name)
 
   It->second->Shutdown();
   m_Assets.erase(It);
+}
+
+void CResourceManager::Prune()
+{
+  m_IsPruneScheduled = true;
 }
 
 void CResourceManager::UnloadUnusedAssets()

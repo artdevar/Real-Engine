@@ -18,7 +18,6 @@ void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetDepthFunc(GL_LESS);
   _Renderer.SetCullFace(ECullMode::Back);
   _Renderer.SetBlending(EAlphaMode::Opaque);
-  _Renderer.SetViewport(_RenderContext.SceneRenderTarget.Size);
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
