@@ -41,9 +41,14 @@ std::filesystem::path OpenFileDialog(EFileDialogMode _Mode)
 
   PWSTR path = nullptr;
   psi->GetDisplayName(SIGDN_FILESYSPATH, &path);
+  if (!path)
+  {
+    psi->Release();
+    pfd->Release();
+    return {};
+  }
 
   std::filesystem::path result(path);
-
   CoTaskMemFree(path);
   psi->Release();
   pfd->Release();
