@@ -17,18 +17,16 @@ out vec4 io_CurrPosition;
 out vec4 io_PrevPosition;
 
 uniform mat4 u_Model;
-uniform mat4 u_CurrentVP;
-uniform mat4 u_PreviousVP;
-uniform mat4 u_JitteredCurrVP;
-uniform mat4 u_JitteredPrevVP;
+uniform mat4 u_CurrViewProjection;
+uniform mat4 u_PrevViewProjection;
 uniform mat4 u_MVP;
 uniform mat4 u_LightSpaceMatrix;
 
 void main()
 {
   vec4 worldPos   = u_Model * vec4(aPos, 1.0);
-  io_CurrPosition = u_JitteredCurrVP * worldPos;
-  io_PrevPosition = u_JitteredPrevVP * worldPos;
+  io_CurrPosition = u_CurrViewProjection * worldPos;
+  io_PrevPosition = u_PrevViewProjection * worldPos;
 
   vec3 T = normalize(vec3(u_Model * vec4(aTangent, 0.0)));
   vec3 N = normalize(vec3(u_Model * vec4(aNormal, 0.0)));
@@ -43,5 +41,5 @@ void main()
   io_TexCoords[1] = aTexCoords_1;
   io_TexCoords[2] = aTexCoords_2;
   io_TexCoords[3] = aTexCoords_3;
-  gl_Position     = u_JitteredCurrVP * worldPos;
+  gl_Position     = io_CurrPosition;
 }

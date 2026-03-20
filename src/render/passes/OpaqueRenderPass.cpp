@@ -21,10 +21,8 @@ void COpaqueRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_Render
   _Renderer.SetShader(m_Shader);
   _Renderer.SetUniform("u_ViewPos", _RenderContext.CameraPosition);
   _Renderer.SetUniform("u_LightSpaceMatrix", _RenderContext.LightSpaceMatrix);
-  _Renderer.SetUniform("u_JitteredCurrVP", _RenderContext.JitteredViewProjectionMatrix);
-  _Renderer.SetUniform("u_JitteredPrevVP", _RenderContext.PreviousJitteredViewProjectionMatrix);
-  _Renderer.SetUniform("u_CurrentVP", _RenderContext.ViewProjectionMatrix);
-  _Renderer.SetUniform("u_PreviousVP", _RenderContext.PreviousViewProjectionMatrix);
+  _Renderer.SetUniform("u_CurrViewProjection", _RenderContext.TAA ? _RenderContext.TAA->JitteredViewProjectionMatrix : _RenderContext.ViewProjectionMatrix);
+  _Renderer.SetUniform("u_PrevViewProjection", _RenderContext.TAA ? _RenderContext.TAA->PrevJitteredViewProjectionMatrix : _RenderContext.ViewProjectionMatrix);
   _Renderer.SetUniform("u_IsShadowMapEnabled", _RenderContext.ShadowMap != CTexture::INVALID_TEXTURE);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   _Renderer.SetUniform("u_IrradianceMap", TEXTURE_IRRADIANCE_MAP_INDEX);
@@ -37,7 +35,7 @@ void COpaqueRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderCon
   for (const TRenderCommand *Command : _Commands)
   {
     _Renderer.SetUniform("u_Model", Command->ModelMatrix);
-    _Renderer.SetUniform("u_MVP", _RenderContext.JitteredViewProjectionMatrix * Command->ModelMatrix);
+    _Renderer.SetUniform("u_MVP", _RenderContext.ViewProjectionMatrix * Command->ModelMatrix);
 
     C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, Command->Material.BaseColorTexture);
     C2DTexture::Bind(TEXTURE_NORMAL_UNIT, Command->Material.NormalTexture);

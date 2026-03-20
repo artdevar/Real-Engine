@@ -30,12 +30,12 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
 {
   const auto      Viewport     = _Renderer.GetViewport();
   const glm::vec2 InverseSize  = glm::vec2(1.0f / Viewport.X, 1.0f / Viewport.Y);
-  const bool      IsTAAEnabled = _RenderContext.TAAHistoryMap != CTexture::INVALID_TEXTURE;
+  const bool      IsTAAEnabled = _RenderContext.TAA.has_value();
 
   C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.DepthTexture);
   C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.ColorTexture);
   C2DTexture::Bind(TEXTURE_BLOOM_UNIT, _RenderContext.BloomMap);
-  C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, _RenderContext.TAAHistoryMap);
+  C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, _RenderContext.TAA ? _RenderContext.TAA->HistoryMap : CTexture::INVALID_TEXTURE);
 
   _Renderer.SetUniform("ColorTexture", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("DepthTexture", TEXTURE_DEPTH_MAP_INDEX);

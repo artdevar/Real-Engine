@@ -39,9 +39,7 @@ CRenderPipeline::CRenderPipeline() :
     m_LastFrameLines(0),
     m_LastFramePoints(0),
     m_ShadowMapTextureID(0),
-    m_PrevViewProjectionMatrix(glm::mat4(1.0f)),
     m_PrevJitteredViewProjectionMatrix(glm::mat4(1.0f)),
-    m_CurrentJitter(0.0f),
     m_PreviousJitter(0.0f),
     m_JitterFrameIndex(0),
     m_TAASamples(0),
@@ -215,9 +213,8 @@ void CRenderPipeline::BeginFrame(IRenderer &_Renderer, const TRenderContext &_Re
 void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_RenderContext)
 {
   m_ShadowMapTextureID               = _RenderContext.ShadowMap;
-  m_PrevViewProjectionMatrix         = _RenderContext.ViewProjectionMatrix;
-  m_PrevJitteredViewProjectionMatrix = _RenderContext.JitteredViewProjectionMatrix;
-  m_PreviousJitter                   = m_CurrentJitter;
+  m_PrevJitteredViewProjectionMatrix = _RenderContext.TAA ? _RenderContext.TAA->JitteredViewProjectionMatrix : glm::mat4(1.0f);
+  m_PreviousJitter                   = _RenderContext.TAA ? _RenderContext.TAA->Jitter : glm::vec2(0.0f);
   m_JitterFrameIndex                 = (m_JitterFrameIndex + 1) % std::max(m_TAASamples, 1);
 
   m_LastFrameDrawCalls = _Renderer.GetDrawCallsCount();
@@ -282,9 +279,10 @@ void CRenderPipeline::GeometryPass(IRenderer &_Renderer, TRenderContext &_Render
                        GL_COLOR_BUFFER_BIT,                     //
                        GL_NEAREST);
 
-    _RenderContext.ColorTexture    = m_ResolvedSceneTarget->Color->ID();
-    _RenderContext.VelocityTexture = m_ResolvedSceneTarget->Velocity ? m_ResolvedSceneTarget->Velocity->ID() : CTexture::INVALID_TEXTURE;
-    _RenderContext.DepthTexture    = std::get<TRenderTarget::TTexture>(m_ResolvedSceneTarget->Depth)->ID();
+    _RenderContext.ColorTexture = m_ResolvedSceneTarget->Color->ID();
+    _RenderContext.DepthTexture = std::get<TRenderTarget::TTexture>(m_ResolvedSceneTarget->Depth)->ID();
+    if (_RenderContext.TAA)
+      _RenderContext.TAA->VelocityTexture = m_ResolvedSceneTarget->Velocity->ID();
   }
 
   m_RenderPassTimes[ERenderPassType::Common_Geometry] = PassClock.GetElapsedTimeMs();
@@ -415,8 +413,7 @@ void CRenderPipeline::SortCommands(std::vector<TRenderCommand> &_Commands, const
   });
 }
 
-std::vector<const TRenderCommand *> CRenderPipeline::FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass,
-                                                                    const std::vector<TRenderCommand>  &_Commands)
+std::vector<const TRenderCommand *> CRenderPipeline::FilterCommands(const std::shared_ptr<IRenderPass> &_RenderPass, const std::vector<TRenderCommand> &_Commands)
 {
   std::vector<const TRenderCommand *> FilteredCommands;
 
@@ -491,48 +488,51 @@ glm::mat4 CRenderPipeline::CalculateLightSpaceMatrix() const
 
 TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData, IRenderer &_Renderer)
 {
-  const auto     &Camera     = _Renderer.GetCamera();
-  const glm::mat4 Projection = Camera->GetPerspectiveProjection();
-  const glm::mat4 View       = Camera->GetView();
+  const auto     &Camera       = _Renderer.GetCamera();
+  const glm::mat4 Projection   = Camera->GetPerspectiveProjection();
+  const glm::mat4 View         = Camera->GetView();
+  const bool      IsTaaEnabled = m_TAASamples > 0;
 
-  glm::mat4 JitteredProjection = Projection;
-  if (m_TAASamples > 0)
+  std::optional<TAAData> TAA;
+  if (IsTaaEnabled)
   {
-    const TVector2i Viewport = m_SceneTarget->Size;
-    m_CurrentJitter          = GenerateHaltonJitter(m_JitterFrameIndex, m_TAASamples) * 2.0f - 1.0f;
+    TAAData Data;
 
-    JitteredProjection[2][0] += m_CurrentJitter.x / Viewport.X;
-    JitteredProjection[2][1] += m_CurrentJitter.y / Viewport.Y;
+    const TVector2i Viewport = m_SceneTarget->Size;
+    const glm::vec2 Jitter   = GenerateHaltonJitter(m_JitterFrameIndex, m_TAASamples) * 2.0f - 1.0f;
+
+    glm::mat4 JitteredProjection = Projection;
+    JitteredProjection[2][0]    += Jitter.x / Viewport.X;
+    JitteredProjection[2][1]    += Jitter.y / Viewport.Y;
+
+    Data.JitteredViewProjectionMatrix     = JitteredProjection * View;
+    Data.PrevJitteredViewProjectionMatrix = m_PrevJitteredViewProjectionMatrix;
+    Data.Jitter                           = Jitter;
+    Data.PrevJitter                       = m_PreviousJitter;
+    Data.VelocityTexture                  = m_SceneTarget->Velocity ? m_SceneTarget->Velocity->ID() : CTexture::INVALID_TEXTURE;
+    Data.HistoryMap                       = CTexture::INVALID_TEXTURE; // Set later
+
+    TAA.emplace(std::move(Data));
   }
-  glm::mat4 JitteredViewProjection = JitteredProjection * View;
 
   return TRenderContext{
-      .QuadVAO                              = m_QuadBuffer.VAO,
-      .CubeVAO                              = m_CubeBuffer.VAO,
-      .CameraPosition                       = Camera->GetPosition(),
-      .ProjectionMatrix                     = Projection,
-      .ViewMatrix                           = View,
-      .ViewProjectionMatrix                 = Projection * View,
-      .JitteredViewProjectionMatrix         = JitteredViewProjection,
-      .PreviousViewProjectionMatrix         = m_PrevViewProjectionMatrix,
-      .PreviousJitteredViewProjectionMatrix = m_PrevJitteredViewProjectionMatrix,
-      .LightSpaceMatrix                     = CalculateLightSpaceMatrix(),
-      .Jitter                               = m_CurrentJitter,
-      .PrevJitter                           = m_PreviousJitter,
-      .ColorTexture                         = m_SceneTarget->Color->ID(),
-      .DepthTexture                         = std::get<TRenderTarget::TTexture>(m_SceneTarget->Depth)->ID(),
-      .VelocityTexture                      = m_SceneTarget->Velocity ? m_SceneTarget->Velocity->ID() : CTexture::INVALID_TEXTURE,
-      .ShadowMap                            = CTexture::INVALID_TEXTURE,
-      .BloomMap                             = CTexture::INVALID_TEXTURE,
-      .IrradianceMap                        = FrameData.Environment.IrradianceMap,
-      .TAAHistoryMap                        = CTexture::INVALID_TEXTURE,
+      .TAA                  = std::move(TAA),
+      .QuadVAO              = m_QuadBuffer.VAO,
+      .CubeVAO              = m_CubeBuffer.VAO,
+      .CameraPosition       = Camera->GetPosition(),
+      .ProjectionMatrix     = Projection,
+      .ViewMatrix           = View,
+      .ViewProjectionMatrix = Projection * View,
+      .LightSpaceMatrix     = CalculateLightSpaceMatrix(),
+      .ColorTexture         = m_SceneTarget->Color->ID(),
+      .DepthTexture         = std::get<TRenderTarget::TTexture>(m_SceneTarget->Depth)->ID(),
+      .ShadowMap            = CTexture::INVALID_TEXTURE,
+      .BloomMap             = CTexture::INVALID_TEXTURE,
+      .IrradianceMap        = FrameData.Environment.IrradianceMap,
   };
 }
 
-std::unique_ptr<TRenderTarget> CRenderPipeline::CreateRenderTarget(TVector2i _Size,
-                                                                   bool      _CreateDepthTexture,
-                                                                   bool      _CreateVelocityTexture,
-                                                                   int       _MSAASamples)
+std::unique_ptr<TRenderTarget> CRenderPipeline::CreateRenderTarget(TVector2i _Size, bool _CreateDepthTexture, bool _CreateVelocityTexture, int _MSAASamples)
 {
   constexpr auto GetTextureName = [](const std::string &_Base) {
     static uint32_t Counter = 0;

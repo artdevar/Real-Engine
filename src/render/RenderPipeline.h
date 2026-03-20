@@ -143,9 +143,7 @@ private:
 
   std::map<ERenderPassType, float> m_RenderPassTimes;
 
-  glm::mat4 m_PrevViewProjectionMatrix;
   glm::mat4 m_PrevJitteredViewProjectionMatrix;
-  glm::vec2 m_CurrentJitter;
   glm::vec2 m_PreviousJitter;
   uint32_t  m_JitterFrameIndex;
 

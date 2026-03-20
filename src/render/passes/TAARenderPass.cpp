@@ -39,16 +39,16 @@ void CTAARenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContex
 
   C2DTexture::Bind(TEXTURE_TAA_HISTORY_UNIT, PrevOutput.Color->ID());
   C2DTexture::Bind(TEXTURE_BASIC_COLOR_UNIT, _RenderContext.ColorTexture);
-  C2DTexture::Bind(TEXTURE_VELOCITY_UNIT, _RenderContext.VelocityTexture);
   C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.DepthTexture);
+  C2DTexture::Bind(TEXTURE_VELOCITY_UNIT, _RenderContext.TAA->VelocityTexture);
   _Renderer.SetUniform("CurrentFrame", TEXTURE_BASIC_COLOR_INDEX);
   _Renderer.SetUniform("HistoryFrame", TEXTURE_TAA_HISTORY_INDEX);
   _Renderer.SetUniform("VelocityTexture", TEXTURE_VELOCITY_INDEX);
   _Renderer.SetUniform("DepthTexture", TEXTURE_DEPTH_MAP_INDEX);
-  _Renderer.SetUniform("CurrentViewProjection", _RenderContext.JitteredViewProjectionMatrix);
-  _Renderer.SetUniform("PreviousViewProjection", _RenderContext.PreviousViewProjectionMatrix);
-  _Renderer.SetUniform("Jitter", _RenderContext.Jitter);
-  _Renderer.SetUniform("PrevJitter", _RenderContext.PrevJitter);
+  _Renderer.SetUniform("CurrentViewProjection", _RenderContext.TAA->JitteredViewProjectionMatrix);
+  _Renderer.SetUniform("PreviousViewProjection", _RenderContext.TAA->PrevJitteredViewProjectionMatrix);
+  _Renderer.SetUniform("Jitter", _RenderContext.TAA->Jitter);
+  _Renderer.SetUniform("PrevJitter", _RenderContext.TAA->PrevJitter);
   _Renderer.SetUniform("InverseScreenSize", InverseSize);
 
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
@@ -58,8 +58,8 @@ void CTAARenderPass::PostExecute(IRenderer &_Renderer, TRenderContext &_RenderCo
 {
   _RenderContext.QuadVAO.Unbind();
 
-  _RenderContext.TAAHistoryMap = m_HistoryTargets[m_HistoryIndex]->Color->ID();
-  m_HistoryIndex               = !m_HistoryIndex;
+  _RenderContext.TAA->HistoryMap = m_HistoryTargets[m_HistoryIndex]->Color->ID();
+  m_HistoryIndex                 = !m_HistoryIndex;
 
   CFrameBuffer::BindBuffer(m_PrevFBO);
 }

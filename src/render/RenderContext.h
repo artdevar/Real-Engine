@@ -1,13 +1,24 @@
 #pragma once
 
-#include <glm/mat4x4.hpp>
-#include <common/MathTypes.h>
-#include "Buffer.h"
+#include <glm/glm/fwd.hpp>
 
 struct TRenderTarget;
+class CVertexArray;
+
+struct TAAData
+{
+  glm::mat4 JitteredViewProjectionMatrix;
+  glm::mat4 PrevJitteredViewProjectionMatrix;
+  glm::vec2 Jitter;
+  glm::vec2 PrevJitter;
+  uint32_t  VelocityTexture;
+  uint32_t  HistoryMap;
+};
 
 struct TRenderContext
 {
+  std::optional<TAAData> TAA;
+
   CVertexArray &QuadVAO;
   CVertexArray &CubeVAO;
 
@@ -15,18 +26,11 @@ struct TRenderContext
   glm::mat4 ProjectionMatrix;
   glm::mat4 ViewMatrix;
   glm::mat4 ViewProjectionMatrix;
-  glm::mat4 JitteredViewProjectionMatrix;
-  glm::mat4 PreviousViewProjectionMatrix;
-  glm::mat4 PreviousJitteredViewProjectionMatrix;
   glm::mat4 LightSpaceMatrix;
-  glm::vec2 Jitter;
-  glm::vec2 PrevJitter;
 
   uint32_t ColorTexture;
   uint32_t DepthTexture;
-  uint32_t VelocityTexture;
   uint32_t ShadowMap;
   uint32_t BloomMap;
   uint32_t IrradianceMap;
-  uint32_t TAAHistoryMap;
 };
