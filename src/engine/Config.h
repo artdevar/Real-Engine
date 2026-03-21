@@ -372,9 +372,6 @@ private:
   // Render
   int   ShadowMapSize            = 4096;
   bool  AreShadowsEnabled        = true;
-  int   MSAASampleCount          = 4;
-  int   TAASampleCount           = 4;
-  bool  IsFXAAEnabled            = false;
   bool  IsHDREnabled             = true;
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;
@@ -384,6 +381,11 @@ private:
   float BloomIntensity           = 1.0f;
   int   BloomBlurPasses          = 10;
   bool  IsSSAOEnabled            = true;
+
+  // Anti Aliasing
+  int  MSAASampleCount = 4;
+  int  TAASampleCount  = 4;
+  bool IsFXAAEnabled   = false;
 
   // Debug
   bool   IsGizmoEnabled     = true;

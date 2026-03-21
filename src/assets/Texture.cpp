@@ -302,8 +302,7 @@ bool C2DTexture::Load(const std::filesystem::path &_Path, const TTextureParams &
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-  glTexImage2D(m_Target, 0, InternalFormat, Image.GetWidth(), Image.GetHeight(), 0, Format, _Params.HDR ? GL_FLOAT : GL_UNSIGNED_BYTE,
-               Image.GetPixels());
+  glTexImage2D(m_Target, 0, InternalFormat, Image.GetWidth(), Image.GetHeight(), 0, Format, _Params.HDR ? GL_FLOAT : GL_UNSIGNED_BYTE, Image.GetPixels());
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
@@ -443,6 +442,9 @@ bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
   glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
+  if (_Params.GenerateMipmaps)
+    glGenerateMipmap(m_Target);
+
   m_Size = TVector2i(_Params.Width, _Params.Height);
   m_Path = "Generated Cubemap";
 
@@ -492,8 +494,7 @@ bool CCubemap::LoadLegacy(const std::filesystem::path &_Path, const TTexturePara
     {
       const CImage &Image  = Images[i];
       const GLenum  Format = ToGLFormat(Image.GetChannels());
-      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.GetWidth(), Image.GetHeight(), 0, Format, GL_UNSIGNED_BYTE,
-                   Image.GetPixels());
+      glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, Format, Image.GetWidth(), Image.GetHeight(), 0, Format, GL_UNSIGNED_BYTE, Image.GetPixels());
     }
 
     glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
