@@ -1,6 +1,8 @@
+#include <glad/glad.h>
 #include "Display.h"
 #include "utils/Image.h"
 #include <common/Logger.h>
+#include <GLFW/glfw3.h>
 #include <cstdlib>
 
 static inline void ApplyInitHints()

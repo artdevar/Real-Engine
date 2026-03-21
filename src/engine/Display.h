@@ -1,12 +1,12 @@
 #pragma once
 
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <common/MathTypes.h>
 #include <common/Sharable.h>
 #include <functional>
 #include <string>
 #include <filesystem>
+
+struct GLFWwindow;
 
 class CDisplay : public CSharable<CDisplay>
 {

@@ -13,6 +13,7 @@
 #include "render/RenderQueue.h"
 #include "scenes/World.h"
 #include <events/EventsManager.h>
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <string>
 
