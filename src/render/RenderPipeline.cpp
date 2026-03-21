@@ -215,7 +215,6 @@ void CRenderPipeline::EndFrame(IRenderer &_Renderer, const TRenderContext &_Rend
   m_ShadowMapTextureID               = _RenderContext.ShadowMap;
   m_PrevJitteredViewProjectionMatrix = _RenderContext.TAA ? _RenderContext.TAA->JitteredViewProjectionMatrix : glm::mat4(1.0f);
   m_PreviousJitter                   = _RenderContext.TAA ? _RenderContext.TAA->Jitter : glm::vec2(0.0f);
-  m_JitterFrameIndex                 = (m_JitterFrameIndex + 1) % std::max(m_TAASamples, 1);
 
   m_LastFrameDrawCalls = _Renderer.GetDrawCallsCount();
   m_LastFrameVertices  = _Renderer.GetVerticesCount();
@@ -496,23 +495,20 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
   std::optional<TAAData> TAA;
   if (IsTaaEnabled)
   {
-    TAAData Data;
-
     const TVector2i Viewport = m_SceneTarget->Size;
-    const glm::vec2 Jitter   = GenerateHaltonJitter(m_JitterFrameIndex, m_TAASamples) * 2.0f - 1.0f;
+    const glm::vec2 Jitter   = GenerateHaltonJitter(m_JitterFrameIndex++, m_TAASamples) * 2.0f - 1.0f;
 
     glm::mat4 JitteredProjection = Projection;
     JitteredProjection[2][0]    += Jitter.x / Viewport.X;
     JitteredProjection[2][1]    += Jitter.y / Viewport.Y;
 
+    TAAData &Data                         = TAA.emplace();
     Data.JitteredViewProjectionMatrix     = JitteredProjection * View;
     Data.PrevJitteredViewProjectionMatrix = m_PrevJitteredViewProjectionMatrix;
     Data.Jitter                           = Jitter;
     Data.PrevJitter                       = m_PreviousJitter;
     Data.VelocityTexture                  = m_SceneTarget->Velocity ? m_SceneTarget->Velocity->ID() : CTexture::INVALID_TEXTURE;
     Data.HistoryMap                       = CTexture::INVALID_TEXTURE; // Set later
-
-    TAA.emplace(std::move(Data));
   }
 
   return TRenderContext{
