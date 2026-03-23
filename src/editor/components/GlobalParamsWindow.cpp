@@ -21,44 +21,6 @@ void CGlobalParamsWindow::Render()
       int ShadowMapSize = CConfig::Instance().GetShadowMapSize();
       if (ImGui::DragInt("Shadow map size", &ShadowMapSize, 256, 512, 4096))
         CConfig::Instance().SetShadowsMapSize(ShadowMapSize);
-
-      ImGui::Separator();
-
-      bool HDREnabled = CConfig::Instance().GetHDREnabled();
-      if (ImGui::Checkbox("HDR", &HDREnabled))
-        CConfig::Instance().SetHDREnabled(HDREnabled);
-
-      float HDRExposure = CConfig::Instance().GetHDRExposure();
-      if (ImGui::DragFloat("HDR exposure", &HDRExposure, 0.1f, 0.0f, 10.0f))
-        CConfig::Instance().SetHDRExposure(HDRExposure);
-
-      ImGui::Separator();
-
-      bool GammaCorrectionEnabled = CConfig::Instance().GetGammaCorrectionEnabled();
-      if (ImGui::Checkbox("Gamma correction", &GammaCorrectionEnabled))
-        CConfig::Instance().SetGammaCorrectionEnabled(GammaCorrectionEnabled);
-
-      float Gamma = CConfig::Instance().GetGamma();
-      if (ImGui::DragFloat("Gamma", &Gamma, 0.1f, 0.01f, 10.0f))
-        CConfig::Instance().SetGamma(Gamma);
-
-      ImGui::Separator();
-
-      bool BloomEnabled = CConfig::Instance().GetBloomEnabled();
-      if (ImGui::Checkbox("Bloom", &BloomEnabled))
-        CConfig::Instance().SetBloomEnabled(BloomEnabled);
-
-      float BloomThreshold = CConfig::Instance().GetBloomThreshold();
-      if (ImGui::DragFloat("Bloom threshold", &BloomThreshold, 0.1f, 0.0f, 10.0f))
-        CConfig::Instance().SetBloomThreshold(BloomThreshold);
-
-      float BloomIntensity = CConfig::Instance().GetBloomIntensity();
-      if (ImGui::DragFloat("Bloom intensity", &BloomIntensity, 0.1f, 0.0f, 10.0f))
-        CConfig::Instance().SetBloomIntensity(BloomIntensity);
-
-      int BloomBlurPasses = CConfig::Instance().GetBloomBlurPasses();
-      if (ImGui::DragInt("Bloom blur passes", &BloomBlurPasses, 1, 0, 100))
-        CConfig::Instance().SetBloomBlurPasses(BloomBlurPasses);
     }
 
     if (ImGui::CollapsingHeader("Anti Aliasing"))
@@ -125,6 +87,55 @@ void CGlobalParamsWindow::Render()
       bool FXAAEnabled = CConfig::Instance().GetFXAAEnabled();
       if (ImGui::Checkbox("FXAA", &FXAAEnabled))
         CConfig::Instance().SetFXAAEnabled(FXAAEnabled);
+    }
+
+    if (ImGui::CollapsingHeader("Post Process"))
+    {
+      bool HDREnabled = CConfig::Instance().GetHDREnabled();
+      if (ImGui::Checkbox("HDR", &HDREnabled))
+        CConfig::Instance().SetHDREnabled(HDREnabled);
+
+      float HDRExposure = CConfig::Instance().GetHDRExposure();
+      if (ImGui::DragFloat("HDR exposure", &HDRExposure, 0.1f, 0.0f, 10.0f))
+        CConfig::Instance().SetHDRExposure(HDRExposure);
+
+      ImGui::Separator();
+
+      bool GammaCorrectionEnabled = CConfig::Instance().GetGammaCorrectionEnabled();
+      if (ImGui::Checkbox("Gamma correction", &GammaCorrectionEnabled))
+        CConfig::Instance().SetGammaCorrectionEnabled(GammaCorrectionEnabled);
+
+      float Gamma = CConfig::Instance().GetGamma();
+      if (ImGui::DragFloat("Gamma", &Gamma, 0.1f, 0.01f, 10.0f))
+        CConfig::Instance().SetGamma(Gamma);
+
+      ImGui::Separator();
+
+      bool BloomEnabled = CConfig::Instance().GetBloomEnabled();
+      if (ImGui::Checkbox("Bloom", &BloomEnabled))
+        CConfig::Instance().SetBloomEnabled(BloomEnabled);
+
+      float BloomThreshold = CConfig::Instance().GetBloomThreshold();
+      if (ImGui::DragFloat("Bloom threshold", &BloomThreshold, 0.1f, 0.0f, 10.0f))
+        CConfig::Instance().SetBloomThreshold(BloomThreshold);
+
+      float BloomIntensity = CConfig::Instance().GetBloomIntensity();
+      if (ImGui::DragFloat("Bloom intensity", &BloomIntensity, 0.1f, 0.0f, 10.0f))
+        CConfig::Instance().SetBloomIntensity(BloomIntensity);
+
+      int BloomBlurPasses = CConfig::Instance().GetBloomBlurPasses();
+      if (ImGui::DragInt("Bloom blur passes", &BloomBlurPasses, 1, 0, 100))
+        CConfig::Instance().SetBloomBlurPasses(BloomBlurPasses);
+
+      ImGui::Separator();
+
+      bool ChromaAberrationEnabled = CConfig::Instance().GetChromaticAberrationEnabled();
+      if (ImGui::Checkbox("Chromatic aberration", &ChromaAberrationEnabled))
+        CConfig::Instance().SetChromaticAberrationEnabled(ChromaAberrationEnabled);
+
+      TVector3f ChromaAberrationOffset = CConfig::Instance().GetChromaticAberrationOffset();
+      if (ImGui::DragFloat3("Chromatic aberration offset", &ChromaAberrationOffset.X, 0.005f, -1.0f, 1.0f))
+        CConfig::Instance().SetChromaticAberrationOffset(ChromaAberrationOffset);
     }
 
     if (ImGui::CollapsingHeader("Debug"))

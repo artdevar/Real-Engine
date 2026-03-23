@@ -584,6 +584,8 @@ std::shared_ptr<CTexture> CRenderPipeline::CreateRenderTexture(const std::string
   TextureParams.Type           = EType::Float;
   TextureParams.MinFilter      = ETextureFilter::Linear;
   TextureParams.MagFilter      = ETextureFilter::Linear;
+  TextureParams.WrapS          = ETextureWrap::ClampToEdge;
+  TextureParams.WrapT          = ETextureWrap::ClampToEdge;
 
   if (_MSAASamples > 0)
     TextureParams.Samples = _MSAASamples;

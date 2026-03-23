@@ -152,6 +152,23 @@ public:
       event::Notify(TEventType::Config_BloomBlurPassesChanged, _Passes);
     }
   }
+  void SetChromaticAberrationEnabled(bool _Enabled)
+  {
+    if (IsChromaAberrationEnabled != _Enabled)
+    {
+      IsChromaAberrationEnabled = _Enabled;
+      event::Notify(TEventType::Config_ChromaticAberrationEnabledChanged, _Enabled);
+    }
+  }
+  void SetChromaticAberrationOffset(TVector3f _Offset)
+  {
+    if (ChromaAberrationOffset != _Offset)
+    {
+      ChromaAberrationOffset = _Offset;
+      event::Notify(TEventType::Config_ChromaticAberrationOffsetChanged, _Offset);
+    }
+  }
+
   void SetWireframeColor(const TColor &_Color)
   {
     if (WireframeColor != _Color)
@@ -275,6 +292,14 @@ public:
   {
     return BloomBlurPasses;
   }
+  bool GetChromaticAberrationEnabled() const
+  {
+    return IsChromaAberrationEnabled;
+  }
+  TVector3f GetChromaticAberrationOffset() const
+  {
+    return ChromaAberrationOffset;
+  }
   float GetGamma() const
   {
     return Gamma;
@@ -376,16 +401,20 @@ private:
   float HDRExposure              = 1.0f;
   bool  IsGammaCorrectionEnabled = true;
   float Gamma                    = 2.2f;
-  bool  IsBloomEnabled           = true;
-  float BloomThreshold           = 1.0f;
-  float BloomIntensity           = 1.0f;
-  int   BloomBlurPasses          = 10;
   bool  IsSSAOEnabled            = true;
 
   // Anti Aliasing
   int  MSAASampleCount = 4;
   int  TAASampleCount  = 4;
   bool IsFXAAEnabled   = false;
+
+  // Effects
+  bool      IsBloomEnabled            = true;
+  float     BloomThreshold            = 1.0f;
+  float     BloomIntensity            = 1.0f;
+  int       BloomBlurPasses           = 10;
+  bool      IsChromaAberrationEnabled = true;
+  TVector3f ChromaAberrationOffset    = TVector3f(0.002f, 0.0f, -0.002f);
 
   // Debug
   bool   IsGizmoEnabled     = true;

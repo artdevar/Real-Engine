@@ -4,6 +4,7 @@
 #include "interfaces/RenderPass.h"
 #include <events/EventsListener.h>
 #include <common/Sharable.h>
+#include <common/MathTypes.h>
 
 class CShader;
 
@@ -43,11 +44,13 @@ private:
 private:
   std::shared_ptr<CShader> m_Shader;
 
-  bool  m_IsFXAAEnabled;
-  bool  m_IsHDREnabled;
-  bool  m_IsBloomEnabled;
-  bool  m_IsGammaCorrectionEnabled;
-  float m_HDRExposure;
-  float m_BloomIntensity;
-  float m_Gamma;
+  bool      m_IsFXAAEnabled;
+  bool      m_IsHDREnabled;
+  bool      m_IsBloomEnabled;
+  bool      m_IsChromaAberrationEnabled;
+  bool      m_IsGammaCorrectionEnabled;
+  float     m_HDRExposure;
+  float     m_BloomIntensity;
+  float     m_Gamma;
+  TVector3f m_ChromaAberrationOffset;
 };

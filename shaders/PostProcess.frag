@@ -16,6 +16,8 @@ uniform bool      IsBloomEnabled;
 uniform float     BloomIntensity;
 uniform bool      IsGammaCorrectionEnabled;
 uniform float     Gamma;
+uniform bool      IsChromaAberrationEnabled;
+uniform vec3      ChromaAberrationOffset;
 
 float Luma(vec3 color)
 {
@@ -33,12 +35,39 @@ vec3 ToneMapACES(vec3 x)
   return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
 }
 
+float EdgeFade(vec2 uv)
+{
+    vec2 d = min(uv, 1.0 - uv);
+    float minDist = min(d.x, d.y);
+    return smoothstep(0.0, 0.02, minDist);
+}
+
+vec3 SampleBase(vec2 uv)
+{
+  return IsTAAEnabled ? texture(TAATexture, uv).rgb
+                      : texture(ColorTexture, uv).rgb;
+}
+
 vec3 SampleColor(vec2 uv)
 {
-  if (IsTAAEnabled)
-    return texture(TAATexture, uv).rgb;
-  else
-    return texture(ColorTexture, uv).rgb;
+  if (!IsChromaAberrationEnabled)
+    return SampleBase(uv);
+
+  vec2 center = vec2(0.5);
+  vec2 dir = uv - center;
+
+  float dist = length(dir);
+  if (dist > 0.0)
+    dir /= dist;
+
+  float fade = EdgeFade(uv);
+  vec2 baseOffset = dir * dist * fade;
+
+  float r = SampleBase(uv + baseOffset * ChromaAberrationOffset.r).r;
+  float g = SampleBase(uv + ChromaAberrationOffset.g).g;
+  float b = SampleBase(uv - baseOffset * ChromaAberrationOffset.b).b;
+
+  return vec3(r, g, b);
 }
 
 vec3 CalculateFXAA(vec3 color)

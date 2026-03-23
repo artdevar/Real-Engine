@@ -6,16 +6,19 @@
 #include "assets/Texture.h"
 #include "engine/Config.h"
 #include "utils/Resource.h"
+#include <common/GlmUtils.h>
 
 CPostProcessRenderPass::CPostProcessRenderPass() :
     m_Shader(resource::LoadShader("PostProcess")),
     m_IsFXAAEnabled(CConfig::Instance().GetFXAAEnabled()),
     m_IsHDREnabled(CConfig::Instance().GetHDREnabled()),
     m_IsBloomEnabled(CConfig::Instance().GetBloomEnabled()),
+    m_IsChromaAberrationEnabled(CConfig::Instance().GetChromaticAberrationEnabled()),
     m_IsGammaCorrectionEnabled(CConfig::Instance().GetGammaCorrectionEnabled()),
     m_HDRExposure(CConfig::Instance().GetHDRExposure()),
     m_BloomIntensity(CConfig::Instance().GetBloomIntensity()),
-    m_Gamma(CConfig::Instance().GetGamma())
+    m_Gamma(CConfig::Instance().GetGamma()),
+    m_ChromaAberrationOffset(CConfig::Instance().GetChromaticAberrationOffset())
 {
 }
 
@@ -30,6 +33,7 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
 {
   const auto      Viewport     = _Renderer.GetViewport();
   const glm::vec2 InverseSize  = glm::vec2(1.0f / Viewport.X, 1.0f / Viewport.Y);
+  const glm::vec3 ChromaOffset = glm::make_vec3(m_ChromaAberrationOffset);
   const bool      IsTAAEnabled = _RenderContext.TAA.has_value();
 
   C2DTexture::Bind(TEXTURE_DEPTH_MAP_UNIT, _RenderContext.DepthTexture);
@@ -50,6 +54,8 @@ void CPostProcessRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_Rend
   _Renderer.SetUniform("IsGammaCorrectionEnabled", m_IsGammaCorrectionEnabled);
   _Renderer.SetUniform("Exposure", m_HDRExposure);
   _Renderer.SetUniform("Gamma", m_Gamma);
+  _Renderer.SetUniform("IsChromaAberrationEnabled", m_IsChromaAberrationEnabled);
+  _Renderer.SetUniform("ChromaAberrationOffset", ChromaOffset);
   _Renderer.DrawArrays(EPrimitiveMode::Triangles, 6);
 }
 
@@ -98,6 +104,12 @@ void CPostProcessRenderPass::OnEvent(const TEvent &_Event)
   case TEventType::Config_GammaChanged:
     m_Gamma = _Event.GetValue<float>();
     break;
+  case TEventType::Config_ChromaticAberrationEnabledChanged:
+    m_IsChromaAberrationEnabled = _Event.GetValue<bool>();
+    break;
+  case TEventType::Config_ChromaticAberrationOffsetChanged:
+    m_ChromaAberrationOffset = _Event.GetValue<TVector3f>();
+    break;
 
   default:
     break;
@@ -113,4 +125,6 @@ void CPostProcessRenderPass::SubscribeToEvents()
   event::Subscribe(TEventType::Config_GammaChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_BloomEnabledChanged, GetWeakPtr());
   event::Subscribe(TEventType::Config_BloomIntensityChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_ChromaticAberrationEnabledChanged, GetWeakPtr());
+  event::Subscribe(TEventType::Config_ChromaticAberrationOffsetChanged, GetWeakPtr());
 }
