@@ -98,11 +98,10 @@ void CGlobalParamsWindow::Render()
       ImGui::Separator();
 
       static const std::map<int, std::pair<int, const char *>> TAAItems = {
-          {0, std::make_pair(0, "None")},     //
-          {4, std::make_pair(4, "Very low")}, //
-          {8, std::make_pair(8, "Low")},      //
-          {16, std::make_pair(16, "Medium")}, //
-          {32, std::make_pair(32, "High")}    //
+          {0, std::make_pair(0, "None")},   //
+          {4, std::make_pair(4, "Low")},    //
+          {8, std::make_pair(8, "Medium")}, //
+          {16, std::make_pair(16, "High")}, //
       };
 
       const int TAASamples = CConfig::Instance().GetTAASampleCount();

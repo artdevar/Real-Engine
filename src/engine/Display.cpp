@@ -57,19 +57,12 @@ int CDisplay::Init(const std::string &_Title, const std::filesystem::path &_Icon
   }
 
   if (!GLAD_GL_ARB_bindless_texture)
-  {
     CLogger::Log(ELogType::Warning, "[CDisplay] ARB_bindless_texture isn't supported by the GPU");
-  }
 
   CLogger::Log(ELogType::Info, "[CDisplay] OpenGL Version: {}. Vendor: {}. Renderer: {}", GLVersion.major, GLVersion.minor,
                reinterpret_cast<const char *>(glGetString(GL_VERSION)), reinterpret_cast<const char *>(glGetString(GL_VENDOR)),
                reinterpret_cast<const char *>(glGetString(GL_RENDERER)));
   CLogger::Log(ELogType::Info, "[CDisplay] GLSL version: {}", reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
-  {
-    int MaxTextureUnits = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &MaxTextureUnits);
-    CLogger::Log(ELogType::Info, "[CDisplay] Maximum supported texture image units: {}", MaxTextureUnits);
-  }
 
   glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
   glfwSwapInterval(1); // VSYNC

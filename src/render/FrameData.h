@@ -21,6 +21,8 @@ struct TFrameData
     uint32_t SkyboxTexture      = 0;
     uint32_t EquirectangularMap = 0;
     uint32_t IrradianceMap      = 0;
+    uint32_t PrefilteredMap     = 0;
+    uint32_t BRDFLUT            = 0;
   };
 
   std::vector<TLight> Lights;

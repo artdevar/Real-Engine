@@ -19,14 +19,7 @@ protected:
   void OnEntityAdded(ecs::TEntity _Entity) override;
 
 private:
-  enum class EConversionStage
-  {
-    WaitingForEquirectangular, // Stage 0: Convert equirectangular → cubemap
-    EquirectangularConverted,  // Stage 1: Convert cubemap → irradiance map
-    IrradianceConverted,       // Stage 2: All done, ready to render
-  };
-
-  EConversionStage m_ConversionStage = EConversionStage::WaitingForEquirectangular;
+  bool m_IsEnvironmentPrepared = false;
 };
 
 } // namespace ecs

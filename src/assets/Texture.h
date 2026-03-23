@@ -75,6 +75,8 @@ public:
   static void Bind(unsigned _TextureUnit, unsigned _TextureID);
   static void Unbind();
 
+  static void GenerateMipmaps(unsigned _TextureID);
+
 private:
   bool Load(const std::filesystem::path &_Path, const TTextureParams &_Params);
   bool LoadLegacy(const std::filesystem::path &_Path, const TTextureParams &_Params);

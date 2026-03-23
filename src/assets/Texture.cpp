@@ -173,9 +173,9 @@ extern unsigned GetSupportedMaxSamples()
   return MaxSamples;
 }
 
-unsigned GetSupportedAnisotropyLevel()
+float GetSupportedAnisotropyLevel()
 {
-  static const unsigned AnisotropyLevel = []() -> unsigned {
+  static const float AnisotropyLevel = []() -> float {
     float MaxAnisotropy = 0.0f;
     if (GLAD_GL_ARB_texture_filter_anisotropic)
     {
@@ -186,10 +186,21 @@ unsigned GetSupportedAnisotropyLevel()
     {
       LOG_INFO("[CTexture] Anisotropic filtering is not supported");
     }
-    return static_cast<unsigned>(MaxAnisotropy);
+    return MaxAnisotropy;
   }();
 
   return AnisotropyLevel;
+}
+
+int GetSupportedTexturesCount()
+{
+  static const int TexturesCount = []() -> int {
+    int Count = 0;
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &Count);
+    LOG_INFO("[CTexture] Maximum supported texture image units: {}", Count);
+    return Count;
+  }();
+  return TexturesCount;
 }
 
 // CTexture
@@ -255,6 +266,8 @@ void CTexture::OverrideTarget(unsigned _Target)
 
 void CTexture::Bind(unsigned _Target, unsigned _TextureUnit, unsigned _TextureID)
 {
+  assert(_TextureUnit >= GL_TEXTURE0 && _TextureUnit < GL_TEXTURE0 + GetSupportedTexturesCount());
+
   glActiveTexture(_TextureUnit);
   glBindTexture(_Target, _TextureID);
 }
@@ -310,7 +323,7 @@ bool C2DTexture::Load(const std::filesystem::path &_Path, const TTextureParams &
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
 
   if (GLAD_GL_ARB_texture_filter_anisotropic)
-    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, std::min(float(GetSupportedAnisotropyLevel()), _Params.Anisotropy));
+    glTexParameterf(m_Target, GL_TEXTURE_MAX_ANISOTROPY, std::min(GetSupportedAnisotropyLevel(), _Params.Anisotropy));
 
   if (!_Params.HDR)
     glGenerateMipmap(m_Target);
@@ -416,34 +429,20 @@ bool CCubemap::Generate(const TTextureParams &_Params, CPasskey<CResourceManager
 
   assert(!IsValid() && "The texture already exists");
 
-  const GLint InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
-  const GLint Format         = ToGLFormat(_Params.Format);
-  const GLint Type           = ToGLType(_Params.Type);
+  const GLint   InternalFormat = ToGLInternalFormat(_Params.InternalFormat);
+  const GLsizei MipmapsCount   = _Params.MipmapsCount.has_value() ? _Params.MipmapsCount.value()
+                                 : _Params.AllocateMipmaps        ? static_cast<GLsizei>(std::floor(std::log2(std::max(_Params.Width, _Params.Height)))) + 1
+                                                                  : 1;
 
   glGenTextures(1, &m_ID);
   glBindTexture(m_Target, m_ID);
-
-  for (int i = 0; i < CUBEMAP_FACES_COUNT; ++i)
-  {
-    glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, //
-                 0,                                  //
-                 InternalFormat,                     //
-                 _Params.Width,                      //
-                 _Params.Height,                     //
-                 0,                                  //
-                 Format,                             //
-                 Type,                               //
-                 nullptr);
-  }
+  glTexStorage2D(m_Target, MipmapsCount, InternalFormat, _Params.Width, _Params.Height);
 
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_S, ToGLWrap(_Params.WrapS));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_T, ToGLWrap(_Params.WrapT));
   glTexParameteri(m_Target, GL_TEXTURE_WRAP_R, ToGLWrap(_Params.WrapR));
   glTexParameteri(m_Target, GL_TEXTURE_MIN_FILTER, ToGLFilter(_Params.MinFilter));
   glTexParameteri(m_Target, GL_TEXTURE_MAG_FILTER, ToGLFilter(_Params.MagFilter));
-
-  if (_Params.GenerateMipmaps)
-    glGenerateMipmap(m_Target);
 
   m_Size = TVector2i(_Params.Width, _Params.Height);
   m_Path = "Generated Cubemap";
@@ -524,4 +523,10 @@ void CCubemap::Bind(unsigned _TextureUnit, unsigned _TextureID)
 void CCubemap::Unbind()
 {
   CTexture::Unbind(TARGET);
+}
+
+void CCubemap::GenerateMipmaps(unsigned _TextureID)
+{
+  glBindTexture(GL_TEXTURE_CUBE_MAP, _TextureID);
+  glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }

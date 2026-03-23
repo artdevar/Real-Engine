@@ -27,8 +27,12 @@ void CTransparentRenderPass::PreExecute(IRenderer &_Renderer, TRenderContext &_R
   _Renderer.SetUniform("u_IsShadowMapEnabled", _RenderContext.ShadowMap != CTexture::INVALID_TEXTURE);
   _Renderer.SetUniform("u_ShadowMap", TEXTURE_SHADOW_MAP_INDEX);
   _Renderer.SetUniform("u_IrradianceMap", TEXTURE_IRRADIANCE_MAP_INDEX);
+  _Renderer.SetUniform("u_PrefilterMap", TEXTURE_PREFILTER_MAP_INDEX);
+  _Renderer.SetUniform("u_BRDFLUT", TEXTURE_BRDF_LUT_INDEX);
   C2DTexture::Bind(TEXTURE_SHADOW_MAP_UNIT, _RenderContext.ShadowMap);
+  C2DTexture::Bind(TEXTURE_BRDF_LUT_UNIT, _RenderContext.BRDFLUT);
   CCubemap::Bind(TEXTURE_IRRADIANCE_MAP_UNIT, _RenderContext.IrradianceMap);
+  CCubemap::Bind(TEXTURE_PREFILTER_MAP_UNIT, _RenderContext.PrefilterMap);
 }
 
 void CTransparentRenderPass::Execute(IRenderer &_Renderer, TRenderContext &_RenderContext, const IRenderPass::CommandsList &_Commands)

@@ -11,8 +11,7 @@ enum ERenderFlags : uint32_t
   ERenderFlags_Transparent,
   ERenderFlags_Opaque,
   ERenderFlags_Skybox,
-  ERenderFlags_EquirectangularToCubemap,
-  ERenderFlags_IrradianceConvolution,
+  ERenderFlags_PrepareEnvironment,
   ERenderFlags_CastShadow,
   ERenderFlags_ReceiveShadow,
   ERenderFlags_Wireframe,
@@ -49,6 +48,8 @@ struct TEnvironment
   uint32_t SkyboxTexture;
   uint32_t EquirectangularMap;
   uint32_t IrradianceMap;
+  uint32_t PrefilteredMap;
+  uint32_t BRDFLUT;
 };
 
 struct TRenderCommand

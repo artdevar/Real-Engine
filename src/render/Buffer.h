@@ -153,9 +153,9 @@ public:
     assert(IsComplete());
   }
 
-  void AttachTexture(GLenum _Attachment, GLuint _TextureID, GLenum _TextureTarget)
+  void AttachTexture(GLenum _Attachment, GLuint _TextureID, GLenum _TextureTarget, GLint _Level = 0)
   {
-    glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, _TextureTarget, _TextureID, 0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, _Attachment, _TextureTarget, _TextureID, _Level);
     assert(IsComplete());
   }
 

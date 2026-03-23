@@ -78,11 +78,12 @@ struct TTextureParams
   EFormat         Format;
   EType           Type;
 
-  bool  GenerateMipmaps = false;
   bool  HDR             = false;
   bool  sRGB            = false;
+  bool  AllocateMipmaps = false;
   float Anisotropy      = 16.0f;
 
+  std::optional<int>                               MipmapsCount;
   std::optional<int>                               Samples;
   std::optional<CStaticArray<float, BordersCount>> BorderColors;
 

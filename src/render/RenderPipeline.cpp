@@ -15,8 +15,7 @@
 #include "passes/OutputRenderPass.h"
 #include "passes/CollisionRenderPass.h"
 #include "passes/GridRenderPass.h"
-#include "passes/EquirectangularToCubemapPass.h"
-#include "passes/IrradianceConvolutionPass.h"
+#include "passes/PrepareEnvPass.h"
 #include "passes/TAARenderPass.h"
 #include "assets/Texture.h"
 #include "engine/Camera.h"
@@ -67,10 +66,9 @@ void CRenderPipeline::Init(TVector2i _Viewport)
   m_MSAASamples = CConfig::Instance().GetMSAASampleCount();
   m_TAASamples  = CConfig::Instance().GetTAASampleCount();
 
-  m_ShadowPasses.emplace_back(CShadowRenderPass::Create(), ShadowsEnabled);
+  m_UtilityPasses.emplace_back(CPrepareEnvPass::Create(), true);
 
-  m_UtilityPasses.emplace_back(CEquirectangularToCubemapPass::Create(), true);
-  m_UtilityPasses.emplace_back(CIrradianceConvolutionPass::Create(), true);
+  m_ShadowPasses.emplace_back(CShadowRenderPass::Create(), ShadowsEnabled);
 
   m_GeometryPasses.emplace_back(COpaqueRenderPass::Create(), true);
   m_GeometryPasses.emplace_back(CSkyboxRenderPass::Create(), true);
@@ -525,6 +523,8 @@ TRenderContext CRenderPipeline::CreateRenderContext(const TFrameData &FrameData,
       .ShadowMap            = CTexture::INVALID_TEXTURE,
       .BloomMap             = CTexture::INVALID_TEXTURE,
       .IrradianceMap        = FrameData.Environment.IrradianceMap,
+      .PrefilterMap         = FrameData.Environment.PrefilteredMap,
+      .BRDFLUT              = FrameData.Environment.BRDFLUT,
   };
 }
 

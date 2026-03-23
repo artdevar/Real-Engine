@@ -42,9 +42,12 @@ struct TMaterial
 uniform TMaterial   u_Material;
 uniform sampler2D   u_ShadowMap;
 uniform bool        u_IsShadowMapEnabled;
-uniform samplerCube u_IrradianceMap;
 uniform mat4        u_LightSpaceMatrix;
 uniform vec3        u_ViewPos;
+
+uniform samplerCube u_IrradianceMap;
+uniform samplerCube u_PrefilterMap;
+uniform sampler2D   u_BRDFLUT;
 
 in vec3 io_Normal;
 in vec3 io_FragPos;
@@ -196,8 +199,13 @@ void main()
 
   vec3 irradiance = texture(u_IrradianceMap, N).rgb;
   vec3 diffuse    = irradiance * albedo;
-  vec3 ambient    = kD * diffuse * occlusion;
 
+  const float MAX_REFLECTION_LOD = 4.0;
+  vec3 prefilteredColor = textureLod(u_PrefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;
+  vec2 brdf  = texture(u_BRDFLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+  specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+  vec3 ambient = (kD * diffuse + specular) * occlusion;
   float alpha = (u_Material.AlphaMode == 0) ? 1.0 : baseColorSample.a;
 
   vec3 color  = ambient + Lo + emissive;

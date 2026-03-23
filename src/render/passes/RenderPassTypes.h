@@ -10,8 +10,7 @@ enum class ERenderPassType
   Collision,
   Grid,
   Output,
-  EquirectangularToCubemap,
-  IrradianceConvolution,
+  PrepareEnvironment,
   Bloom,
   TAA,
 

@@ -33,4 +33,6 @@ struct TRenderContext
   uint32_t ShadowMap;
   uint32_t BloomMap;
   uint32_t IrradianceMap;
+  uint32_t PrefilterMap;
+  uint32_t BRDFLUT;
 };

@@ -91,6 +91,8 @@ struct TEnvironmentComponent
   std::shared_ptr<CTexture> SkyboxTexture;
   std::shared_ptr<CTexture> EquirectangularMap;
   std::shared_ptr<CTexture> IrradianceMap;
+  std::shared_ptr<CTexture> PrefilteredMap;
+  std::shared_ptr<CTexture> BRDFLUT;
 };
 
 /////////////////////////////////////////////////////////////////
