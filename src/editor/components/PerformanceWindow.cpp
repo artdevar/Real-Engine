@@ -235,23 +235,27 @@ void CPerformanceWindow::UpdateFPSHistory()
     m_FrameTimeHistory.History.pop_front();
   m_FrameTimeHistory.History.emplace_back(RunningTime, SmoothedFrameTime);
 
-  m_FPSHistory.Min = std::min_element(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), Comparator)->Y;
-  m_FPSHistory.Max = std::max_element(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), Comparator)->Y;
+  m_FPSHistory.Min = std::numeric_limits<float>::max();
+  m_FPSHistory.Max = std::numeric_limits<float>::lowest();
+  m_FPSHistory.Avg = 0.0f;
+  for (const TVector2f &Data : m_FPSHistory.History)
+  {
+    m_FPSHistory.Min  = std::min(m_FPSHistory.Min, Data.Y);
+    m_FPSHistory.Max  = std::max(m_FPSHistory.Max, Data.Y);
+    m_FPSHistory.Avg += Data.Y;
+  }
+  m_FPSHistory.Avg /= m_FPSHistory.History.size();
 
-  m_FPSHistory.Avg = std::accumulate(m_FPSHistory.History.begin(), m_FPSHistory.History.end(), 0.0f,
-                                     [](float sum, const TVector2f &point) {
-                                       return sum + point.Y;
-                                     }) /
-                     m_FPSHistory.History.size();
-
-  m_FrameTimeHistory.Min = std::min_element(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), Comparator)->Y;
-  m_FrameTimeHistory.Max = std::max_element(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), Comparator)->Y;
-
-  m_FrameTimeHistory.Avg = std::accumulate(m_FrameTimeHistory.History.begin(), m_FrameTimeHistory.History.end(), 0.0f,
-                                           [](float sum, const TVector2f &point) {
-                                             return sum + point.Y;
-                                           }) /
-                           m_FrameTimeHistory.History.size();
+  m_FrameTimeHistory.Min = std::numeric_limits<float>::max();
+  m_FrameTimeHistory.Max = std::numeric_limits<float>::lowest();
+  m_FrameTimeHistory.Avg = 0.0f;
+  for (const TVector2f &Data : m_FrameTimeHistory.History)
+  {
+    m_FrameTimeHistory.Min  = std::min(m_FrameTimeHistory.Min, Data.Y);
+    m_FrameTimeHistory.Max  = std::max(m_FrameTimeHistory.Max, Data.Y);
+    m_FrameTimeHistory.Avg += Data.Y;
+  }
+  m_FrameTimeHistory.Avg /= m_FrameTimeHistory.History.size();
 }
 
 void CPerformanceWindow::UpdateRenderPassHistory()
@@ -280,14 +284,16 @@ void CPerformanceWindow::UpdateRenderPassHistory()
 
     Stats.History.emplace_back(RunningTime, SmoothedPassTimes[i]);
 
-    Stats.Min = std::min_element(Stats.History.begin(), Stats.History.end(), Comparator)->Y;
-    Stats.Max = std::max_element(Stats.History.begin(), Stats.History.end(), Comparator)->Y;
-
-    Stats.Avg = std::accumulate(Stats.History.begin(), Stats.History.end(), 0.0f,
-                                [](float sum, const TVector2f &point) {
-                                  return sum + point.Y;
-                                }) /
-                Stats.History.size();
+    Stats.Min = std::numeric_limits<float>::max();
+    Stats.Max = std::numeric_limits<float>::lowest();
+    Stats.Avg = 0.0f;
+    for (const TVector2f &Data : Stats.History)
+    {
+      Stats.Min  = std::min(Stats.Min, Data.Y);
+      Stats.Max  = std::max(Stats.Max, Data.Y);
+      Stats.Avg += Data.Y;
+    }
+    Stats.Avg /= Stats.History.size();
 
     m_MaxRenderPassTime = std::max(m_MaxRenderPassTime, Stats.Max);
   }
