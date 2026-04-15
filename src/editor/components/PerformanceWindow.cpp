@@ -212,10 +212,6 @@ void CPerformanceWindow::RenderPassesStatistics(const RenderPassesList &_RenderP
 
 void CPerformanceWindow::UpdateFPSHistory()
 {
-  constexpr auto Comparator = [](const TVector2f &a, const TVector2f &b) {
-    return a.Y < b.Y;
-  };
-
   const float FPS         = CEngine::Instance().GetFPS();
   const float FrameTime   = CEngine::Instance().GetFrameTime();
   const float RunningTime = CEngine::Instance().GetApplicationRunningTime();
@@ -260,10 +256,6 @@ void CPerformanceWindow::UpdateFPSHistory()
 
 void CPerformanceWindow::UpdateRenderPassHistory()
 {
-  constexpr auto Comparator = [](const TVector2f &a, const TVector2f &b) {
-    return a.Y < b.Y;
-  };
-
   const auto  RenderPipeline = CEngine::Instance().GetRenderPipeline();
   const float RunningTime    = CEngine::Instance().GetApplicationRunningTime();
 
