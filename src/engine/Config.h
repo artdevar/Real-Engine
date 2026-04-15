@@ -420,7 +420,7 @@ private:
 
   // Anti Aliasing
   int  MSAASampleCount = 4;
-  int  TAASampleCount  = 4;
+  int  TAASampleCount  = 0;
   bool IsFXAAEnabled   = false;
 
   // Effects
