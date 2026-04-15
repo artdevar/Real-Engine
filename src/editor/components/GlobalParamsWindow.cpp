@@ -14,6 +14,10 @@ void CGlobalParamsWindow::Render()
   {
     if (ImGui::CollapsingHeader("Render"))
     {
+      int FPSLimit = static_cast<int>(CConfig::Instance().GetFPSLimit());
+      if (ImGui::DragInt("FPS limit", &FPSLimit, 5, 0, 1000))
+        CConfig::Instance().SetFPSLimit(static_cast<unsigned>(FPSLimit));
+
       bool ShadowsEnabled = CConfig::Instance().GetShadowsEnabled();
       if (ImGui::Checkbox("Draw shadows", &ShadowsEnabled))
         CConfig::Instance().SetShadowsEnabled(ShadowsEnabled);

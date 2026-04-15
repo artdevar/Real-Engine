@@ -13,13 +13,17 @@
 #include "render/RenderQueue.h"
 #include "scenes/World.h"
 #include <events/EventsManager.h>
+#include <common/Logger.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <string>
+#include <thread>
+#include <chrono>
 
 CEngine::TSharedPtr CEngine::Singleton = nullptr;
 
 CEngine::CEngine() :
+    m_MaxFPS(300),
     m_FrameTime(0.0f),
     m_RequestShutdown(false)
 {
@@ -77,6 +81,7 @@ int CEngine::Init()
 #if DEV_STAGE
   m_EditorUI = editor::CEditorUI::Create(*m_World);
 #endif
+  m_MaxFPS = CConfig::Instance().GetFPSLimit();
 
   const std::string GameTitle       = CConfig::Instance().GetAppTitle();
   const auto        WindowIconPath  = CConfig::Instance().GetAppIconPath();
@@ -112,20 +117,35 @@ int CEngine::Run()
   std::unique_ptr<IRenderer> Renderer = std::make_unique<COpenGLRenderer>();
   Renderer->SetCamera(m_Camera);
 
-  float LastFrameTime = 0.0f;
+  double LastFrameTime = 0.0f;
   while (!m_RequestShutdown && !m_Display->ShouldClose())
   {
-    const double CurrentFrameTime = GetApplicationRunningTime();
-    const float  FrameDelta       = (CurrentFrameTime - LastFrameTime) * 1000.0f;
-    LastFrameTime                 = CurrentFrameTime;
+    const double TargetFrameTime = m_MaxFPS == 0 ? 0.0 : 1.0 / m_MaxFPS;
+    const double FrameStartTime  = GetApplicationRunningTime();
+    const double FrameDelta      = (FrameStartTime - LastFrameTime) * 1000.0;
+    LastFrameTime                = FrameStartTime;
 
-    SetFrameTime(FrameDelta);
+    SetFrameTime(static_cast<float>(FrameDelta));
 
-    Update(FrameDelta);
+    Update(static_cast<float>(FrameDelta));
     Render(*Renderer);
 
     m_Display->SwapBuffers();
     m_Display->PollEvents();
+
+    const double NextFrameTime = FrameStartTime + TargetFrameTime;
+
+    while (true)
+    {
+      const double Now       = GetApplicationRunningTime();
+      const double Remaining = NextFrameTime - Now;
+
+      if (Remaining <= 0.0)
+        break;
+
+      if (Remaining > 2.0)
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
   }
 
   return EXIT_SUCCESS;
@@ -173,9 +193,14 @@ float CEngine::GetFPS() const
   return 1000.0f / GetFrameTime();
 }
 
-float CEngine::GetApplicationRunningTime() const
+double CEngine::GetApplicationRunningTime() const
 {
-  return static_cast<float>(glfwGetTime());
+  return glfwGetTime();
+}
+
+void CEngine::SetMaxFPS(float _MaxFPS)
+{
+  m_MaxFPS = (_MaxFPS > 0.0f) ? _MaxFPS : 60.0f;
 }
 
 TVector2i CEngine::GetWindowSize() const
@@ -232,6 +257,9 @@ void CEngine::OnEvent(const TEvent &_Event)
 {
   switch (_Event.Type)
   {
+  case TEventType::Config_FPSLimitChanged:
+    m_MaxFPS = _Event.GetValue<unsigned>();
+    break;
   case TEventType::RequestAppShutdown:
     m_RequestShutdown = true;
     break;
@@ -240,6 +268,7 @@ void CEngine::OnEvent(const TEvent &_Event)
 
 void CEngine::SubscribeToEvents()
 {
+  event::Subscribe(TEventType::Config_FPSLimitChanged, GetWeakPtr());
   event::Subscribe(TEventType::RequestAppShutdown, GetWeakPtr());
 }
 

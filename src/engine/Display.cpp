@@ -65,7 +65,7 @@ int CDisplay::Init(const std::string &_Title, const std::filesystem::path &_Icon
   CLogger::Log(ELogType::Info, "[CDisplay] GLSL version: {}", reinterpret_cast<const char *>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
   glViewport(0, 0, DEFAULT_WIDTH, DEFAULT_HEIGHT);
-  glfwSwapInterval(1); // VSYNC
+  //glfwSwapInterval(1); // VSYNC
 
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_STENCIL_TEST);

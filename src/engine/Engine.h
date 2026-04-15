@@ -55,7 +55,9 @@ public:
 
   float GetFrameTime() const;
   float GetFPS() const;
-  float GetApplicationRunningTime() const;
+  double GetApplicationRunningTime() const;
+
+  void SetMaxFPS(float _MaxFPS);
 
   void OnEvent(const TEvent &_Event) override;
 
@@ -82,8 +84,9 @@ private:
 #endif
 
 private:
-  float m_FrameTime;
-  bool  m_RequestShutdown;
+  unsigned m_MaxFPS;
+  float    m_FrameTime;
+  bool     m_RequestShutdown;
 
   std::shared_ptr<CDisplay>         m_Display;
   std::shared_ptr<CInputManager>    m_InputManager;

@@ -16,6 +16,15 @@ public:
   }
 
 #if DEV_STAGE
+  void SetFPSLimit(unsigned _Limit)
+  {
+    if (FPSLimit != _Limit)
+    {
+      FPSLimit = _Limit;
+      event::Notify(TEventType::Config_FPSLimitChanged, _Limit);
+    }
+  }
+
   void SetShadowsEnabled(bool _Enabled)
   {
     if (AreShadowsEnabled != _Enabled)
@@ -236,6 +245,11 @@ public:
     }
   }
 #endif
+  int GetFPSLimit() const
+  {
+    return FPSLimit;
+  }
+
   int GetShadowMapSize() const
   {
     return ShadowMapSize;
@@ -395,13 +409,14 @@ public:
 
 private:
   // Render
-  int   ShadowMapSize            = 4096;
-  bool  AreShadowsEnabled        = true;
-  bool  IsHDREnabled             = true;
-  float HDRExposure              = 1.0f;
-  bool  IsGammaCorrectionEnabled = true;
-  float Gamma                    = 2.2f;
-  bool  IsSSAOEnabled            = true;
+  unsigned FPSLimit                 = 300;
+  int      ShadowMapSize            = 4096;
+  bool     AreShadowsEnabled        = true;
+  bool     IsHDREnabled             = true;
+  float    HDRExposure              = 1.0f;
+  bool     IsGammaCorrectionEnabled = true;
+  float    Gamma                    = 2.2f;
+  bool     IsSSAOEnabled            = true;
 
   // Anti Aliasing
   int  MSAASampleCount = 4;

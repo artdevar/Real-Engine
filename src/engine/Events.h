@@ -10,6 +10,7 @@ enum class TEventType
   Config_CameraFOVChanged = 1000,
   Config_CameraZNearChanged,
   Config_CameraZFarChanged,
+  Config_FPSLimitChanged,
   Config_ShadowsEnabledChanged,
   Config_ShadowsMapSizeChanged,
   Config_FXAAEnabledChanged,

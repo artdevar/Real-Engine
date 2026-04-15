@@ -116,10 +116,12 @@ void CPerformanceWindow::RenderFPSSection()
     ImGui::Text("Tick (ms)");
     ImGui::Separator();
     ImGui::NextColumn();
+    ImGui::Text("Curr: %.1f", m_FPSHistory.History.back().Y);
     ImGui::Text("Min: %.1f", m_FPSHistory.Min);
     ImGui::Text("Max: %.1f", m_FPSHistory.Max);
     ImGui::Text("Avg: %.1f", m_FPSHistory.Avg);
     ImGui::NextColumn();
+    ImGui::Text("Curr: %.2f", m_FrameTimeHistory.History.back().Y);
     ImGui::Text("Min: %.2f", m_FrameTimeHistory.Min);
     ImGui::Text("Max: %.2f", m_FrameTimeHistory.Max);
     ImGui::Text("Avg: %.2f", m_FrameTimeHistory.Avg);
